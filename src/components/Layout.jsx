@@ -1,14 +1,17 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Header from './Header';
-import Footer from './Footer';
 import Content from './Content';
 import Register from './Register';
+import Login from './Login';
 const Layout = () => {
   return (
-    <div>
+    <BrowserRouter>
       <Header />
-      <Content />
-      <Register />
-    </div>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+      </Routes>
+    </BrowserRouter>
   );
 };
 
