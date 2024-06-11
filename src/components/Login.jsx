@@ -1,22 +1,36 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { useState } from 'react';
+
 const Login = () => {
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit } = useForm();
+  const [loginError, setLoginError] = useState(false);
+  const navigate = useNavigate();
+
+  const onSubmit = (data) => {
+    if (data.username === 'user' && data.password === 'user') {
+      setLoginError(false);
+      navigate('/landingpage');
+    } else {
+      setLoginError(true);
+    }
+  };
   return (
     <div>
       <section className="Login">
-        <div className="h-[350px] md:h-[90vh] bg-center bg-cover md:bg-auto md   bg-[url('/bg-desktop.png')]">
+        <div className="h-[370px] md:h-[93vh] bg-center bg-cover md:bg-auto md:bg-no-repeat   bg-[url('/bg-desktop.png')]">
           <div className="min-h-[93vh] flex flex-col items-center justify-end md:justify-center">
             <div className="bg-white min-h-[500px] p-8 rounded-t-3xl md:rounded-3xl shadow-md w-full  md:w-96">
               <div className="text-3xl font-bold text-blue-500 mb-8">
-                <p className="drop-shadow-xl">Enjoy the trip with Voyage</p>
+                <p className="drop-shadow-xl">Enjoy the trip</p>
+                <p className="drop-shadow-xl">with Voyage</p>
               </div>
               <h1 className="text-2xl text-center text-gray-800 font-semibold mb-6">
                 Welcome
               </h1>
               <form
                 className="flex flex-col gap-2"
-                onSubmit={handleSubmit((e) => console.log(e))}
+                onSubmit={handleSubmit(onSubmit)}
               >
                 <label className="input input-bordered flex items-center gap-2">
                   <svg
@@ -50,24 +64,33 @@ const Login = () => {
                   <input
                     type="password"
                     className="grow"
-                    value="password"
+                    placeholder="Password"
                     {...register('password')}
                   />
                 </label>
-                <p className="text-sm text-blue-500 hover:text-blue-700 mb-8">
+                <span
+                  className={`text-red-500 text-sm ${
+                    loginError ? '' : 'hidden'
+                  }`}
+                >
+                  Username หรือ password ไม่ถูกต้อง
+                </span>
+                <a
+                  href="#"
+                  className="text-sm text-blue-500 hover:text-blue-700 mb-8"
+                >
                   Forgot Password?
-                </p>
-                <Link to="/landingpage">
-                  <button
-                    type="submit"
-                    className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
-                  >
-                    Sign In
-                  </button>
-                </Link>
+                </a>
+
+                <button
+                  type="submit"
+                  className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
+                >
+                  Sign In
+                </button>
               </form>
               <div className="mt-2 text-sm  flex">
-                <p> Don’t have an account?</p>{' '}
+                <p> Don't have an account?</p>{' '}
                 <Link to="/register">
                   <p className="text-blue-500 hover:text-blue-700">
                     Create one
