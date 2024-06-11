@@ -4,6 +4,7 @@ import Register from './Register';
 import Login from './Login';
 import Landingpage from './Landingpage';
 import ProductPage from './ProductPage';
+import ProductDetail from './ProductDetail';
 const Layout = () => {
   return (
     <BrowserRouter>
@@ -13,6 +14,7 @@ const Layout = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/landingpage" element={<Landingpage />} />
         <Route path="/productPage" element={<ProductPage />} />
+        <Route path="/productDetail" element={<ProductDetail />} />
       </Routes>
     </BrowserRouter>
   );
