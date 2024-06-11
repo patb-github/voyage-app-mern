@@ -1,14 +1,15 @@
+import { Link } from 'react-router-dom';
 const Header = () => {
   return (
-    <nav className="navbar bg-base-100 max-w-screen flex justify-between pr-4 shadow-lg">
+    <nav className="navbar bg-base-100 max-w-screen flex justify-between pr-4 ">
       <div>
-        <a href="#">
+        <Link to="/landingpage">
           <img
             src="/vovageLogo.png"
             className="btn btn-ghost normal-case text-xl hover:bg-white"
             alt="VoVage Logo"
           />
-        </a>
+        </Link>
       </div>
 
       <div className="flex-none">
@@ -44,16 +45,16 @@ const Header = () => {
           </summary>
           <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-[150px]">
             <li>
-              <a href="#">ตะกร้าสินค้า</a>
+              <Link to="/">บัญชี</Link>
             </li>
             <li>
-              <a href="#">บัญชี</a>
+              <Link to="/">ตะกร้าสินค้า</Link>
             </li>
             <li>
-              <a href="#">ทริปของฉัน</a>
+              <Link to="/">ทริปของฉัน</Link>
             </li>
-            <li>
-              <a href="#">ออกจากระบบ</a>
+            <li className="bg-red-500 text-white rounded-full">
+              <Link to="/">ออกจากระบบ</Link>
             </li>
           </ul>
         </details>
