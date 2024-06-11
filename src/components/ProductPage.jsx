@@ -1,4 +1,6 @@
 import React from 'react';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faLocationDot, faStar, faHeart, faCartShopping } from "@fortawesome/free-solid-svg-icons";
 
 const ProductPage = () => {
   return (
@@ -18,7 +20,7 @@ const ProductPage = () => {
         {/* ส่วนรูปภาพและคำอธิบายแพ็คเกจ */}
         <div className="md:flex md:flex-col md:h-auto md:w-[55%] md:px-16 md:border-r md:border-r-black">
           <img
-            src="/aquarium.jpg"
+            src="/destination/aquarium.jpg"
             alt="แพ็คเกจเที่ยว โอกินาว่า"
             className="md:rounded-3xl fixed bottom-[50%] h-[50%] w-full object-cover md:relative md:h-[60%] md:bottom-auto"
           />
@@ -38,17 +40,19 @@ const ProductPage = () => {
           </p>
           <div className="flex flex-row place-content-between px-8">
             <div className="flex gap-2 content-center">
-              <i
+              <FontAwesomeIcon icon={faLocationDot} className="fa-xl" style={{ color: "#fd003a" }} />
+              {/* <i
                 className="fa-solid fa-location-dot fa-xl flex flex-col justify-center"
                 style={{ color: '#fd003a' }}
-              ></i>
+              ></i> */}
               <p>โอะกินะวะ, ญี่ปุ่น</p>
             </div>
             <div className="flex gap-2">
-              <i
+              <FontAwesomeIcon icon={faStar} className="fa-xl" style={{ color: "#ffc107" }} />
+              {/* <i
                 className="fa-solid fa-star fa-xl flex flex-col justify-center"
                 style={{ color: '#ffc107' }}
-              ></i>
+              ></i> */}
               <p>4.8 (857 รีวิว)</p>
             </div>
           </div>
@@ -92,17 +96,19 @@ const ProductPage = () => {
                 <p className="text-2xl font-bold">฿ 52,400</p>
               </div>
               <div className="flex content-center gap-3">
-                <button className="btn btn-circle btn-outline">
-                  <i
+                <button className="btn btn-circle bg-white outline outline-1 outline-gray-300">
+                  <FontAwesomeIcon icon={faHeart} className="fa-2x" style={{ color: "#d7443e" }} />
+                  {/* <i
                     className="fa-solid fa-heart fa-2x"
                     style={{ color: '#d7443e' }}
-                  ></i>
+                  ></i> */}
                 </button>
-                <button className="btn btn-circle btn-outline">
-                  <i
+                <button className="btn btn-circle bg-white outline outline-1 outline-gray-300">
+                  <FontAwesomeIcon icon={faCartShopping} className="fa-2x" style={{ color: "#000000" }} />
+                  {/* <i
                     className="fa-solid fa-cart-shopping fa-2x"
                     style={{ color: '#000000' }}
-                  ></i>
+                  ></i> */}
                 </button>
                 <button className="btn rounded-full bg-[#5F97FB] text-white text-xl">
                   ชำระเงิน
