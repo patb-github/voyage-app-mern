@@ -1,5 +1,8 @@
 import { Link } from 'react-router-dom';
+import { useContext } from 'react'; // นำเข้า useContext
+import UserContext from './UserContext';
 const Header = () => {
+  const { user } = useContext(UserContext);
   return (
     <nav className="navbar bg-base-100 max-w-screen flex justify-between pr-4 ">
       <div>
@@ -15,12 +18,12 @@ const Header = () => {
       <div className="flex-none">
         <a href="#" className="items-center mr-4 hidden md:flex">
           <img
-            src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+            src={user.profileImage}
             alt="User Profile"
-            className="w-11 h-10 mx-4"
+            className="w-11 h-10 mx-4 mask mask-squircle"
           />
           <div>
-            <p className="text-xl font-bold">สวัสดี, {name}</p>
+            <p className="text-xl font-bold">สวัสดี, {user.firstName}</p>
             <p className="text-sm font-semibold text-amber-800">
               เรามีโปรแกรมมากมายสำหรับคุณ
             </p>
@@ -43,12 +46,12 @@ const Header = () => {
               />
             </svg>
           </summary>
-          <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-[150px]">
+          <ul className="p-2 shadow menu dropdown-content z-50 bg-base-100 rounded-box w-[150px]">
             <li>
-              <Link to="/">บัญชี</Link>
+              <Link to="/userData">บัญชี</Link>
             </li>
             <li>
-              <Link to="/">ตะกร้าสินค้า</Link>
+              <Link to="/cart">ตะกร้าสินค้า</Link>
             </li>
             <li>
               <Link to="/">ทริปของฉัน</Link>
