@@ -4,18 +4,23 @@ import Register from './Register';
 import Login from './Login';
 import Landingpage from './Landingpage';
 import ProductPage from './ProductPage';
-import ProductDetail from './ProductDetail';
+import UserData from './UserData';
+import Cart from './Cart';
+import UserProvider from './UserProvider';
 const Layout = () => {
   return (
     <BrowserRouter>
-      <Header />
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/landingpage" element={<Landingpage />} />
-        <Route path="/productPage" element={<ProductPage />} />
-        <Route path="/productDetail" element={<ProductDetail />} />
-      </Routes>
+      <UserProvider>
+        <Header />
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/landingPage" element={<Landingpage />} />
+          <Route path="/productPage" element={<ProductPage />} />
+          <Route path="/userData" element={<UserData />} />
+          <Route path="/cart" element={<Cart />} />
+        </Routes>
+      </UserProvider>
     </BrowserRouter>
   );
 };

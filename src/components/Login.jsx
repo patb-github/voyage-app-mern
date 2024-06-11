@@ -10,7 +10,7 @@ const Login = () => {
   const onSubmit = (data) => {
     if (data.username === 'user' && data.password === 'user') {
       setLoginError(false);
-      navigate('/landingpage');
+      navigate('/landingPage');
     } else {
       setLoginError(true);
     }
