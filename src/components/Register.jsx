@@ -1,5 +1,4 @@
-import React from 'react';
-
+import { Link } from 'react-router-dom';
 const Register = () => {
   return (
     <div className="h-full bg-cover bg-center bg-no-repeat bg-[url('/bg.svg')]">
@@ -38,9 +37,11 @@ const Register = () => {
                 <hr className="absolute bottom-0 z-50 w-full bg-red-500" />
               </div>
 
-              <button className="w-full mt-6 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">
-                Sign Up
-              </button>
+              <Link to="/">
+                <button className="w-full mt-6 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">
+                  Sign Up
+                </button>
+              </Link>
             </div>
           </div>
         </div>
