@@ -11,7 +11,7 @@ const Header = () => {
   return (
     <nav className="navbar sticky top-0 z-50  bg-base-100 max-w-screen  pr-4 ">
       <div>
-        <Link to="/landingpage">
+        <Link to="/">
           <img
             src="/vovageLogo.png"
             className="btn btn-ghost normal-case hidden md:block text-xl hover:bg-white"
