@@ -39,7 +39,8 @@ const ContentHead = () => {
 
 const ProductDetails = ({showDetail, setShowDetail}) => { 
     return (
-      <div className={`${showDetail ? "" : "hidden"} md:flex md:flex-col h-full`}>
+      <div className={`${showDetail ? "" : "hidden"} md:flex md:flex-col h-full pb-[88px]`}>
+        {/* ถ้าข้อมูลแสดงผลไม่ครบ ลองเพิ่มค่า pb-[] หรือไม่ก็ลดขนาดตัวอักษร */}
         <div className="flex flex-col content-center px-8
                     md:rounded-3xl md:shadow-xl md:grow 
                     md:outline md:outline-1 md:outline-gray-200">
@@ -118,7 +119,7 @@ const ProductPage = () => {
           </div>
 
           {/* ส่วนรายละเอียดการจอง */}
-          <div className="fixed top-[45%] h-[55%] w-full bg-white rounded-t-[2rem] flex flex-col overflow-y-scroll pb-[84px]
+          <div className="fixed top-[45%] h-[55%] w-full bg-white rounded-t-[2rem] flex flex-col overflow-y-scroll
                           md:relative md:w-[50%] md:h-auto md:px-16 md:overflow-y-visible md:pb-0">
             <div className="md:hidden">
               <ContentHead />
