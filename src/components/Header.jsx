@@ -45,8 +45,13 @@ const Header = () => {
               </p>
             </div>
           </div>
-          <details className="dropdown dropdown-end">
-            <summary className="btn bg-white hover:bg-white rounded-full">
+
+          <div className="dropdown dropdown-hover dropdown-end">
+            <div
+              tabIndex={0}
+              role="button"
+              className="btn bg-white hover:bg-white rounded-full"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -60,8 +65,11 @@ const Header = () => {
                   d="M4 6h16M4 12h16M4 18h16"
                 />
               </svg>
-            </summary>
-            <ul className="p-2 shadow menu dropdown-content z-50 bg-base-100 rounded-box w-[150px]">
+            </div>
+            <ul
+              tabIndex={0}
+              className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
+            >
               <li>
                 <Link to="/userData">บัญชี</Link>
               </li>
@@ -75,7 +83,7 @@ const Header = () => {
                 <Link to="/">ออกจากระบบ</Link>
               </li>
             </ul>
-          </details>
+          </div>
         </div>
       )}
     </nav>

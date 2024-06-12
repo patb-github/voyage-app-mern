@@ -7,8 +7,8 @@ import ProductPage from './ProductPage';
 import UserData from './UserData';
 import Cart from './Cart';
 import UserProvider from './UserProvider';
-import Checkout from './Checkout';
-import ProductPageV2 from './ProductPageV2';
+import Payment from './Payment';
+import PaymentSuccess from './PaymentSuccess';
 
 const Layout = () => {
   return (
@@ -22,8 +22,8 @@ const Layout = () => {
           <Route path="/productPage" element={<ProductPage />} />
           <Route path="/userData" element={<UserData />} />
           <Route path="/cart" element={<Cart />} />
-          <Route path="/productpagev2" element={<ProductPageV2 />} />
-          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/paymentSuccess" element={<PaymentSuccess />} />
+          <Route path="/payment" element={<Payment />} />
         </Routes>
       </UserProvider>
     </BrowserRouter>
