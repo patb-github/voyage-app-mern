@@ -180,7 +180,7 @@ const Landingpage = () => {
           </div>
 
           {/* Search Box */}
-          <div className="z-0 search-box absolute transform -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 z-50">
+          <div className="search-box absolute transform -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 z-40">
             <div style={{ position: 'relative' }}>
               <input
                 type="text"
