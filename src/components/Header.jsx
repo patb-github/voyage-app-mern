@@ -6,7 +6,7 @@ const Header = () => {
   return (
     <nav className="navbar bg-base-100 max-w-screen flex justify-between pr-4 ">
       <div>
-        <Link to="/landingpage">
+        <Link to="/">
           <img
             src="/vovageLogo.png"
             className="btn btn-ghost normal-case text-xl hover:bg-white"
