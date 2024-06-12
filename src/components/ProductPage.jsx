@@ -1,6 +1,6 @@
 import React from 'react';
+import { faCartShopping, faHeart, faLocationDot, faStar } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faLocationDot, faStar, faHeart, faCartShopping } from "@fortawesome/free-solid-svg-icons";
 import { Link } from 'react-router-dom';
 
 const ProductPage = () => {
