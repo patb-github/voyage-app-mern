@@ -7,8 +7,8 @@ import ProductPage from './ProductPage';
 import UserData from './UserData';
 import Cart from './Cart';
 import UserProvider from './UserProvider';
-import Payment from './Payment';
 import PaymentSuccess from './PaymentSuccess';
+import Payment from './Payment';
 
 const Layout = () => {
   return (

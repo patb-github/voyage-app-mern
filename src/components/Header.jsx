@@ -9,7 +9,7 @@ const Header = () => {
   const showProfileAndMenu2 =
     location.pathname == '/' || location.pathname == '/register';
   return (
-    <nav className="navbar sticky top-0 z-50  bg-base-100 max-w-screen  pr-4 ">
+    <nav className="navbar  top-0 z-50  bg-base-100 max-w-screen  pr-4 ">
       <div>
         <Link to="/">
           <img

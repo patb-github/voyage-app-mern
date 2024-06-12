@@ -21,7 +21,7 @@ function CartItemUi({
     <div className="card bg-base-100 shadow-xl my-4">
       <div className="card-body">
         <div className="card-title justify-between">
-          <h2 className="text-xl md:text-2xl font-semibold">{title}</h2>
+          <h2 className="text-xl md:text-xl font-semibold">{title}</h2>
           <div className="card-actions">
             <button className="btn btn-sm" onClick={() => onDelete(id)}>
               x

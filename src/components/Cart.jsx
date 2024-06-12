@@ -107,7 +107,7 @@ function Cart() {
             <h3 className="text-lg font-semibold mb-2">Promotions</h3>
 
             <div className="border-t border-gray-200 pt-2 mb-4">
-              <p className="text-gray-700 text-sm">Subtotal</p>
+              <p className="text-gray-700 text-sm">Original price</p>
               <p className="text-gray-900 font-semibold">฿ {totalAmount}</p>
             </div>
             <div className="border-t border-gray-200 pt-2 mb-4">
