@@ -7,6 +7,9 @@ import ProductPage from './ProductPage';
 import UserData from './UserData';
 import Cart from './Cart';
 import UserProvider from './UserProvider';
+import Payment from './Payment';
+import PaymentSuccess from './PaymentSuccess';
+
 const Layout = () => {
   return (
     <BrowserRouter>
@@ -19,6 +22,8 @@ const Layout = () => {
           <Route path="/productPage" element={<ProductPage />} />
           <Route path="/userData" element={<UserData />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/paymentSuccess" element={<PaymentSuccess />} />
+          <Route path="/payment" element={<Payment />} />
         </Routes>
       </UserProvider>
     </BrowserRouter>

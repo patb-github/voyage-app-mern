@@ -1,12 +1,17 @@
 import React from 'react';
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faLocationDot, faStar, faHeart, faCartShopping } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faLocationDot,
+  faStar,
+  faHeart,
+  faCartShopping,
+} from '@fortawesome/free-solid-svg-icons';
 import { Link } from 'react-router-dom';
 
 const ProductPage = () => {
   return (
     <div className="h-full bg-cover bg-center bg-no-repeat bg-[url('/bg.svg')] md:py-16 md:px-32">
-      <section className="bg-white md:rounded-3xl h-full">
+      <section className="bg-white md:rounded-3xl h-full ">
         {/* ส่วนของปุ่มกลับ และหัวข้อ */}
         <div className="flex justify-center relative z-10">
           <Link to="../landingpage">
@@ -44,7 +49,11 @@ const ProductPage = () => {
             </p>
             <div className="flex flex-row place-content-between px-8">
               <div className="flex gap-2 content-center">
-                <FontAwesomeIcon icon={faLocationDot} className="fa-xl" style={{ color: "#fd003a" }} />
+                <FontAwesomeIcon
+                  icon={faLocationDot}
+                  className="fa-xl"
+                  style={{ color: '#fd003a' }}
+                />
                 {/* <i
                   className="fa-solid fa-location-dot fa-xl flex flex-col justify-center"
                   style={{ color: '#fd003a' }}
@@ -52,7 +61,11 @@ const ProductPage = () => {
                 <p>โอะกินะวะ, ญี่ปุ่น</p>
               </div>
               <div className="flex gap-2">
-                <FontAwesomeIcon icon={faStar} className="fa-xl" style={{ color: "#ffc107" }} />
+                <FontAwesomeIcon
+                  icon={faStar}
+                  className="fa-xl"
+                  style={{ color: '#ffc107' }}
+                />
                 {/* <i
                   className="fa-solid fa-star fa-xl flex flex-col justify-center"
                   style={{ color: '#ffc107' }}
@@ -84,8 +97,9 @@ const ProductPage = () => {
             {/* ส่วนโปรโมชั่น */}
             <div className="bg-[#B9FFFB] rounded-3xl px-6 py-3 mx-12">
               <p>
-                โปรแกรมท่องเที่ยว โอกินาว่า แบบ All in one ไม่ต้อง ปวดหัวกับการจอง
-                ตั๋วเครื่องบิน โรงแรม ร้านอาหาร เพราะ Vovage จัดการให้หมดแล้ว
+                โปรแกรมท่องเที่ยว โอกินาว่า แบบ All in one ไม่ต้อง
+                ปวดหัวกับการจอง ตั๋วเครื่องบิน โรงแรม ร้านอาหาร เพราะ Vovage
+                จัดการให้หมดแล้ว
               </p>
               <p className="font-semibold underline">
                 <a href="#">ดูรายละเอียดแบบเต็มๆ</a>
@@ -101,14 +115,22 @@ const ProductPage = () => {
                 </div>
                 <div className="flex content-center gap-3">
                   <button className="btn btn-circle bg-white outline outline-1 outline-gray-300">
-                    <FontAwesomeIcon icon={faHeart} className="fa-2x" style={{ color: "#d7443e" }} />
+                    <FontAwesomeIcon
+                      icon={faHeart}
+                      className="fa-2x"
+                      style={{ color: '#d7443e' }}
+                    />
                     {/* <i
                       className="fa-solid fa-heart fa-2x"
                       style={{ color: '#d7443e' }}
                     ></i> */}
                   </button>
                   <button className="btn btn-circle bg-white outline outline-1 outline-gray-300">
-                    <FontAwesomeIcon icon={faCartShopping} className="fa-2x" style={{ color: "#000000" }} />
+                    <FontAwesomeIcon
+                      icon={faCartShopping}
+                      className="fa-2x"
+                      style={{ color: '#000000' }}
+                    />
                     {/* <i
                       className="fa-solid fa-cart-shopping fa-2x"
                       style={{ color: '#000000' }}

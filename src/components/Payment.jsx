@@ -1,63 +1,37 @@
-import React from 'react'
+import { useForm } from 'react-hook-form';
+import { useState } from 'react';
 
 const Payment = () => {
+  const { register, handleSubmit } = useForm();
+
   return (
-    <div className="flex flex-col items-center">
-  <div className="bg-white p-4 rounded-2xl shadow-lg min-w-[390px] max-w-[390px]">
-    <p className="font-bold">
-      เที่ยวญี่ปุ่น โอกินาว่า ปราสาทชูริ พิพิธภัณฑ์สัตว์น้ำ ชุราอูมิ
-      โอกินาว่าเวิลด์
-    </p>
-    <div className="flex-grow">
-      <div className="flex justify-center items-center gap-4">
-        <div className="flex flex-col items-center">
-          <p className="font-bold text-lg">กรุงเทพ</p>
-          <p className="badge badge-ghost p-4">พฤ 15 พ.ค.</p>
-        </div>
-        <div className="flex flex-col items-center">
-          <img src="/planeBlue.svg" alt="" />
-          <p className="text-error">(3 วัน 2 คืน)</p>
-        </div>
-        <div className="flex flex-col items-center">
-          <p className="font-bold text-lg">สิงคโปร์</p>
-          <p className="badge badge-ghost p-4">อา 17 พ.ค.</p>
-        </div>
-      </div>
+    <div>
+      <section className="PaymentSuccess">
+        <div className="h-[370px] md:h-[93vh] bg-center bg-cover md:bg-auto md:bg-no-repeat   bg-[url('/bg-desktop.png')]">
+          <div className="px-8 py-8 drop-shadow-xl md:hidden font-bold text-3xl text-white mb-8 "></div>
 
-      <div className="flex flex-col items-center justify-between mt-4 md:mt-8 px-4 md:px-8">
-        <div className="flex items-center mb-4 md:mb-0">
-          <h2 className="card-title text-info">
-            จำนวน Voyager
-            <div className="badge badge-info text-white h-7 w-7 ml-2">1</div>
-          </h2>
-        </div>
+          <div className="min-h-[75vh] flex flex-col items-center justify-end md:justify-center">
+            <div className="bg-white min-h-[500px] px-16 py-10  rounded-t-3xl md:rounded-3xl shadow-md w-full  md:w-96">
+              <div className="text-3xl text-center font-bold text-blue-500 md:mb-8">
+                <p className="drop-shadow-xl hidden md:block">Thank You!</p>
+              </div>
+              <span className="text-xl text-center text-gray-800 font-bold">
+                <p>Payment done Successfully</p>
+              </span>
+              <p className="mt-2 text-gray-500 text-center">
+                You will be redirected to the home page shortly or click here to
+                return to homepage
+              </p>
 
-        <div className="flex items-baseline gap-2 text-2xl font-bold">
-          <p>ยอดรวม</p>
-          <p className="text-gray-800">฿ 16,990</p>
+              <button className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full mt-2">
+                Home
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
-  </div>
-  <div className="flex items-center py-4">
-    <input
-      type="checkbox"
-      checked="checked"
-      className="checkbox checkbox-primary mx-2"
-    />
-    <div className="bg-white p-4 w-full rounded-2xl shadow-lg min-w-[350px] max-w-[350px]">
-      <p className="font-extrabold text-2xl">บัตรเครดิต / บัตรเดบิต</p>
-      <div className="flex gap-5">
-        <img src="/visa_logo.svg" alt="" />
-        <img src="/mastercard_logo.svg" alt="" />
-        <img src="/assets/jcb_logo.svg" alt="" />
-        <img src="/assets/unionpay_logo.svg" alt="" />
-      </div>
-    </div>
-  </div>
-</div>
+  );
+};
 
-  )
-}
-
-export default Payment
+export default Payment;
