@@ -5,6 +5,7 @@ import Login from './Login';
 import Landingpage from './Landingpage';
 import ProductPage from './ProductPage';
 import ProductDetail from './ProductDetail';
+import ProductPageV2 from './ProductPageV2';
 const Layout = () => {
   return (
     <BrowserRouter>
@@ -15,6 +16,7 @@ const Layout = () => {
         <Route path="/landingpage" element={<Landingpage />} />
         <Route path="/productPage" element={<ProductPage />} />
         <Route path="/productDetail" element={<ProductDetail />} />
+        <Route path="/productPageV2" element={<ProductPageV2 />} />
       </Routes>
     </BrowserRouter>
   );
