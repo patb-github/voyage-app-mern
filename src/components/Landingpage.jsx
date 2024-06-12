@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
 
-// คอมโพเนนต์ Slide
 const Slide = ({
   imageSrc,
   altText,
@@ -31,14 +29,12 @@ const Slide = ({
   </div>
 );
 
-// คอมโพเนนต์ Offer
 const Offer = ({ imageSrc, altText }) => (
   <a href="">
     <img src={imageSrc} alt={altText} className="rounded-lg" />
   </a>
 );
 
-// คอมโพเนนต์ LikedItem
 const LikedItem = ({ imageSrc, title, location, rating, tags, price }) => (
   <a href="">
     <div className="card w-full bg-base-100 shadow-xl">
@@ -79,7 +75,6 @@ const LikedItem = ({ imageSrc, title, location, rating, tags, price }) => (
   </a>
 );
 
-// ข้อมูลสำหรับ Offers
 const offers = [
   { id: 1, imageSrc: '/destination/discount.jpg', altText: 'Discount Offer' },
   { id: 2, imageSrc: '/destination/fuji.jpg', altText: 'Fuji Offer' },
@@ -87,7 +82,6 @@ const offers = [
   { id: 4, imageSrc: '/destination/europe.jpg', altText: 'Europe Offer' },
 ];
 
-// ข้อมูลสำหรับ LikedItems
 const likedItems = [
   {
     id: 1,
@@ -109,57 +103,20 @@ const likedItems = [
     tags: ['ขายดีที่สุด', '4 วัน 3 คืน'],
     price: 29950,
   },
-  // ... เพิ่มข้อมูล LikedItems อื่นๆ ...
 ];
 
 const Landingpage = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [count, setCount] = useState(0);
-  const carouselRef = useRef(null);
-
-  const handleSlideChange = (newIndex) => {
-    setCurrentSlide(newIndex);
-  };
-
-  useEffect(() => {
-    let interval;
-
-    const startSlide = () => {
-      interval = setInterval(() => {
-        handleSlideChange((currentSlide + 1) % 3);
-      }, 3000);
-    };
-
-    const stopSlide = () => {
-      clearInterval(interval);
-    };
-
-    startSlide();
-
-    const carousel = carouselRef.current;
-    carousel.addEventListener('mouseenter', stopSlide);
-    carousel.addEventListener('mouseleave', startSlide);
-
-    return () => {
-      carousel.removeEventListener('mouseenter', stopSlide);
-      carousel.removeEventListener('mouseleave', startSlide);
-      clearInterval(interval);
-    };
-  }, [currentSlide]);
-
   return (
     <div>
-      <section className="bg-white md:px-12 md:mx-12">
-        {/* Carousel */}
-        <div className="relative w-full" ref={carouselRef}>
-          <div className="carousel w-full">
+      <section className="  ">
+        <div className="relative w-full ">
+          <div className="carousel w-full h-[200px] md:h-[450px]">
             <Slide
-              imageSrc="/slide/santorini.jpg"
+              imageSrc="/slide/sentosa.png"
               altText="Travel Fest"
               slideId="slide1"
               prevSlide="slide3"
               nextSlide="slide2"
-              onSlideChange={handleSlideChange}
             />
             <Slide
               imageSrc="/slide/Neuschwanstein.jpg"
@@ -167,7 +124,6 @@ const Landingpage = () => {
               slideId="slide2"
               prevSlide="slide1"
               nextSlide="slide3"
-              onSlideChange={handleSlideChange}
             />
             <Slide
               imageSrc="/slide/Shirakawako.jpg"
@@ -175,11 +131,9 @@ const Landingpage = () => {
               slideId="slide3"
               prevSlide="slide2"
               nextSlide="slide1"
-              onSlideChange={handleSlideChange}
             />
           </div>
 
-          {/* Search Box */}
           <div className="search-box absolute transform -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 z-40">
             <div style={{ position: 'relative' }}>
               <input
@@ -204,8 +158,7 @@ const Landingpage = () => {
           </div>
         </div>
 
-        {/* Offers */}
-        <div className="md:mx-[5%] my-14 mx-4">
+        <div className="md:mx-[10%] my-14 mx-4">
           <div className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">ข้อเสนอสำหรับคุณ</h2>
 
@@ -220,7 +173,6 @@ const Landingpage = () => {
             </div>
           </div>
 
-          {/* Liked Items */}
           <h2 className="text-2xl font-semibold mb-4">ที่คุณกดถูกใจไว้</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {likedItems.map((item) => (
@@ -228,7 +180,6 @@ const Landingpage = () => {
             ))}
           </div>
 
-          {/* ดูเพิ่มเติม Button */}
           <div className="flex justify-center pt-4">
             <button className="btn btn-wide rounded-full bg-[#5F97FB] text-white text-base">
               ดูเพิ่มเติม
