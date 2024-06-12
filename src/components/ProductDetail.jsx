@@ -1,14 +1,13 @@
-import React from 'react';
+import { faCartShopping, faHeart, faLocationDot, faStar } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faLocationDot, faStar, faHeart, faCartShopping } from "@fortawesome/free-solid-svg-icons";
-import { Link } from 'react-router-dom';
+import React from 'react';
 
 function ProductDetail() {
   return (
     <div className="h-full bg-cover bg-center bg-no-repeat bg-[url('/bg.svg')] md:py-16 md:px-32">
       <section className="bg-white md:rounded-3xl md:px-16 md:pb-16 h-full">
       {/* md:mx-[2%] md:my-12 md:min-w-[90%]*/}
-      <div className="flex content-center justify-center">
+      <div className="content-center justify-center hidden md:flex">
         <p className="text-xl md:text-4xl font-extrabold pt-8 pb-10">รายละเอียดแพ็คเกจ</p>
       </div>
 
