@@ -9,6 +9,7 @@ import Cart from './Cart';
 import UserProvider from './UserProvider';
 import Payment from './Payment';
 import PaymentSuccess from './PaymentSuccess';
+import MyTrips from './MyTrips';
 
 const Layout = () => {
   return (
@@ -24,6 +25,7 @@ const Layout = () => {
           <Route path="/cart" element={<Cart />} />
           <Route path="/paymentSuccess" element={<PaymentSuccess />} />
           <Route path="/payment" element={<Payment />} />
+          <Route path="/mytrips" element={<MyTrips />} />
         </Routes>
       </UserProvider>
     </BrowserRouter>
