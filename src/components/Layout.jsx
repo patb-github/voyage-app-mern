@@ -21,7 +21,6 @@ const Layout = () => {
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/landingPage" element={<Landingpage />} />
-          <Route path="/productPage" element={<ProductPage />} />
           <Route path="/userData" element={<UserData />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/paymentSuccess" element={<PaymentSuccess />} />
