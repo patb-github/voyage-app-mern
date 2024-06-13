@@ -10,6 +10,7 @@ import UserProvider from './UserProvider';
 import Payment from './Payment';
 import PaymentSuccess from './PaymentSuccess';
 import MyTrips from './MyTrips';
+import ProductPageV2 from './ProductPageV2';
 
 const Layout = () => {
   return (
@@ -26,6 +27,7 @@ const Layout = () => {
           <Route path="/paymentSuccess" element={<PaymentSuccess />} />
           <Route path="/payment" element={<Payment />} />
           <Route path="/mytrips" element={<MyTrips />} />
+          <Route path="/productpagev2" element={<ProductPageV2 />} />
         </Routes>
       </UserProvider>
     </BrowserRouter>
