@@ -1,40 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-
-const Slide = ({
-  imageSrc,
-  altText,
-  slideId,
-  prevSlide,
-  nextSlide,
-  onSlideChange,
-}) => (
-  <div id={slideId} className="carousel-item relative w-full">
-    <img src={imageSrc} className="w-full" alt={altText} />
-    <div className="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 top-1/2">
-      <a
-        href={`#${prevSlide}`}
-        className="btn btn-circle"
-        onClick={() => onSlideChange(prevSlide)}
-      >
-        ❮
-      </a>
-      <a
-        href={`#${nextSlide}`}
-        className="btn btn-circle"
-        onClick={() => onSlideChange(nextSlide)}
-      >
-        ❯
-      </a>
-    </div>
-  </div>
-);
-
+import Carousel from './Carousel';
 const Offer = ({ imageSrc, altText }) => (
   <a href="">
     <img src={imageSrc} alt={altText} className="rounded-lg" />
   </a>
 );
-
 const LikedItem = ({ imageSrc, title, location, rating, tags, price }) => (
   <a href="">
     <div className="card w-full bg-base-100 shadow-xl">
@@ -74,14 +43,12 @@ const LikedItem = ({ imageSrc, title, location, rating, tags, price }) => (
     </div>
   </a>
 );
-
 const offers = [
   { id: 1, imageSrc: '/destination/discount.jpg', altText: 'Discount Offer' },
   { id: 2, imageSrc: '/destination/fuji.jpg', altText: 'Fuji Offer' },
   { id: 3, imageSrc: '/destination/thai.jpg', altText: 'Thai Offer' },
   { id: 4, imageSrc: '/destination/europe.jpg', altText: 'Europe Offer' },
 ];
-
 const likedItems = [
   {
     id: 1,
@@ -108,60 +75,12 @@ const likedItems = [
 const Landingpage = () => {
   return (
     <div>
-      <section className="  ">
-        <div className="relative w-full ">
-          <div className="carousel w-full h-[200px] md:h-[450px]">
-            <Slide
-              imageSrc="/slide/sentosa.png"
-              altText="Travel Fest"
-              slideId="slide1"
-              prevSlide="slide3"
-              nextSlide="slide2"
-            />
-            <Slide
-              imageSrc="/slide/Neuschwanstein.jpg"
-              altText="Discount Code"
-              slideId="slide2"
-              prevSlide="slide1"
-              nextSlide="slide3"
-            />
-            <Slide
-              imageSrc="/slide/Shirakawako.jpg"
-              altText="Summer Sales"
-              slideId="slide3"
-              prevSlide="slide2"
-              nextSlide="slide1"
-            />
-          </div>
+      <Carousel />
 
-          <div className="search-box absolute transform -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 z-40">
-            <div style={{ position: 'relative' }}>
-              <input
-                type="text"
-                placeholder="เลือกสถานที่ที่อยากไปเลย.."
-                className="input input-bordered max-w-xs md:w-[80vw]"
-                style={{ paddingLeft: '2.5rem' }}
-              />
-              <img
-                src="/search.png"
-                alt="Search Icon"
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '0.5rem',
-                  transform: 'translateY(-50%)',
-                  width: '1.25rem',
-                  height: '1.25rem',
-                }}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="md:mx-[10%] my-14 mx-4">
+      <section>
+        <div className="md:mx-[10%] my-6 mx-4">
           <div className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">ข้อเสนอสำหรับคุณ</h2>
-
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {offers.map((offer) => (
                 <Offer
