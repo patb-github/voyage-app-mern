@@ -29,7 +29,22 @@ function UserProvider({ children }) {
           total: 16990,
           isChecked: false,
         },
+        {
+          id: 2,
+          title:
+            'แพ็คเกจเที่ยว ญี่ปุ่น โตเกียว พร้อมที่พัก 5 วัน 4 คืน  ภูเขาไฟฟูจิ วัดอาซากุสะ Tokyo Disney land ',
+          imageSrc: '/destination/japan.jpg',
+          departure: 'กรุงเทพ',
+          departureDate: 'ศ 12 มิ.ย.',
+          destination: 'โตเกียว',
+          arrivalDate: 'พฤ 18 มิ.ย.',
+          duration: '(5 วัน 4 คืน)',
+          voyagerCount: 2,
+          total: 35800,
+          isChecked: false,
+        },
       ],
+      orders: [],
     },
     {
       id: 2,
@@ -38,7 +53,7 @@ function UserProvider({ children }) {
       firstName: 'Jane',
       lastName: 'Doe',
       email: 'Jane.doe@gmail.com',
-      profileImage: '/user/jane.jpg',
+      profileImage: '/user/jane.png',
       cart: [
         {
           id: 2,

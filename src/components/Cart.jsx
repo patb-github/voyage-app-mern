@@ -5,20 +5,26 @@ import { useNavigate } from 'react-router-dom';
 import UserContext from './UserContext';
 
 function Cart() {
-  const { user, userData, setUserData } = useContext(UserContext);
+  const { user, setUserData } = useContext(UserContext);
   const currentUserCartItems = user ? user.cart : [];
   const promoCode = [{ code: 'testcode', discount: 10 }];
   const navigate = useNavigate();
   const [totalAmount, setTotalAmount] = useState(0);
   const [discount, setDiscount] = useState(0);
+  const generateOrderId = () => {
+    const now = new Date();
+    const year = now.getFullYear().toString().slice(-2);
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const randomNumber = Math.floor(Math.random() * 9000) + 1000;
+
+    return `VO${year}${month}${randomNumber}`;
+  };
   const {
     register: registerPromo,
     handleSubmit: handleSubmitPromo,
     formState: { errors: promoErrors },
-    reset: resetPromo,
   } = useForm();
 
-  // คำนวณ totalAmount ใหม่เมื่อ component เริ่มต้นหรือ currentUser เปลี่ยนแปลง
   useEffect(() => {
     const newTotalAmount = currentUserCartItems.reduce((sum, item) => {
       return item.isChecked ? sum + item.total : sum;
@@ -42,7 +48,6 @@ function Cart() {
       )
     );
   };
-  console.log(currentUserCartItems);
 
   const handleDelete = (itemId) => {
     setUserData((prevUserData) =>
@@ -71,14 +76,26 @@ function Cart() {
 
   const handlePayment = () => {
     const selectedItems = currentUserCartItems.filter((item) => item.isChecked);
+
     if (selectedItems.length === 0) {
-      const modal = document.getElementById('none_item_selection_modal');
-      if (modal) {
-        modal.showModal();
-      }
+      // ... (แสดง modal ถ้าไม่มีสินค้าถูกเลือก)
     } else {
-      console.log('สินค้าที่เลือก:', selectedItems);
-      navigate('/payment');
+      const orderId = generateOrderId(); // สร้าง orderId
+      const order = {
+        orderId, // เพิ่ม orderId เข้าไปใน object order
+        OrderOriginalPrice: totalAmount,
+        OrderDiscount: discount,
+        OrderTotal: totalAmount - discount,
+        OrderItems: selectedItems,
+      };
+
+      setUserData((prevUserData) =>
+        prevUserData.map((u) =>
+          u.id === user.id ? { ...u, orders: [...(u.orders || []), order] } : u
+        )
+      );
+
+      navigate('/Payment', { state: { order } });
     }
   };
 
@@ -100,7 +117,7 @@ function Cart() {
                 />
               ))}
           </div>
-          <div className="bg-white   shadow-xl p-6 md:w-80   card rounded-2xl md:mx-2  my-4 h-fit">
+          <div className="bg-white shadow-xl p-6 md:w-80 card rounded-2xl md:mx-2 my-4 h-fit">
             <form onSubmit={handleSubmitPromo(handleApplyPromo)}>
               <h3 className="text-lg font-semibold mb-2">Promotions</h3>
               <div className="mb-4">
@@ -110,7 +127,7 @@ function Cart() {
                 >
                   Enter Promo Code
                 </label>
-                <div className="flex">
+                <div className="flex mb-2">
                   <input
                     type="text"
                     id="promo-code"
@@ -126,7 +143,10 @@ function Cart() {
                     Apply
                   </button>
                 </div>
-                {promoErrors.promoCode && <span>กรุณากรอกโปรโมโค้ด</span>}
+
+                {promoErrors.promoCode && (
+                  <span className="text-red-500">กรุณากรอกโปรโมโค้ด</span>
+                )}
               </div>
             </form>
 

@@ -8,7 +8,7 @@ const Register = () => {
   return (
     <div>
       <section className="Login">
-        <div className="h-[370px] md:h-[93vh] bg-center bg-cover md:bg-auto md:bg-no-repeat   bg-[url('/bg-desktop.png')]">
+        <div className="h-[370px] md:h-[93vh] bg-center bg-cover md:bg-no-repeat bg-[url('/bg-desktop.png')]">
           <div className="px-8 py-8 drop-shadow-xl md:hidden font-bold text-3xl text-white mb-8 ">
             <p>Enjoy the trip </p>
             <p>with Voyage</p>

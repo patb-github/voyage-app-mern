@@ -10,6 +10,7 @@ import UserProvider from './UserProvider';
 import PaymentSuccess from './PaymentSuccess';
 import Payment from './Payment';
 import NotFound from './NotFound';
+import PasswordChange from './PasswordChange';
 const Layout = () => {
   return (
     <BrowserRouter>
@@ -25,6 +26,7 @@ const Layout = () => {
           <Route path="/paymentSuccess" element={<PaymentSuccess />} />
           <Route path="/payment" element={<Payment />} />
           <Route path="*" element={<NotFound />} />
+          <Route path="/PasswordChange" element={<PasswordChange />} />
         </Routes>
       </UserProvider>
     </BrowserRouter>

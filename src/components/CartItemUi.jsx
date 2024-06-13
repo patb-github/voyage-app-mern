@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useContext } from 'react';
-import UserContext from './UserContext';
+// import { useContext } from 'react';
+// import UserContext from './UserContext';
 function CartItemUi({
   id,
   title,
@@ -17,8 +17,8 @@ function CartItemUi({
   isChecked,
 }) {
   const [isCheckedLocal, setIsCheckedLocal] = useState(isChecked);
-  const { cartItems, removeFromCart, updateCartItemQuantity } =
-    useContext(UserContext);
+  // const { cartItems, removeFromCart, updateCartItemQuantity } =
+  //   useContext(UserContext);
   return (
     <div className="card bg-base-100 shadow-xl my-4">
       <div className="card-body">
@@ -67,8 +67,8 @@ function CartItemUi({
 
             <div className="flex flex-col md:flex-row items-center justify-between mt-4 md:mt-8 px-4 md:px-8">
               <div className="flex items-center mb-4 md:mb-0">
-                <h2 className="text-2xl text-info">จำนวน Voyager</h2>
-                <div className="w-7 h-7 ml-2 rounded-full bg-blue-500 text-white font-bold text-xl flex items-center justify-center">
+                <h2 className="text-2xl text-info p">จำนวน Voyager</h2>
+                <div className="w-7 h-7 ml-2 mr-2 rounded-full bg-blue-500 text-white font-bold text-xl flex items-center justify-center">
                   {voyagerCount}
                 </div>
               </div>

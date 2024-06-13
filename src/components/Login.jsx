@@ -10,7 +10,6 @@ const Login = () => {
   const [loginError, setLoginError] = useState(false);
   const navigate = useNavigate();
 
-  // ใน component Login
   const onSubmit = (data) => {
     const user = userData.find(
       (u) => u.username === data.username && u.password === data.password
@@ -18,8 +17,8 @@ const Login = () => {
 
     if (user) {
       setLoginError(false);
-      setCurrentUser(user.id); // ตั้งค่า currentUser ใน context
-      setUser(user); // <--- เพิ่มบรรทัดนี้เพื่ออัปเดต user
+      setCurrentUser(user.id);
+      setUser(user);
       navigate('/landingPage');
     } else {
       setLoginError(true);
@@ -28,9 +27,9 @@ const Login = () => {
   return (
     <div>
       <section className="Login">
-        <div className="h-[370px] md:h-[93vh] bg-center bg-cover md:bg-auto md:bg-no-repeat   bg-[url('/bg-desktop.png')]">
+        <div className="h-[370px] md:h-[93vh] bg-center bg-cover md:bg-no-repeat bg-[url('/bg-desktop.png')]">
           <div className="min-h-[93vh] flex flex-col items-center justify-end md:justify-center">
-            <div className="bg-white min-h-[500px] p-8 rounded-t-3xl md:rounded-3xl shadow-md w-full  md:w-96">
+            <div className="bg-white min-h-[500px] p-8 rounded-t-3xl md:rounded-3xl shadow-md w-full md:w-96">
               <div className="text-3xl font-bold text-blue-500 mb-8">
                 <p className="drop-shadow-xl">Enjoy the trip</p>
                 <p className="drop-shadow-xl">with Voyage</p>
@@ -85,16 +84,16 @@ const Login = () => {
                 >
                   Username หรือ password ไม่ถูกต้อง
                 </span>
-                <a
+                {/* <a
                   href="#"
                   className="text-sm text-blue-500 hover:text-blue-700 mb-8"
                 >
                   Forgot Password?
-                </a>
+                </a> */}
 
                 <button
                   type="submit"
-                  className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
+                  className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 mt-4 px-4 rounded-full"
                 >
                   Sign In
                 </button>

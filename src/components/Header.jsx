@@ -3,7 +3,7 @@ import { useContext } from 'react';
 import UserContext from './UserContext';
 
 const Header = () => {
-  const { user, isLoading } = useContext(UserContext);
+  const { user } = useContext(UserContext);
   const location = useLocation();
 
   const showProfileAndMenu =
@@ -24,7 +24,7 @@ const Header = () => {
       </div>
       <div>
         {showProfileAndMenu2 && (
-          <Link to="/landingpage">
+          <Link to="/">
             <img
               src="/vovageLogo.png"
               className="btn btn-ghost normal-case md:hidden text-xl hover:bg-white"
@@ -35,7 +35,7 @@ const Header = () => {
       </div>
       {showProfileAndMenu && (
         <div className="flex justify-end md:justify-end md:gap-2 md:w-[90%] w-full">
-          {user && !isLoading && (
+          {user && (
             <div className="flex">
               <img
                 src={user.profileImage}
