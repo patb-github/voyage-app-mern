@@ -1,59 +1,76 @@
-import { useState } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { useForm } from 'react-hook-form';
 import CartItemUi from './CartItemUi';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import UserContext from './UserContext';
+
 function Cart() {
+  const { user, userData, setUserData } = useContext(UserContext);
+  const currentUserCartItems = user ? user.cart : [];
+  const promoCode = [{ code: 'testcode', discount: 10 }];
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      title:
-        'แพ็คเกจเที่ยว สิงคโปร์ พร้อมที่พัก 3 วัน 2 คืน + Universal Studio Singapore',
-      imageSrc: '/destination/universal.jpg',
-      departure: 'กรุงเทพ',
-      departureDate: 'พฤ 15 พ.ค.',
-      destination: 'สิงคโปร์',
-      arrivalDate: 'อา 17 พ.ค.',
-      duration: '(3 วัน 2 คืน)',
-      voyagerCount: 1,
-      total: 16990,
-      isChecked: false,
-    },
-    {
-      id: 2,
-      title:
-        'แพ็คเกจเที่ยว ญี่ปุ่น โตเกียว พร้อมที่พัก 5 วัน 4 คืน  ภูเขาไฟฟูจิ วัดอาซากุสะ Tokyo Disney land ',
-      imageSrc: '/destination/japan.jpg',
-      departure: 'กรุงเทพ',
-      departureDate: 'ศ 12 มิ.ย.',
-      destination: 'โตเกียว',
-      arrivalDate: 'พฤ 18 มิ.ย.',
-      duration: '(5 วัน 4 คืน)',
-      voyagerCount: 2,
-      total: 35800,
-      isChecked: false,
-    },
-  ]);
   const [totalAmount, setTotalAmount] = useState(0);
+  const [discount, setDiscount] = useState(0);
+  const {
+    register: registerPromo,
+    handleSubmit: handleSubmitPromo,
+    formState: { errors: promoErrors },
+    reset: resetPromo,
+  } = useForm();
+
+  // คำนวณ totalAmount ใหม่เมื่อ component เริ่มต้นหรือ currentUser เปลี่ยนแปลง
+  useEffect(() => {
+    const newTotalAmount = currentUserCartItems.reduce((sum, item) => {
+      return item.isChecked ? sum + item.total : sum;
+    }, 0);
+    setTotalAmount(newTotalAmount);
+  }, [currentUserCartItems, user]);
+
   const handleCheckboxChange = (itemId) => {
-    setCartItems((prevCartItems) => {
-      const updatedCartItems = prevCartItems.map((item) =>
-        item.id === itemId ? { ...item, isChecked: !item.isChecked } : item
-      );
-      const newTotalAmount = updatedCartItems.reduce((sum, item) => {
-        return item.isChecked ? sum + item.total : sum;
-      }, 0);
-      setTotalAmount(newTotalAmount);
-      return updatedCartItems;
-    });
+    setUserData((prevUserData) =>
+      prevUserData.map((u) =>
+        u.id === user.id
+          ? {
+              ...u,
+              cart: u.cart.map((item) =>
+                item.id === itemId
+                  ? { ...item, isChecked: !item.isChecked }
+                  : item
+              ),
+            }
+          : u
+      )
+    );
   };
+  console.log(currentUserCartItems);
 
   const handleDelete = (itemId) => {
-    const updatedCartItems = cartItems.filter((item) => item.id !== itemId);
-    setCartItems(updatedCartItems);
+    setUserData((prevUserData) =>
+      prevUserData.map((u) =>
+        u.id === user.id
+          ? { ...u, cart: u.cart.filter((item) => item.id !== itemId) }
+          : u
+      )
+    );
+  };
+
+  const handleApplyPromo = (data) => {
+    const enteredCode = data.promoCode;
+    const validPromo = promoCode.find((promo) => promo.code === enteredCode);
+
+    if (validPromo) {
+      const newDiscount = (totalAmount * validPromo.discount) / 100;
+      setDiscount(newDiscount);
+    } else {
+      const modalPromo = document.getElementById('invalid_promo_code_modal');
+      if (modalPromo) {
+        modalPromo.showModal();
+      }
+    }
   };
 
   const handlePayment = () => {
-    const selectedItems = cartItems.filter((item) => item.isChecked);
+    const selectedItems = currentUserCartItems.filter((item) => item.isChecked);
     if (selectedItems.length === 0) {
       const modal = document.getElementById('none_item_selection_modal');
       if (modal) {
@@ -64,47 +81,54 @@ function Cart() {
       navigate('/payment');
     }
   };
+
   return (
     <div className="bg-cover bg-center bg-no-repeat bg-[#FAFAFC] md:bg-[url('/bg-desktop.png')] min-h-screen flex justify-center ">
-      <section className="bg-[#FAFAFC]  md:rounded-2xl my-6">
+      <section className="bg-[#FAFAFC] md:rounded-2xl my-6 ">
         <p className="text-2xl font-semibold mb-4 text-center pt-4">
           แพ็คเก็จที่ใส่ตะกร้าไว้
         </p>
-        <div className=" mx-4 lg:mx-6  bg md:flex">
+        <div className=" mx-4 lg:mx-6  bg md:flex">
           <div>
-            {cartItems.map((item) => (
-              <CartItemUi
-                key={item.id}
-                {...item}
-                onDelete={handleDelete}
-                onCheckboxChange={handleCheckboxChange}
-              />
-            ))}
-          </div>
-          {/* Promotion and Total Price Section */}
-
-          <div className="bg-white  shadow-xl p-6 md:w-80 card rounded-2xl md:ml-4 my-4 h-fit">
-            <div className="mb-4">
-              <label
-                htmlFor="promo-code"
-                className="block text-gray-700 text-sm font-bold mb-2"
-              >
-                Enter Promo Code
-              </label>
-              <div className="flex">
-                <input
-                  type="text"
-                  id="promo-code"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  placeholder="Promo Code"
+            {user &&
+              currentUserCartItems.map((item) => (
+                <CartItemUi
+                  key={item.id}
+                  {...item}
+                  onDelete={handleDelete}
+                  onCheckboxChange={handleCheckboxChange}
                 />
-                <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2">
-                  Submit
-                </button>
-              </div>
-            </div>
+              ))}
+          </div>
+          <div className="bg-white   shadow-xl p-6 md:w-80   card rounded-2xl md:mx-2  my-4 h-fit">
+            <form onSubmit={handleSubmitPromo(handleApplyPromo)}>
+              <h3 className="text-lg font-semibold mb-2">Promotions</h3>
+              <div className="mb-4">
+                <label
+                  htmlFor="promo-code"
+                  className="block text-gray-700 text-sm font-bold mb-2"
+                >
+                  Enter Promo Code
+                </label>
+                <div className="flex">
+                  <input
+                    type="text"
+                    id="promo-code"
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    placeholder="Promo Code"
+                    {...registerPromo('promoCode', { required: true })}
+                  />
 
-            <h3 className="text-lg font-semibold mb-2">Promotions</h3>
+                  <button
+                    type="submit"
+                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2"
+                  >
+                    Apply
+                  </button>
+                </div>
+                {promoErrors.promoCode && <span>กรุณากรอกโปรโมโค้ด</span>}
+              </div>
+            </form>
 
             <div className="border-t border-gray-200 pt-2 mb-4">
               <p className="text-gray-700 text-sm">Original price</p>
@@ -112,12 +136,13 @@ function Cart() {
             </div>
             <div className="border-t border-gray-200 pt-2 mb-4">
               <p className="text-gray-700 text-sm ">Discount</p>
-              <p className=" font-semibold text-red-500">฿ 0</p>
+              <p className=" font-semibold text-red-500">฿ {discount}</p>
             </div>
-
             <div className="border-t border-gray-200 pt-2 mb-4">
               <p className="text-gray-700 text-sm">Estimated Total</p>
-              <p className="text-gray-900 font-semibold"> ฿ {totalAmount}</p>
+              <p className="text-gray-900 font-semibold">
+                ฿ {totalAmount - discount}
+              </p>
             </div>
 
             <button
@@ -135,7 +160,19 @@ function Cart() {
               </p>
               <div className="modal-action">
                 <form method="dialog">
-                  {/* if there is a button in form, it will close the modal */}
+                  <button className="btn">Close</button>
+                </form>
+              </div>
+            </div>
+          </dialog>
+          <dialog id="invalid_promo_code_modal" className="modal">
+            <div className="modal-box">
+              <h3 className="font-bold text-lg">Vovage</h3>
+              <p className="py-4">
+                ไม่พบรหัสโปรโมชั่นที่คุณกรอก กรุณากรอกรหัสโปรโมชั่นให้ถูกต้อง
+              </p>
+              <div className="modal-action">
+                <form method="dialog">
                   <button className="btn">Close</button>
                 </form>
               </div>

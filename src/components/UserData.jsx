@@ -24,23 +24,26 @@ const InputField = ({ label, name, value, onChange, disabled = false }) => (
 );
 
 const UserData = () => {
-  const { user, setUser } = useContext(UserContext);
+  const { user, setUser, isLoading } = useContext(UserContext);
 
   const [formData, setFormData] = useState({
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
+    firstName: '',
+    lastName: '',
+    email: '',
   });
 
-  const [profileImage, setProfileImage] = useState(user.profileImage);
+  const [profileImage, setProfileImage] = useState('');
 
   useEffect(() => {
-    setFormData({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-    });
-    setProfileImage(user.profileImage);
+    if (user) {
+      // ตรวจสอบว่า user มีค่าแล้วหรือยัง
+      setFormData({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+      });
+      setProfileImage(user.profileImage);
+    }
   }, [user]);
 
   const handleChange = (e) => {
@@ -67,75 +70,79 @@ const UserData = () => {
 
   return (
     <div className="flex flex-col md:flex-row md:p-16 bg-gray-100 justify-center">
-      <form onSubmit={handleSubmit}>
-        <div className="flex content-center justify-center md:justify-start md:px-12">
-          <p className="text-xl md:text-4xl font-extrabold py-4">
-            แก้ไขโปรไฟล์
-          </p>
-        </div>
-
-        <div className="flex flex-col md:flex-row items-center gap-3 pb-2 md:px-12 md:py-6">
-          <figure className="w-40 mask mask-squircle">
-            <img src={profileImage} alt="User Potrait" />
-          </figure>
-          <label className="form-control w-full max-w-xs ">
-            <div className="label">
-              <span className="label-text">อัพโหลดรูปภาพ</span>
-            </div>
-            <input
-              type="file"
-              className="file-input file-input-bordered bg w-full max-w-xs"
-              onChange={handleImageChange}
-            />
-            <div className="label"></div>
-          </label>
-        </div>
-
-        <div className="pl-12 pr-8 pb-6 md:pb-12 flex flex-col gap-2 md:gap-4">
-          <div className="flex content-center justify-center md:justify-start">
-            <p className="text-lg md:text-2xl font-extrabold">
-              ข้อมูลผู้ใช้งาน
+      {isLoading ? ( // ตรวจสอบ isLoading ก่อนแสดงผล
+        <p>Loading...</p>
+      ) : (
+        <form onSubmit={handleSubmit}>
+          <div className="flex content-center justify-center md:justify-start md:px-12">
+            <p className="text-xl md:text-4xl font-extrabold py-4">
+              แก้ไขโปรไฟล์
             </p>
           </div>
 
-          <InputField
-            label="ชื่อผู้ใช้"
-            name="username"
-            value={user.username}
-            disabled
-          />
-          <InputField
-            label="ชื่อ"
-            name="firstName"
-            value={formData.firstName}
-            onChange={handleChange}
-          />
-          <InputField
-            label="นามสกุล"
-            name="lastName"
-            value={formData.lastName}
-            onChange={handleChange}
-          />
-          <InputField
-            label="อีเมล"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="mt-auto">
-          <div className="shadow-md h-2 md:shadow-none z-10 relative"></div>
-          <div className="flex content-center gap-5 bg-white md:bg-transparent md:w-full justify-center py-3 md:pt-12">
-            <button
-              type="submit"
-              className="btn rounded-full mt-4 bg-[#5F97FB] text-white text-xl"
-            >
-              อัพเดตการเปลี่ยนแปลง
-            </button>
+          <div className="flex flex-col md:flex-row items-center gap-3 pb-2 md:px-12 md:py-6">
+            <figure className="w-40 mask mask-squircle">
+              <img src={profileImage} alt="User Potrait" />
+            </figure>
+            <label className="form-control w-full max-w-xs ">
+              <div className="label">
+                <span className="label-text">อัพโหลดรูปภาพ</span>
+              </div>
+              <input
+                type="file"
+                className="file-input file-input-bordered bg w-full max-w-xs"
+                onChange={handleImageChange}
+              />
+              <div className="label"></div>
+            </label>
           </div>
-        </div>
-      </form>
+
+          <div className="pl-12 pr-8 pb-6 md:pb-12 flex flex-col gap-2 md:gap-4">
+            <div className="flex content-center justify-center md:justify-start">
+              <p className="text-lg md:text-2xl font-extrabold">
+                ข้อมูลผู้ใช้งาน
+              </p>
+            </div>
+
+            <InputField
+              label="ชื่อผู้ใช้"
+              name="username"
+              value={user.username}
+              disabled
+            />
+            <InputField
+              label="ชื่อ"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+            />
+            <InputField
+              label="นามสกุล"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+            />
+            <InputField
+              label="อีเมล"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="mt-auto">
+            <div className="shadow-md h-2 md:shadow-none z-10 relative"></div>
+            <div className="flex content-center gap-5 bg-white md:bg-transparent md:w-full justify-center py-3 md:pt-12">
+              <button
+                type="submit"
+                className="btn rounded-full mt-4 bg-[#5F97FB] text-white text-xl"
+              >
+                อัพเดตการเปลี่ยนแปลง
+              </button>
+            </div>
+          </div>
+        </form>
+      )}
     </div>
   );
 };

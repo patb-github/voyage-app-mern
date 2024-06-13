@@ -9,7 +9,7 @@ import Cart from './Cart';
 import UserProvider from './UserProvider';
 import PaymentSuccess from './PaymentSuccess';
 import Payment from './Payment';
-
+import NotFound from './NotFound';
 const Layout = () => {
   return (
     <BrowserRouter>
@@ -24,6 +24,7 @@ const Layout = () => {
           <Route path="/cart" element={<Cart />} />
           <Route path="/paymentSuccess" element={<PaymentSuccess />} />
           <Route path="/payment" element={<Payment />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </UserProvider>
     </BrowserRouter>

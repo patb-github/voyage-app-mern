@@ -25,7 +25,7 @@ function Payment() {
       <div className="flex flex-col md:flex-row bg-white mx-28 w-screen p-28">
         <form className="w-1/2" onSubmit={handleSubmit(handlePayment)}>
           <div className="form-control w-full">
-            <p>Payment</p>
+            <p className="text-3xl font-bold">Payment</p>
             <label className="label">
               <span className="label-text">
                 Full name (as displayed on card)*
@@ -34,12 +34,12 @@ function Payment() {
             <input
               type="text"
               placeholder="John Doe"
-              className="input input-bordered w-full"
+              className="input input-bordered w-full bg-[#FAFAFC]"
               {...register('fullName', { required: true })}
             />
             {errors.fullName && (
               <span className="text-red-500 text-sm pt-1">
-                กรุณากรอกชื่อเต็ม
+                กรุณากรอกชื่อและนามสกุลให้ถูกต้อง
               </span>
             )}
           </div>
@@ -50,7 +50,7 @@ function Payment() {
             <input
               type="text"
               placeholder="XXXX-XXXX-XXXX-XXXX"
-              className="input input-bordered w-full"
+              className="input input-bordered w-full bg-[#FAFAFC]"
               {...register('cardNumber', {
                 required: true,
                 onChange: (e) => {
@@ -70,14 +70,14 @@ function Payment() {
             )}
           </div>
           <div className="flex justify-between">
-            <div className="form-control w-1/2">
+            <div className="form-control w-1/2 ">
               <label className="label">
                 <span className="label-text">Card expiration*</span>
               </label>
               <input
                 type="text"
                 placeholder="12/24"
-                className="input input-bordered w-full"
+                className="input input-bordered w-full bg-[#FAFAFC]"
                 {...register('expiration', {
                   required: true,
                 })}
@@ -88,14 +88,14 @@ function Payment() {
                 </span>
               )}
             </div>
-            <div className="form-control w-1/2">
+            <div className="form-control w-1/2 ml-2">
               <label className="label">
                 <span className="label-text">CVV*</span>
               </label>
               <input
                 type="text"
                 placeholder="..."
-                className="input input-bordered w-full"
+                className="input input-bordered w-full bg-[#FAFAFC]"
                 {...register('cvv', {
                   required: true,
                   pattern: /^\d{3}$/,

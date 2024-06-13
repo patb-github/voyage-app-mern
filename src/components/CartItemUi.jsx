@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-
+import { useContext } from 'react';
+import UserContext from './UserContext';
 function CartItemUi({
   id,
   title,
@@ -16,7 +17,8 @@ function CartItemUi({
   isChecked,
 }) {
   const [isCheckedLocal, setIsCheckedLocal] = useState(isChecked);
-
+  const { cartItems, removeFromCart, updateCartItemQuantity } =
+    useContext(UserContext);
   return (
     <div className="card bg-base-100 shadow-xl my-4">
       <div className="card-body">

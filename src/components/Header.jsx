@@ -1,15 +1,18 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useContext } from 'react'; // นำเข้า useContext
+import { useContext } from 'react';
 import UserContext from './UserContext';
+
 const Header = () => {
-  const { user } = useContext(UserContext);
+  const { user, isLoading } = useContext(UserContext);
   const location = useLocation();
+
   const showProfileAndMenu =
     location.pathname !== '/' && location.pathname !== '/register';
   const showProfileAndMenu2 =
     location.pathname == '/' || location.pathname == '/register';
+
   return (
-    <nav className="navbar  top-0 z-50  bg-base-100 max-w-screen  pr-4 ">
+    <nav className="navbar sticky shadow-xl top-0 z-50 bg-base-100 max-w-screen pr-4">
       <div>
         <Link to="/">
           <img
@@ -31,21 +34,22 @@ const Header = () => {
         )}
       </div>
       {showProfileAndMenu && (
-        <div className="flex justify-between md:justify-end md:gap-2 md:w-[90%] w-full  ">
-          <div className="flex ">
-            <img
-              src={user.profileImage}
-              alt="User Profile"
-              className="w-11 h-10  mask mask-squircle mx-2"
-            />
-            <div>
-              <p className="text-xl font-bold">สวัสดี, {user.firstName}</p>
-              <p className="text-sm font-semibold text-amber-800">
-                เรามีโปรแกรมมากมายสำหรับคุณ
-              </p>
+        <div className="flex justify-end md:justify-end md:gap-2 md:w-[90%] w-full">
+          {user && !isLoading && (
+            <div className="flex">
+              <img
+                src={user.profileImage}
+                alt="User Profile"
+                className="w-11 h-10 mask mask-squircle mx-2"
+              />
+              <div>
+                <p className="text-xl font-bold">สวัสดี, {user.firstName}</p>
+                <p className="text-sm font-semibold text-amber-800">
+                  เรามีโปรแกรมมากมายสำหรับคุณ
+                </p>
+              </div>
             </div>
-          </div>
-
+          )}
           <div className="dropdown dropdown-hover dropdown-end">
             <div
               tabIndex={0}
