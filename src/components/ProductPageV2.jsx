@@ -39,10 +39,15 @@ const ContentHead = () => {
 
 const ProductDetails = ({showDetail, setShowDetail}) => { 
     return (
-      <div className={`${showDetail ? "" : "hidden"} md:flex md:flex-col h-full pb-[88px]`}>
+      <div className={`${showDetail ? "" : "hidden"} md:flex md:flex-col md:pb-2 md:h-full pb-[88px]`}>
         {/* ถ้าข้อมูลแสดงผลไม่ครบ ลองเพิ่มค่า pb-[] หรือไม่ก็ลดขนาดตัวอักษร */}
+        <p className="text-xl font-normal px-8 pt-4 text-center md:hidden">
+          แพ็คเกจเที่ยว โอกินาว่า 4 วัน 3 คืน รวมตั๋วเครื่องบิน ที่พัก ร้านอาหาร และ 
+          ตั๋วเข้าชมพิพิธภัณฑ์สัตว์น้ำชุราอูมิ  พร้อมบริการผู้ช่วยส่วนตัวตลอด
+          24 ชั่วโมง ตั้งแต่เริ่มจนจบ ทริป สำหรับ 1 ท่าน <strong>อ่านเงื่อนไขเพิ่มเติมคลิก</strong>
+        </p>
         <div className="flex flex-col content-center px-8
-                    md:rounded-3xl md:shadow-xl md:grow 
+                    md:rounded-3xl md:shadow-xl md:grow
                     md:outline md:outline-1 md:outline-gray-200">
           <h2 className="font-semibold text-3xl text-center py-8">สิ่งที่รวมในแพ็คเกจ</h2>
           <ul>
@@ -119,23 +124,25 @@ const ProductPage = () => {
           </div>
 
           {/* ส่วนรายละเอียดการจอง */}
-          <div className="fixed top-[45%] h-[55%] w-full bg-white rounded-t-[2rem] flex flex-col overflow-y-scroll
+          <div className="fixed top-[45%] h-[55%] w-full bg-white rounded-t-[2rem] flex flex-col justify-between overflow-y-auto
                           md:relative md:w-[50%] md:h-auto md:px-16 md:overflow-y-visible md:pb-0">
-            <div className="md:hidden">
-              <ContentHead />
-              <div className={`bg-[#B9FFFB] rounded-3xl px-6 py-3 mx-12 ${showDetail ? "hidden" : ""}`}>
-                <p>
-                    โปรแกรมท่องเที่ยว โอกินาว่า แบบ All in one ไม่ต้อง ปวดหัวกับการจอง
-                    ตั๋วเครื่องบิน โรงแรม ร้านอาหาร เพราะ Vovage จัดการให้หมดแล้ว
-                </p>
-                <p className="font-semibold underline" onClick={() => setShowDetail(true)}>
-                    ดูรายละเอียดแบบเต็มๆ
-                </p>
+            {/* <div> */}
+              <div className="md:hidden">
+                <ContentHead />
+                <div className={`bg-[#B9FFFB] rounded-3xl px-6 py-3 mx-12 ${showDetail ? "hidden" : ""}`}>
+                  <p>
+                      โปรแกรมท่องเที่ยว โอกินาว่า แบบ All in one ไม่ต้อง ปวดหัวกับการจอง
+                      ตั๋วเครื่องบิน โรงแรม ร้านอาหาร เพราะ Vovage จัดการให้หมดแล้ว
+                  </p>
+                  <p className="font-semibold underline" onClick={() => setShowDetail(true)}>
+                      ดูรายละเอียดแบบเต็มๆ
+                  </p>
+                </div>
               </div>
-            </div>
 
-            {/* รายละเอียดเพิ่มเติม */}
-            <ProductDetails showDetail={showDetail} setShowDetail={setShowDetail}/>
+              {/* รายละเอียดเพิ่มเติม */}
+              <ProductDetails showDetail={showDetail} setShowDetail={setShowDetail}/>
+            {/* </div> */}
 
             {/* ส่วนราคาและปุ่มต่างๆ */}
             <div className="fixed bottom-0 w-full bg-white md:bg-transparent md:relative md:mt-auto">
