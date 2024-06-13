@@ -7,8 +7,8 @@ const Offer = ({ imageSrc, altText }) => (
     <img src={imageSrc} alt={altText} className="rounded-lg" />
   </a>
 );
-const LikedItem = ({ id, imageSrc, title, location, rating, tags, price }) => (
-  <Link to={`/landingpage/${title}-${id}`}>
+const LikedItem = ({ imageSrc, title, location, rating, tags, price }) => (
+  <Link to={`/landingpage/${title}`}>
     <div className="card w-full bg-base-100 shadow-xl">
       <figure>
         <img className="w-full" src={imageSrc} alt={title} />

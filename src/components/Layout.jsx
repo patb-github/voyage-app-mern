@@ -25,7 +25,7 @@ const Layout = () => {
           <Route path="/cart" element={<Cart />} />
           <Route path="/paymentSuccess" element={<PaymentSuccess />} />
           <Route path="/payment" element={<Payment />} />
-          <Route path="/landingpage/:tripname-id" element={<ProductPageV2 />} />
+          <Route path="/landingpage/:tripname" element={<ProductPageV2 />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </UserProvider>
