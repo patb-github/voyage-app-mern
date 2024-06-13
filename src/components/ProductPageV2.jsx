@@ -2,8 +2,9 @@ import React, {useState} from 'react';
 import { faCartShopping, faHeart, faLocationDot, faStar } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from 'react-router-dom';
+import { packages } from '../assets/allTrips';
 
-const ContentHead = () => { 
+const ContentHead = ({trip}) => { 
     return (
         <div>
             <p className="text-2xl font-extrabold py-4 px-8 md:px-0">
@@ -121,7 +122,8 @@ const ProductCarousel = ({classes}) => {
  }
 const ProductPageV2 = () => {
 
-    const [showDetail, setShowDetail] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
+  const trip = packages
 
   return (
     <div className="h-full bg-cover bg-center bg-no-repeat bg-[url('/bg.svg')] md:py-16 md:px-48">
@@ -143,8 +145,7 @@ const ProductPageV2 = () => {
           {/* ส่วนรูปภาพและคำอธิบายแพ็คเกจ */}
           <div className="md:flex md:flex-col md:h-auto md:w-[50%] md:px-16 md:border-r md:border-r-black">
           
-            <ProductCarousel onClick={()=>document.getElementById('my_modal_2').showModal()}
-              classes={"md:rounded-3xl fixed bottom-[50%] h-[50%] w-full object-cover md:relative md:h-[60%] md:bottom-auto"}/>
+            <ProductCarousel classes={"md:rounded-3xl fixed bottom-[50%] h-[50%] w-full object-cover md:relative md:h-[60%] md:bottom-auto"}/>
             {/* <img
                 src="/destination/aquarium.jpg"
                 alt="แพ็คเกจเที่ยว โอกินาว่า"
