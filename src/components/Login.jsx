@@ -1,15 +1,25 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
+import { useContext } from 'react';
+import UserContext from './UserContext';
 
 const Login = () => {
+  const { userData, setCurrentUser, setUser } = useContext(UserContext);
   const { register, handleSubmit } = useForm();
   const [loginError, setLoginError] = useState(false);
   const navigate = useNavigate();
 
+  // ใน component Login
   const onSubmit = (data) => {
-    if (data.username === 'user' && data.password === 'user') {
+    const user = userData.find(
+      (u) => u.username === data.username && u.password === data.password
+    );
+
+    if (user) {
       setLoginError(false);
+      setCurrentUser(user.id); // ตั้งค่า currentUser ใน context
+      setUser(user); // <--- เพิ่มบรรทัดนี้เพื่ออัปเดต user
       navigate('/landingPage');
     } else {
       setLoginError(true);
