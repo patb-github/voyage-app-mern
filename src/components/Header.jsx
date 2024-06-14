@@ -75,13 +75,13 @@ const Header = () => {
               className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
             >
               <li>
-                <Link to="/userData">บัญชี</Link>
+                <Link to="/user-data">บัญชี</Link>
               </li>
               <li>
                 <Link to="/cart">ตะกร้าสินค้า</Link>
               </li>
               <li>
-                <Link to="/">ทริปของฉัน</Link>
+                <Link to="/my-trips">ทริปของฉัน</Link>
               </li>
               <li className="bg-red-500 text-white rounded-full">
                 <Link to="/">ออกจากระบบ</Link>

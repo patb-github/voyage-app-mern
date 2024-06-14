@@ -80,13 +80,16 @@ function Cart() {
     if (selectedItems.length === 0) {
       // ... (แสดง modal ถ้าไม่มีสินค้าถูกเลือก)
     } else {
-      const orderId = generateOrderId(); // สร้าง orderId
+      const orderId = generateOrderId();
+      const orderStatus = 'Pending'; // สร้าง orderId
       const order = {
         orderId, // เพิ่ม orderId เข้าไปใน object order
         OrderOriginalPrice: totalAmount,
         OrderDiscount: discount,
         OrderTotal: totalAmount - discount,
         OrderItems: selectedItems,
+        orderStatus,
+        OrderDate: new Date(),
       };
 
       setUserData((prevUserData) =>
@@ -94,8 +97,11 @@ function Cart() {
           u.id === user.id ? { ...u, orders: [...(u.orders || []), order] } : u
         )
       );
-
-      navigate('/Payment', { state: { order } });
+      const modal3 = document.getElementById('wait_for_payment_modal');
+      modal3.showModal();
+      setTimeout(function () {
+        navigate('/Payment', { state: { order } });
+      }, 2000);
     }
   };
 
@@ -195,6 +201,19 @@ function Cart() {
                 <form method="dialog">
                   <button className="btn">Close</button>
                 </form>
+              </div>
+            </div>
+          </dialog>
+          <dialog id="wait_for_payment_modal" className="modal">
+            <div className="modal-box">
+              <h3 className="font-semibold flex">
+                Please wait while we are redirecting you to the payment page.
+              </h3>
+              <p className="py-4 flex justify-center">
+                <span className="loading loading-spinner loading-lg"></span>
+              </p>
+              <div className="modal-action">
+                <form method="dialog"></form>
               </div>
             </div>
           </dialog>

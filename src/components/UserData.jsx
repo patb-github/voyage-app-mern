@@ -69,7 +69,7 @@ const UserData = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row md:p-16 bg-gray-100 justify-center">
+    <div className="flex flex-col md:flex-row md:p-16 bg-gray-100 justify-center h-[100vh]">
       {isLoading ? ( // ตรวจสอบ isLoading ก่อนแสดงผล
         <p>Loading...</p>
       ) : (

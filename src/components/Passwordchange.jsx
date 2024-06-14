@@ -1,4 +1,4 @@
-const Passwordchange = () => {
+const PasswordChange = () => {
   return (
     <section className="password-change">
       <div className=" bg-center bg-cover md:bg-no-repeat bg-[url('/bg-desktop.png')]">
@@ -73,4 +73,4 @@ const Passwordchange = () => {
   );
 };
 
-export default Passwordchange;
+export default PasswordChange;

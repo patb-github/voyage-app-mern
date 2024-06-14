@@ -8,6 +8,7 @@ function Payment() {
   const navigate = useNavigate();
   const location = useLocation();
   const orderFromCart = location.state?.order;
+
   const {
     register,
     handleSubmit,
@@ -16,14 +17,12 @@ function Payment() {
 
   const handlePayment = (creditCardDetail) => {
     const modal = document.getElementById('payment_process');
-    if (creditCardDetail) {
-      if (modal) {
-        modal.showModal();
-        setTimeout(function () {
-          navigate('/PaymentSuccess');
-        }, 3000);
-        console.log(creditCardDetail);
-      }
+    if (creditCardDetail && modal) {
+      modal.showModal();
+      setTimeout(() => {
+        navigate('/payment-success');
+      }, 3000);
+      console.log(creditCardDetail);
     }
   };
 
@@ -34,14 +33,17 @@ function Payment() {
   }, [user, orderFromCart]);
 
   const handleExpirationChange = (event) => {
-    let value = event.target.value.replace(/\D/g, ''); // ลบอักขระที่ไม่ใช่ตัวเลข
-    value = value.slice(0, 4); // จำกัดความยาวสูงสุด 4 ตัว
-
+    let value = event.target.value.replace(/\D/g, '');
+    value = value.slice(0, 4);
     if (value.length > 2) {
-      value = `${value.slice(0, 2)}/${value.slice(2)}`; // เพิ่มเครื่องหมาย /
+      value = `${value.slice(0, 2)}/${value.slice(2)}`;
     }
-
     event.target.value = value;
+  };
+
+  const handleCvvChange = (event) => {
+    let value = event.target.value.replace(/\D/g, ''); // ลบอักขระที่ไม่ใช่ตัวเลข
+    event.target.value = value.slice(0, 3); // จำกัดความยาวเหลือ 3 ตัว
   };
 
   return (
@@ -105,7 +107,7 @@ function Payment() {
                 {...register('expiration', {
                   required: true,
                   onChange: handleExpirationChange,
-                  pattern: /^\d{2}\/\d{2}$/, // ตรวจสอบรูปแบบ MM/YY
+                  pattern: /^\d{2}\/\d{2}$/,
                 })}
               />
               {errors.expiration && (
@@ -125,12 +127,9 @@ function Payment() {
                 className="input input-bordered w-full bg-[#FAFAFC]"
                 {...register('cvv', {
                   required: true,
+                  maxLength: 3,
                   pattern: /^\d{3}$/,
-                  maxLength: 3, // เพิ่ม maxLength เพื่อจำกัดจำนวนตัวอักษร
-                  onChange: (e) => {
-                    // เพิ่ม onChange เพื่อกรองเฉพาะตัวเลข
-                    e.target.value = e.target.value.replace(/\D/g, ''); // ลบอักขระที่ไม่ใช่ตัวเลข
-                  },
+                  onChange: handleCvvChange,
                 })}
               />
               {errors.cvv && (
@@ -166,16 +165,6 @@ function Payment() {
               <span className="font-bold">
                 ฿{orderFromCart.OrderTotal.toLocaleString()}
               </span>
-            </div>
-            <div>
-              <span className="font-bold">Items:</span>
-              <ul>
-                {orderFromCart.OrderItems.map((item, itemIndex) => (
-                  <li key={itemIndex}>
-                    {item.name} x {item.quantity}
-                  </li>
-                ))}
-              </ul>
             </div>
             <div className="flex gap-4 mt-4 justify-center">
               <img src="/paypal.svg" alt="PayPal" className="mr-2 w-20" />
