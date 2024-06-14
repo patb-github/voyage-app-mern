@@ -20,9 +20,24 @@ function Payment() {
     if (creditCardDetail && modal) {
       modal.showModal();
       setTimeout(() => {
+        // อัปเดตสถานะออเดอร์ใน context
+        setUserData((prevUserData) =>
+          prevUserData.map((u) =>
+            u.id === user.id
+              ? {
+                  ...u,
+                  orders: u.orders.map((order) =>
+                    order.orderId === orderFromCart.orderId
+                      ? { ...order, orderStatus: 'Completed' } // เปลี่ยนสถานะเป็น Completed
+                      : order
+                  ),
+                }
+              : u
+          )
+        );
+
         navigate('/payment-success');
-      }, 3000);
-      console.log(creditCardDetail);
+      }, 3000); // จำลองการรอ 3 วินาที เหมือนเดิม
     }
   };
 

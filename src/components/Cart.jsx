@@ -11,6 +11,7 @@ function Cart() {
   const navigate = useNavigate();
   const [totalAmount, setTotalAmount] = useState(0);
   const [discount, setDiscount] = useState(0);
+
   const generateOrderId = () => {
     const now = new Date();
     const year = now.getFullYear().toString().slice(-2);
@@ -19,6 +20,7 @@ function Cart() {
 
     return `VO${year}${month}${randomNumber}`;
   };
+
   const {
     register: registerPromo,
     handleSubmit: handleSubmitPromo,
@@ -30,7 +32,7 @@ function Cart() {
       return item.isChecked ? sum + item.total : sum;
     }, 0);
     setTotalAmount(newTotalAmount);
-  }, [currentUserCartItems, user]);
+  }, [currentUserCartItems]); // อัปเดต totalAmount เมื่อ currentUserCartItems เปลี่ยนแปลง
 
   const handleCheckboxChange = (itemId) => {
     setUserData((prevUserData) =>
@@ -78,12 +80,15 @@ function Cart() {
     const selectedItems = currentUserCartItems.filter((item) => item.isChecked);
 
     if (selectedItems.length === 0) {
-      // ... (แสดง modal ถ้าไม่มีสินค้าถูกเลือก)
+      const modal = document.getElementById('none_item_selection_modal');
+      if (modal) {
+        modal.showModal();
+      }
     } else {
       const orderId = generateOrderId();
-      const orderStatus = 'Pending'; // สร้าง orderId
+      const orderStatus = 'Pending';
       const order = {
-        orderId, // เพิ่ม orderId เข้าไปใน object order
+        orderId,
         OrderOriginalPrice: totalAmount,
         OrderDiscount: discount,
         OrderTotal: totalAmount - discount,
@@ -94,9 +99,16 @@ function Cart() {
 
       setUserData((prevUserData) =>
         prevUserData.map((u) =>
-          u.id === user.id ? { ...u, orders: [...(u.orders || []), order] } : u
+          u.id === user.id
+            ? {
+                ...u,
+                orders: [...(u.orders || []), order],
+                cart: u.cart.filter((item) => !item.isChecked), // ลบสินค้าที่เลือกออก
+              }
+            : u
         )
       );
+
       const modal3 = document.getElementById('wait_for_payment_modal');
       modal3.showModal();
       setTimeout(function () {
