@@ -11,7 +11,6 @@ import Payment from './Payment';
 import NotFound from './NotFound';
 import ProductPageV2 from './ProductPageV2';
 import MyTrips from './MyTrips';
-
 const Layout = () => {
   return (
     <BrowserRouter>
@@ -33,5 +32,4 @@ const Layout = () => {
     </BrowserRouter>
   );
 };
-
 export default Layout;

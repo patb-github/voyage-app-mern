@@ -32,6 +32,10 @@ function Cart() {
       return item.isChecked ? sum + item.total : sum;
     }, 0);
     setTotalAmount(newTotalAmount);
+    if (user && user.cart) {
+      // เพิ่มเงื่อนไขตรวจสอบว่า user และ user.cart มีค่า
+      console.log('User cart:', user.cart); // log ข้อมูล user.cart ออกมาดู
+    }
   }, [currentUserCartItems]); // อัปเดต totalAmount เมื่อ currentUserCartItems เปลี่ยนแปลง
 
   const handleCheckboxChange = (itemId) => {
