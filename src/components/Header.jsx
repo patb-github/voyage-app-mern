@@ -1,16 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useContext } from 'react';
 import UserContext from './UserContext';
-
 const Header = () => {
   const { user } = useContext(UserContext);
   const location = useLocation();
-
   const showProfileAndMenu =
     location.pathname !== '/' && location.pathname !== '/register';
   const showProfileAndMenu2 =
     location.pathname == '/' || location.pathname == '/register';
-
   return (
     <nav className="navbar sticky shadow-xl top-0 z-50 bg-base-100 max-w-screen pr-4">
       <div>
@@ -93,5 +90,4 @@ const Header = () => {
     </nav>
   );
 };
-
 export default Header;
