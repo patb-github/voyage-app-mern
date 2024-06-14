@@ -3,7 +3,7 @@ import { useContext } from 'react';
 import UserContext from './UserContext';
 
 const Header = () => {
-  const { user, isLoading } = useContext(UserContext);
+  const { user } = useContext(UserContext);
   const location = useLocation();
 
   const showProfileAndMenu =
@@ -24,7 +24,7 @@ const Header = () => {
       </div>
       <div>
         {showProfileAndMenu2 && (
-          <Link to="/landingpage">
+          <Link to="/">
             <img
               src="/vovageLogo.png"
               className="btn btn-ghost normal-case md:hidden text-xl hover:bg-white"
@@ -35,7 +35,7 @@ const Header = () => {
       </div>
       {showProfileAndMenu && (
         <div className="flex justify-end md:justify-end md:gap-2 md:w-[90%] w-full">
-          {user && !isLoading && (
+          {user && (
             <div className="flex">
               <img
                 src={user.profileImage}
@@ -75,13 +75,13 @@ const Header = () => {
               className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
             >
               <li>
-                <Link to="/userData">บัญชี</Link>
+                <Link to="/user-data">บัญชี</Link>
               </li>
               <li>
                 <Link to="/cart">ตะกร้าสินค้า</Link>
               </li>
               <li>
-                <Link to="/">ทริปของฉัน</Link>
+                <Link to="/my-trips">ทริปของฉัน</Link>
               </li>
               <li className="bg-red-500 text-white rounded-full">
                 <Link to="/">ออกจากระบบ</Link>

@@ -30,6 +30,80 @@ function UserProvider({ children }) {
           isChecked: false,
         },
       ],
+      orders: [
+        {
+          orderId: 'VO24067840',
+          OrderOriginalPrice: 16990,
+          OrderDiscount: 0,
+          OrderTotal: 16990,
+          OrderItems: [
+            {
+              id: 1,
+              title:
+                'แพ็คเกจเที่ยว สิงคโปร์ พร้อมที่พัก 3 วัน 2 คืน + Universal Studio Singapore',
+              imageSrc: '/destination/universal.jpg',
+              departure: 'กรุงเทพ',
+              departureDate: 'พฤ 15 พ.ค.',
+              destination: 'สิงคโปร์',
+              arrivalDate: 'อา 17 พ.ค.',
+              duration: '(3 วัน 2 คืน)',
+              voyagerCount: 1,
+              total: 16990,
+              isChecked: true,
+            },
+          ],
+          orderStatus: 'Pending',
+          OrderDate: '2024-06-13T15:15:45.001Z',
+        },
+        {
+          orderId: 'VO24062222',
+          OrderOriginalPrice: 16990,
+          OrderDiscount: 0,
+          OrderTotal: 16990,
+          OrderItems: [
+            {
+              id: 1,
+              title:
+                'แพ็คเกจเที่ยว สิงคโปร์ พร้อมที่พัก 3 วัน 2 คืน + Universal Studio Singapore',
+              imageSrc: '/destination/okinawaAquarium.jpg',
+              departure: 'กรุงเทพ',
+              departureDate: 'พฤ 15 พ.ค.',
+              destination: 'สิงคโปร์',
+              arrivalDate: 'อา 17 พ.ค.',
+              duration: '(3 วัน 2 คืน)',
+              voyagerCount: 1,
+              total: 16990,
+              isChecked: true,
+            },
+          ],
+          orderStatus: 'Completed',
+          OrderDate: '2024-06-13T15:15:45.001Z',
+        },
+        {
+          orderId: 'VO24044442',
+          OrderOriginalPrice: 16990,
+          OrderDiscount: 0,
+          OrderTotal: 16990,
+          OrderItems: [
+            {
+              id: 1,
+              title:
+                'แพ็คเกจเที่ยว สิงคโปร์ พร้อมที่พัก 3 วัน 2 คืน + Universal Studio Singapore',
+              imageSrc: '/destination/universal.jpg',
+              departure: 'กรุงเทพ',
+              departureDate: 'พฤ 15 พ.ค.',
+              destination: 'สิงคโปร์',
+              arrivalDate: 'อา 17 พ.ค.',
+              duration: '(3 วัน 2 คืน)',
+              voyagerCount: 1,
+              total: 16990,
+              isChecked: true,
+            },
+          ],
+          orderStatus: 'Cancelled',
+          OrderDate: '2024-06-13T15:15:45.001Z',
+        },
+      ],
     },
     {
       id: 2,
@@ -38,7 +112,7 @@ function UserProvider({ children }) {
       firstName: 'Jane',
       lastName: 'Doe',
       email: 'Jane.doe@gmail.com',
-      profileImage: '/user/jane.jpg',
+      profileImage: '/user/jane.png',
       cart: [
         {
           id: 2,
