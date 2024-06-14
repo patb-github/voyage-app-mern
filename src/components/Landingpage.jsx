@@ -1,11 +1,14 @@
 import Carousel from './Carousel';
+import { Link, Routes, Route } from 'react-router-dom';
+import ProductPageV2 from './ProductPageV2';
+
 const Offer = ({ imageSrc, altText }) => (
   <a href="">
     <img src={imageSrc} alt={altText} className="rounded-lg" />
   </a>
 );
 const LikedItem = ({ imageSrc, title, location, rating, tags, price }) => (
-  <a href="">
+  <Link to={`/landingpage/${title}`}>
     <div className="card w-full bg-base-100 shadow-xl">
       <figure>
         <img className="w-full" src={imageSrc} alt={title} />
@@ -41,7 +44,7 @@ const LikedItem = ({ imageSrc, title, location, rating, tags, price }) => (
         </div>
       </div>
     </div>
-  </a>
+  </Link>
 );
 const offers = [
   { id: 1, imageSrc: '/destination/discount.jpg', altText: 'Discount Offer' },
