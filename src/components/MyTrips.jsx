@@ -44,7 +44,7 @@ function MyTrips() {
         ))}
       </ul>
 
-      <div className="mx-4 md:mx-48 md:mt-11 md:border-t md:border-gray-300">
+      <div className="mx-4 md:mx-48 md:mt-11 md:border-t md:border-gray-300 h-[50vh]">
         <TabContent activeTab={activeTab} user={user} />
       </div>
     </section>
