@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import axios from 'axios';
 
 const RegisterPage = () => {
   const {
@@ -14,24 +15,38 @@ const RegisterPage = () => {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const navigate = useNavigate();
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     try {
       const userData = {
+        firstname: data.firstName,
+        lastname: data.lastName,
         email: data.email,
-        firstName: data.firstName,
-        lastName: data.lastName,
         password: data.password,
       };
 
-      console.log(JSON.stringify(userData, null, 2));
-      setRegistrationSuccess(true);
-      reset();
-      navigate('/');
+      const response = await axios.post(
+        'http://localhost:3000/api/users/register',
+        userData
+      );
+
+      if (response.status === 201) {
+        setRegistrationSuccess(true);
+        reset();
+        navigate('/');
+      } else {
+        setRegistrationError('Registration failed. Please try again.');
+      }
     } catch (error) {
       console.error('An error occurred:', error);
+      if (error.response) {
+        setRegistrationError(
+          error.response.data.message || 'Registration failed.'
+        );
+      } else {
+        setRegistrationError('An error occurred during registration.');
+      }
     }
   };
-
   return (
     <div>
       <section className="Login">
