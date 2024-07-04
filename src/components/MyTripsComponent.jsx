@@ -1,5 +1,3 @@
-import React from 'react';
-
 const MyTripsComponent = ({ user, activeTab }) => {
   const filteredOrders = user?.orders?.filter(
     (order) => order.orderStatus.toLowerCase() === activeTab.toLowerCase()
@@ -121,7 +119,13 @@ const MyTripsComponent = ({ user, activeTab }) => {
           </div>
         ))
       ) : (
-        <p>No orders found for this status.</p>
+        <div className="flex flex-col items-center justify-center h-full">
+          <img src="/female-guide.webp" alt="" className="w-1/2" />
+          <p className="items-center text-center just text-xl font-semibold ">
+            No adventures in this status yet! Let's find you a new one to get
+            excited about.
+          </p>
+        </div>
       )}
     </div>
   );

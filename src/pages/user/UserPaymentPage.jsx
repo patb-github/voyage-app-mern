@@ -1,13 +1,12 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useState, useEffect, useContext } from 'react';
-import UserContext from './UserContext';
+import { useState, useEffect } from 'react';
 
 function Payment() {
-  const { user, setUserData } = useContext(UserContext);
+  const [user, setUser] = useState(null); // เก็บข้อมูลผู้ใช้
+  const [orderFromCart, setOrderFromCart] = useState(null); // เก็บข้อมูลออเดอร์
   const navigate = useNavigate();
   const location = useLocation();
-  const orderFromCart = location.state?.order;
 
   const {
     register,
@@ -20,9 +19,17 @@ function Payment() {
     if (creditCardDetail && modal) {
       modal.showModal();
       setTimeout(() => {
+        // อัปเดตสถานะออเดอร์ใน state
+        setUser((prevUser) => ({
+          ...prevUser,
+          orders: prevUser.orders.map((order) =>
+            order.orderId === orderFromCart.orderId
+              ? { ...order, orderStatus: 'Completed' }
+              : order
+          ),
+        }));
         navigate('/payment-success');
       }, 3000);
-      console.log(creditCardDetail);
     }
   };
 

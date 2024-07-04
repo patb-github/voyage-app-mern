@@ -2,9 +2,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
 import { useContext } from 'react';
-import UserContext from './UserContext';
+import UserContext from '../context/UserContext';
 
-const Login = () => {
+const LoginPage = () => {
   const { userData, setCurrentUser, setUser } = useContext(UserContext);
   const { register, handleSubmit } = useForm();
   const [loginError, setLoginError] = useState(false);
@@ -114,4 +114,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default LoginPage;
