@@ -40,6 +40,11 @@ function CreateTripForm() {
     }
   };
 
+  const removeExpense = (index) => {
+    const updatedExpenses = formData.sub_expenses.filter((_, i) => i !== index);
+    setFormData({ ...formData, sub_expenses: updatedExpenses });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -177,16 +182,37 @@ function CreateTripForm() {
           ></textarea>
         </div>
 
+        {/* Sub Expenses Table */}
         <div className="card bg-base-200 shadow-xl">
           <div className="card-body">
             <h3 className="card-title">Sub Expenses</h3>
-            <ul className="list-disc list-inside mb-4">
-              {formData.sub_expenses.map((expense, index) => (
-                <li key={index}>
-                  {expense.expense_name}: ฿{expense.expense_amount}
-                </li>
-              ))}
-            </ul>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Expense Name</th>
+                  <th>Amount (฿)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {formData.sub_expenses.map((expense, index) => (
+                  <tr key={index}>
+                    <td>{expense.expense_name}</td>
+                    <td>{expense.expense_amount}</td>
+                    <td>
+                      <button
+                        type="button"
+                        onClick={() => removeExpense(index)}
+                        className="btn btn-error btn-sm"
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Input fields for adding new expenses */}
             <div className="flex space-x-2">
               <input
                 type="text"

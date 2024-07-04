@@ -47,6 +47,56 @@ const RegisterPage = () => {
       }
     }
   };
+
+  const inputFields = [
+    {
+      name: 'email',
+      type: 'text',
+      placeholder: 'Email',
+      validation: {
+        required: 'Email is required',
+        pattern: {
+          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+          message: 'Invalid email address',
+        },
+      },
+    },
+    {
+      name: 'firstName',
+      type: 'text',
+      placeholder: 'First Name',
+      validation: { required: 'First Name is required' },
+    },
+    {
+      name: 'lastName',
+      type: 'text',
+      placeholder: 'Last Name',
+      validation: { required: 'Last Name is required' },
+    },
+    {
+      name: 'password',
+      type: 'password',
+      placeholder: 'Password',
+      validation: {
+        required: 'Password is required',
+        minLength: {
+          value: 6,
+          message: 'Password must be at least 6 characters',
+        },
+      },
+    },
+    {
+      name: 'confirmPassword',
+      type: 'password',
+      placeholder: 'Password Confirmation',
+      validation: {
+        required: 'Confirm Password is required',
+        validate: (value) =>
+          value === getValues('password') || 'Passwords do not match',
+      },
+    },
+  ];
+
   return (
     <div>
       <section className="Login">
@@ -69,93 +119,24 @@ const RegisterPage = () => {
                 className="flex flex-col mt-4"
                 onSubmit={handleSubmit(onSubmit)}
               >
-                <span className="label-text">Email</span>
-                <label className="input input-bordered flex items-center gap-2">
-                  <input
-                    type="text"
-                    className="grow"
-                    placeholder="Email"
-                    {...register('email', {
-                      required: 'Email is required',
-                      pattern: {
-                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                        message: 'Invalid email address',
-                      },
-                    })}
-                  />
-                </label>
-                {errors.email && (
-                  <p className="text-red-500">{errors.email.message}</p>
-                )}
-
-                <span className="label-text">First Name</span>
-                <label className="input input-bordered flex items-center gap-2">
-                  <input
-                    type="text"
-                    className="grow"
-                    placeholder="First Name"
-                    {...register('firstName', {
-                      required: 'First Name is required',
-                    })}
-                  />
-                </label>
-                {errors.firstName && (
-                  <p className="text-red-500">{errors.firstName.message}</p>
-                )}
-
-                <span className="label-text">Last Name</span>
-                <label className="input input-bordered flex items-center gap-2">
-                  <input
-                    type="text"
-                    className="grow"
-                    placeholder="Last Name"
-                    {...register('lastName', {
-                      required: 'Last Name is required',
-                    })}
-                  />
-                </label>
-                {errors.lastName && (
-                  <p className="text-red-500">{errors.lastName.message}</p>
-                )}
-
-                <span className="label-text">Password</span>
-                <label className="input input-bordered flex items-center gap-2">
-                  <input
-                    type="password"
-                    className="grow"
-                    placeholder="Password"
-                    {...register('password', {
-                      required: 'Password is required',
-                      minLength: {
-                        value: 6,
-                        message: 'Password must be at least 6 characters',
-                      },
-                    })}
-                  />
-                </label>
-                {errors.password && (
-                  <p className="text-red-500">{errors.password.message}</p>
-                )}
-
-                <span className="label-text">Confirm Password</span>
-                <label className="input input-bordered flex items-center gap-2">
-                  <input
-                    type="password"
-                    className="grow"
-                    placeholder="Password Confirmation"
-                    {...register('confirmPassword', {
-                      required: 'Confirm Password is required',
-                      validate: (value) =>
-                        value === getValues('password') ||
-                        'Passwords do not match',
-                    })}
-                  />
-                </label>
-                {errors.confirmPassword && (
-                  <p className="text-red-500">
-                    {errors.confirmPassword.message}
-                  </p>
-                )}
+                {inputFields.map((field) => (
+                  <div key={field.name}>
+                    <span className="label-text">{field.placeholder}</span>
+                    <label className="input input-bordered flex items-center gap-2">
+                      <input
+                        type={field.type}
+                        className="grow"
+                        placeholder={field.placeholder}
+                        {...register(field.name, field.validation)}
+                      />
+                    </label>
+                    {errors[field.name] && (
+                      <p className="text-red-500">
+                        {errors[field.name].message}
+                      </p>
+                    )}
+                  </div>
+                ))}
 
                 {registrationSuccess && (
                   <p className="text-green-500">Registration successful!</p>
