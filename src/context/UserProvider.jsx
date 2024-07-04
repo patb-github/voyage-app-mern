@@ -15,25 +15,44 @@ const UserProvider = ({ children }) => {
   useEffect(() => {
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('token', token); // เก็บ token ด้วย
+      if (token) {
+        localStorage.setItem('token', token);
+      }
     } else {
       localStorage.removeItem('user');
-      localStorage.removeItem('token'); // ลบ token เมื่อ logout
+      localStorage.removeItem('token');
     }
-  }, [user, token]); // เพิ่ม token ใน dependency array
+  }, [user, token]);
+
+  const setUserAndStorage = (newUser) => {
+    setUser(newUser);
+    if (newUser) {
+      localStorage.setItem('user', JSON.stringify(newUser));
+    } else {
+      localStorage.removeItem('user');
+    }
+  };
 
   const login = (userData, tokenData) => {
-    setUser(userData);
+    setUserAndStorage(userData);
     setToken(tokenData);
   };
 
   const logout = () => {
-    setUser(null);
+    setUserAndStorage(null);
     setToken(null);
   };
+
   return (
     <UserContext.Provider
-      value={{ user, setUser, token, setToken, login, logout }}
+      value={{
+        user,
+        setUser: setUserAndStorage,
+        token,
+        setToken,
+        login,
+        logout,
+      }}
     >
       {children}
     </UserContext.Provider>

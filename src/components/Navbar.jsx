@@ -1,110 +1,165 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import UserContext from '../context/UserContext';
 
 const Navbar = () => {
   const { user, setUser } = useContext(UserContext);
   const [isLogin, setIsLogin] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // ตรวจสอบ user ใน context เมื่อ component mount หรือ user เปลี่ยนแปลง
     setIsLogin(user !== null);
   }, [user]);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const handleLogout = () => {
     setUser(null);
-    localStorage.removeItem('user'); // ลบข้อมูล user จาก localStorage
-    navigate('/');
-    console.log(localStorage);
+    localStorage.removeItem('user');
+    setIsOpen(false);
+    navigate('/login');
+  };
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
   };
 
   return (
-    <nav className="navbar sticky shadow-xl top-0 z-50 bg-base-100 max-w-screen pr-4">
-      <div>
-        <Link to="/">
-          <button>
-            <img
-              src="/vovageLogo.png"
-              className="btn btn-ghost normal-case text-xl hover:bg-white"
-              alt="VoVage Logo"
-            />
-          </button>
-        </Link>
-      </div>
-
-      {/* Navbar content based on login status */}
-      {isLogin ? (
-        // Navbar for logged in users
-        <div className="flex justify-end md:justify-end md:gap-2 md:w-[90%] w-full">
-          <div className="flex">
-            {user?.profileImage ? ( // แสดงรูปโปรไฟล์ถ้ามี
-              <img
-                src={user.profileImage} // ใช้ URL รูปโปรไฟล์จาก user object
-                alt="User Profile"
-                className="w-11 h-10 mask mask-squircle mx-2"
-              />
-            ) : (
-              <img
-                src="/profile.jpg" // รูปโปรไฟล์ default ถ้าไม่มี
-                alt="User Profile"
-                className="w-11 h-10 mask mask-squircle mx-2"
-              />
-            )}
-            <div>
-              <p className="text-xl font-bold">
-                สวัสดี, {user?.firstname || 'ผู้ใช้งาน'}
-              </p>
-              <p className="text-sm font-semibold text-amber-800">
-                เรามีโปรแกรมมากมายสำหรับคุณ
-              </p>
-            </div>
+    <nav className="bg-white shadow-md relative z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex-shrink-0">
+            <Link to="/" className="flex items-center">
+              <img className="w-40" src="/voyageLogo.webp" alt="Voyage Logo" />
+            </Link>
           </div>
 
-          <details className="dropdown dropdown-end">
-            <summary className="btn bg-white hover:bg-white rounded-full">
-              {/* Dropdown icon */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                className="inline-block w-5 h-5 stroke-current"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </summary>
-            <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
-              <li>
-                <Link to="/member">Member</Link>
-              </li>
-              <li>
-                <Link to="/cart">Cart</Link>
-              </li>
-              <li>
-                <Link to="/booking">Booking</Link>
-              </li>
-              <li className="bg-red-500 text-white rounded-full">
-                <button onClick={handleLogout}>Log Out</button>
-              </li>
-            </ul>
-          </details>
+          <div className="flex items-center">
+            {isLogin ? (
+              <div className="flex items-center space-x-4">
+                <Link
+                  to="/cart"
+                  className="relative p-1 rounded-full text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  <span className="sr-only">View cart</span>
+                  <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
+                  </svg>
+                  <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
+                    3
+                  </span>
+                </Link>
+
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    type="button"
+                    className="flex items-center max-w-xs rounded-full text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    id="user-menu-button"
+                    aria-expanded={isOpen}
+                    aria-haspopup="true"
+                    onClick={toggleDropdown}
+                  >
+                    <span className="sr-only">Open user menu</span>
+                    <img
+                      className="h-8 w-8 rounded-full object-cover"
+                      src={user?.profileImage || '/profile.jpg'}
+                      alt=""
+                    />
+                    <span className="ml-2 text-sm font-medium hidden md:inline-block">
+                      {user?.firstname || 'User'}
+                    </span>
+                    <svg
+                      className={`ml-1 h-5 w-5 text-gray-400 transition-transform duration-200 ${
+                        isOpen ? 'transform rotate-180' : ''
+                      }`}
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                  {/* Dropdown menu */}
+                  {isOpen && (
+                    <div
+                      className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-[60]"
+                      role="menu"
+                      aria-orientation="vertical"
+                      aria-labelledby="user-menu-button"
+                      tabIndex="-1"
+                    >
+                      <Link
+                        to="/member"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        role="menuitem"
+                      >
+                        My Profile
+                      </Link>
+                      <Link
+                        to="/booking"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        role="menuitem"
+                      >
+                        My Bookings
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        role="menuitem"
+                      >
+                        Sign out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Link
+                  to="/login"
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out"
+                >
+                  Log In
+                </Link>
+                <Link
+                  to="/register"
+                  className="bg-indigo-600 text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
-      ) : (
-        // Navbar for not logged in users (or on specific pages)
-        <div className="flex justify-end md:justify-end md:gap-2 md:w-[90%] w-full">
-          <Link to="/register" className="btn">
-            Sign up
-          </Link>
-          <Link to="/login" className="btn">
-            Login
-          </Link>
-        </div>
-      )}
+      </div>
     </nav>
   );
 };
