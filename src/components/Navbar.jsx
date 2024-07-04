@@ -1,14 +1,21 @@
-import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useContext, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import UserContext from '../context/UserContext';
 
 const Navbar = () => {
-  const [isLogin, setIsLogin] = useState(true); // เริ่มต้นเป็น false (ยังไม่ได้ login)
-  const handleLogin = () => setIsLogin(true);
+  const { user, setUser } = useContext(UserContext);
+  const [isLogin, setIsLogin] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // ตรวจสอบ user ใน context เมื่อ component mount หรือ user เปลี่ยนแปลง
+    setIsLogin(user !== null);
+  }, [user]);
+
   const handleLogout = () => {
-    setIsLogin(false);
+    setUser(null); // ลบ user ออกจาก context เมื่อ logout
     navigate('/');
   };
-  const navigate = useNavigate();
 
   return (
     <nav className="navbar sticky shadow-xl top-0 z-50 bg-base-100 max-w-screen pr-4">
@@ -28,15 +35,24 @@ const Navbar = () => {
       {isLogin ? (
         // Navbar for logged in users
         <div className="flex justify-end md:justify-end md:gap-2 md:w-[90%] w-full">
-          {/* ส่วนของ navbar เมื่อ login แล้ว (เช่น รูปโปรไฟล์, เมนู) */}
           <div className="flex">
-            <img
-              src="/profile.jpg" // Replace with actual profile image URL
-              alt="User Profile"
-              className="w-11 h-10 mask mask-squircle mx-2"
-            />
+            {user?.profileImage ? ( // แสดงรูปโปรไฟล์ถ้ามี
+              <img
+                src={user.profileImage} // ใช้ URL รูปโปรไฟล์จาก user object
+                alt="User Profile"
+                className="w-11 h-10 mask mask-squircle mx-2"
+              />
+            ) : (
+              <img
+                src="/profile.jpg" // รูปโปรไฟล์ default ถ้าไม่มี
+                alt="User Profile"
+                className="w-11 h-10 mask mask-squircle mx-2"
+              />
+            )}
             <div>
-              <p className="text-xl font-bold">สวัสดี, ผู้ใช้งาน</p>
+              <p className="text-xl font-bold">
+                สวัสดี, {user?.firstname || 'ผู้ใช้งาน'}
+              </p>
               <p className="text-sm font-semibold text-amber-800">
                 เรามีโปรแกรมมากมายสำหรับคุณ
               </p>
@@ -79,7 +95,6 @@ const Navbar = () => {
       ) : (
         // Navbar for not logged in users (or on specific pages)
         <div className="flex justify-end md:justify-end md:gap-2 md:w-[90%] w-full">
-          {/* ส่วนของ navbar เมื่อไม่ได้ login (เช่น ปุ่ม login) */}
           <Link to="/register" className="btn">
             Sign up
           </Link>

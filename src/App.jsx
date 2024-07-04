@@ -14,6 +14,7 @@ import UserPaymentSuccess from './pages/user/UserPaymentSuccess';
 import UserPasswordChange from './pages/user/UserPasswordChange';
 import UserEditBookingPage from './pages/user/UserEditBookingPage';
 import UserCheckout from './pages/user/UserCheckout';
+import CreateTripForm from './pages/admin/CreateTripForm';
 import Footer from './components/Footer';
 
 const App = () => {
@@ -36,9 +37,10 @@ const App = () => {
             <Route path="/booking-edit" element={<UserEditBookingPage />} />
             <Route path="/checkout" element={<UserCheckout />} />
             <Route path="*" element={<NotFound />} />
+            <Route path="/admin" element={<CreateTripForm />} />
           </Routes>
+          {/* <Footer /> */}
         </UserProvider>
-        {/* <Footer /> */}
       </BrowserRouter>
     </>
   );

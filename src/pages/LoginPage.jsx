@@ -2,25 +2,26 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
 import { useContext } from 'react';
-import axios from 'axios';
 import UserContext from '../context/UserContext';
+import axios from 'axios';
 
 const LoginPage = () => {
-  const { userData, setCurrentUser, setUser } = useContext(UserContext);
   const { register, handleSubmit } = useForm();
   const [loginError, setLoginError] = useState(false);
   const navigate = useNavigate();
-
+  const { setUser } = useContext(UserContext);
   const onSubmit = async (data) => {
     try {
-      console.log(data);
-      const res = await axios.post("http://localhost:3000/api/users/login", data);
+      const res = await axios.post(
+        'http://localhost:3000/api/users/login',
+        data
+      );
       const user = res.data.user;
-      console.log(res);
+
       if (user) {
         setLoginError(false);
-        setCurrentUser(user.id);
-        setUser(user);
+        setLoginError(false);
+        setUser(user); // Update user in context
         navigate('/');
       } else {
         setLoginError(true);
