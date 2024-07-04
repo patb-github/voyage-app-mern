@@ -13,8 +13,10 @@ const Navbar = () => {
   }, [user]);
 
   const handleLogout = () => {
-    setUser(null); // ลบ user ออกจาก context เมื่อ logout
+    setUser(null);
+    localStorage.removeItem('user'); // ลบข้อมูล user จาก localStorage
     navigate('/');
+    console.log(localStorage);
   };
 
   return (
