@@ -1,21 +1,23 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
+import UserContext from '../context/UserContext'; // Import UserContext
 
 const RegisterPage = () => {
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
     getValues,
   } = useForm();
   const [registrationError, setRegistrationError] = useState(null);
-  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { setUser } = useContext(UserContext); // Use UserContext
 
   const onSubmit = async (data) => {
+    setIsLoading(true);
     try {
       const userData = {
         firstname: data.firstName,
@@ -24,15 +26,31 @@ const RegisterPage = () => {
         password: data.password,
       };
 
-      const response = await axios.post(
+      // Register the user
+      const registerResponse = await axios.post(
         'http://localhost:3000/api/users/register',
         userData
       );
 
-      if (response.status === 201) {
-        setRegistrationSuccess(true);
-        reset();
-        navigate('/');
+      if (registerResponse.status === 201) {
+        // If registration is successful, immediately log in the user
+        const loginResponse = await axios.post(
+          'http://localhost:3000/api/users/login',
+          {
+            email: data.email,
+            password: data.password,
+          }
+        );
+
+        if (loginResponse.status === 200) {
+          const user = loginResponse.data.user;
+          setUser(user); // Update user in context
+          navigate('/'); // Redirect to home page
+        } else {
+          setRegistrationError(
+            'Registration successful, but automatic login failed. Please log in manually.'
+          );
+        }
       } else {
         setRegistrationError('Registration failed. Please try again.');
       }
@@ -45,143 +63,138 @@ const RegisterPage = () => {
       } else {
         setRegistrationError('An error occurred during registration.');
       }
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const inputFields = [
+    { name: 'email', type: 'email', placeholder: 'Email' },
+    { name: 'firstName', type: 'text', placeholder: 'First Name' },
+    { name: 'lastName', type: 'text', placeholder: 'Last Name' },
+    { name: 'password', type: 'password', placeholder: 'Password' },
+    {
+      name: 'confirmPassword',
+      type: 'password',
+      placeholder: 'Confirm Password',
+    },
+  ];
+
   return (
-    <div>
-      <section className="Login">
-        <div className="h-[370px] md:h-[93vh] bg-center bg-cover md:bg-no-repeat bg-[url('/bg-desktop.png')]">
-          <div className="px-8 py-8 drop-shadow-xl md:hidden font-bold text-3xl text-white mb-8 ">
-            <p>Enjoy the trip </p>
-            <p>with Voyage</p>
-          </div>
-          <div className="min-h-[75vh] flex flex-col items-center justify-end md:justify-center">
-            <div className="bg-white min-h-[500px] px-10 py-10 rounded-t-3xl md:rounded-3xl shadow-md w-full md:w-96">
-              <div className="text-3xl font-bold text-blue-500 md:mb-8">
-                <p className="drop-shadow-xl hidden md:block">
-                  Enjoy the trip with Voyage
-                </p>
-              </div>
-              <span className="text-3xl text-gray-800 font-bold">
-                <p>New Account</p>
-              </span>
-              <form
-                className="flex flex-col mt-4"
-                onSubmit={handleSubmit(onSubmit)}
-              >
-                <span className="label-text">Email</span>
-                <label className="input input-bordered flex items-center gap-2">
-                  <input
-                    type="text"
-                    className="grow"
-                    placeholder="Email"
-                    {...register('email', {
-                      required: 'Email is required',
+    <div className="min-h-screen bg-center bg-cover bg-no-repeat bg-[url('/bg-desktop.webp')] flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl shadow-2xl">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-blue-500">
+            Enjoy the trip with Voyage
+          </h2>
+          <p className="mt-2 text-center text-xl text-gray-900 font-semibold">
+            Create a New Account
+          </p>
+        </div>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            {inputFields.map((field, index) => (
+              <div key={field.name}>
+                <label htmlFor={field.name} className="sr-only">
+                  {field.placeholder}
+                </label>
+                <input
+                  id={field.name}
+                  name={field.name}
+                  type={field.type}
+                  autoComplete={field.name}
+                  required
+                  className={`appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm ${
+                    index === 0
+                      ? 'rounded-t-md'
+                      : index === inputFields.length - 1
+                      ? 'rounded-b-md'
+                      : ''
+                  }`}
+                  placeholder={field.placeholder}
+                  {...register(field.name, {
+                    required: `${field.placeholder} is required`,
+                    ...(field.name === 'email' && {
                       pattern: {
                         value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                         message: 'Invalid email address',
                       },
-                    })}
-                  />
-                </label>
-                {errors.email && (
-                  <p className="text-red-500">{errors.email.message}</p>
-                )}
-
-                <span className="label-text">First Name</span>
-                <label className="input input-bordered flex items-center gap-2">
-                  <input
-                    type="text"
-                    className="grow"
-                    placeholder="First Name"
-                    {...register('firstName', {
-                      required: 'First Name is required',
-                    })}
-                  />
-                </label>
-                {errors.firstName && (
-                  <p className="text-red-500">{errors.firstName.message}</p>
-                )}
-
-                <span className="label-text">Last Name</span>
-                <label className="input input-bordered flex items-center gap-2">
-                  <input
-                    type="text"
-                    className="grow"
-                    placeholder="Last Name"
-                    {...register('lastName', {
-                      required: 'Last Name is required',
-                    })}
-                  />
-                </label>
-                {errors.lastName && (
-                  <p className="text-red-500">{errors.lastName.message}</p>
-                )}
-
-                <span className="label-text">Password</span>
-                <label className="input input-bordered flex items-center gap-2">
-                  <input
-                    type="password"
-                    className="grow"
-                    placeholder="Password"
-                    {...register('password', {
-                      required: 'Password is required',
+                    }),
+                    ...(field.name === 'password' && {
                       minLength: {
                         value: 6,
                         message: 'Password must be at least 6 characters',
                       },
-                    })}
-                  />
-                </label>
-                {errors.password && (
-                  <p className="text-red-500">{errors.password.message}</p>
-                )}
-
-                <span className="label-text">Confirm Password</span>
-                <label className="input input-bordered flex items-center gap-2">
-                  <input
-                    type="password"
-                    className="grow"
-                    placeholder="Password Confirmation"
-                    {...register('confirmPassword', {
-                      required: 'Confirm Password is required',
+                    }),
+                    ...(field.name === 'confirmPassword' && {
                       validate: (value) =>
                         value === getValues('password') ||
                         'Passwords do not match',
-                    })}
-                  />
-                </label>
-                {errors.confirmPassword && (
-                  <p className="text-red-500">
-                    {errors.confirmPassword.message}
+                    }),
+                  })}
+                />
+                {errors[field.name] && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors[field.name].message}
                   </p>
                 )}
-
-                {registrationSuccess && (
-                  <p className="text-green-500">Registration successful!</p>
-                )}
-                {registrationError && (
-                  <p className="text-red-500">{registrationError}</p>
-                )}
-
-                <button
-                  type="submit"
-                  className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full mt-2"
-                >
-                  Sign Up
-                </button>
-              </form>
-
-              <div className="mt-2 text-sm flex">
-                <p>Already have an account? </p>
-                <Link to="/login">
-                  <p className="text-blue-500 hover:text-blue-700">Sign In</p>
-                </Link>
               </div>
-            </div>
+            ))}
           </div>
+
+          {registrationError && (
+            <div className="text-red-500 text-sm text-center">
+              {registrationError}
+            </div>
+          )}
+
+          <div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-full text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {isLoading ? (
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              ) : (
+                'Sign Up'
+              )}
+            </button>
+          </div>
+        </form>
+        <div className="text-center">
+          <p className="mt-2 text-sm text-gray-600">
+            Already have an account?{' '}
+            <Link
+              to="/login"
+              className="font-medium text-blue-600 hover:text-blue-500"
+            >
+              Sign In
+            </Link>
+          </p>
         </div>
-      </section>
+      </div>
     </div>
   );
 };

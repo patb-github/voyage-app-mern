@@ -1,35 +1,38 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import UserContext from '../../context/UserContext';
+import axios from 'axios';
 
 const UserDashboardPage = () => {
   const { user, setUser } = useContext(UserContext);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedGender, setSelectedGender] = useState('');
+  const fileInputRef = useRef(null);
+  const [modalContent, setModalContent] = useState({ title: '', message: '' });
+
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isDirty },
     reset,
   } = useForm();
 
   useEffect(() => {
-    // เมื่อ user ใน context เปลี่ยนแปลง ให้ reset ฟอร์ม
     if (user) {
       reset({
         firstName: user.firstname,
         lastName: user.lastname,
+        dateOfBirth: user.dateOfBirth,
+        country: user.country,
+        phoneNumber: user.phone,
         email: user.email,
-        gender: user.gender || '',
-        dateOfBirth: user.dateOfBirth || '',
-        phoneNumber: user.phoneNumber || '',
-        country: user.country || '',
+        gender: user.gender,
       });
-      setSelectedImage(user.profileImage);
+      setSelectedGender(user.gender || '');
     }
   }, [user, reset]);
 
   const handleImageChange = (event) => {
-    // เมื่อเลือกรูปภาพใหม่
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -38,144 +41,141 @@ const UserDashboardPage = () => {
     }
   };
 
+  const triggerFileInput = () => {
+    fileInputRef.current.click();
+  };
+
+  const showModal = () => {
+    document.getElementById('update_modal').showModal();
+  };
+
   const onSubmit = async (data) => {
-    // เมื่อกด submit ฟอร์ม
+    const updatedFields = {
+      firstname: data.firstName,
+      lastname: data.lastName,
+      email: data.email,
+      gender: data.gender,
+      dateOfBirth: data.dateOfBirth,
+      country: data.country,
+      phone: data.phoneNumber,
+    };
+
+    if (selectedImage) {
+      updatedFields.profileImage = selectedImage;
+    }
+
     try {
-      const updatedUser = {
-        ...user,
-        ...data,
-        profileImage: selectedImage || user?.profileImage,
-      };
-      setUser(updatedUser);
-      console.log(updatedUser); // อัปเดต user ใน context
+      console.log('Before update:', user);
+      const response = await axios.put(
+        `http://localhost:3000/api/profile/${user.id}`,
+        updatedFields
+      );
+      console.log('After update:', response.data);
 
-      // ส่งข้อมูลไปยัง backend เพื่ออัปเดต (ถ้าจำเป็น)
-      const response = await fetch('YOUR_BACKEND_ENDPOINT', {
-        // แทนที่ด้วย endpoint ของ backend
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedUser),
+      setUser((prevUser) => ({
+        ...prevUser,
+        ...response.data,
+      }));
+
+      console.log('After setUser:', user);
+      setModalContent({
+        title: 'Success',
+        message: 'Profile updated successfully!',
       });
+      showModal();
 
-      if (!response.ok) {
-        throw new Error('Failed to update user data');
-      }
-
-      // อัปเดต context ด้วยข้อมูลที่อัพเดทจาก backend (ถ้าจำเป็น)
-      // const updatedUserFromBackend = await response.json();
-      // setUser(updatedUserFromBackend);
+      reset(response.data);
+      setSelectedGender(response.data.gender || '');
     } catch (error) {
       console.error('Error updating user data:', error);
-      // Handle error, e.g., show error message to user
+      setModalContent({
+        title: 'Error',
+        message: 'Failed to update profile. Please try again.',
+      });
+      showModal();
     }
   };
 
   return (
-    <div className="flex flex-col md:flex-row p-6 bg-gray-100 md:h-screen">
-      <div className="md:mr-6">
-        {/* ส่วนแสดงรูปภาพและชื่อผู้ใช้ */}
-        <div className="bg-white rounded-lg p-4 shadow">
-          <img
-            src={selectedImage || user?.profileImage}
-            alt="Profile"
-            className="w-32 h-32 rounded-full mx-auto mb-4"
-          />
-          <div className="flex justify-center">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="file-input file-input-bordered file-input-xs w-full max-w-xs"
-            />
+    <div className="bg-gray-100 min-h-screen py-8">
+      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="md:flex">
+          <div className="md:flex-shrink-0 p-8 bg-gray-50">
+            <div className="text-center">
+              <img
+                src={
+                  selectedImage || user?.profileImage || '/default-avatar.png'
+                }
+                alt="Profile"
+                className="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-white shadow-lg"
+              />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+                ref={fileInputRef}
+              />
+              <button
+                onClick={triggerFileInput}
+                className="btn btn-outline btn-sm mt-2"
+              >
+                Change Photo
+              </button>
+              <h2 className="mt-4 text-xl font-semibold text-gray-800">
+                {user?.firstname} {user?.lastname}
+              </h2>
+            </div>
           </div>
-          <h2 className="text-xl font-semibold text-center pt-4">
-            {user?.firstname} {user?.lastname}
-          </h2>
-        </div>
-      </div>
-      <div className="pt-4 md:w-3/4 md:pt-0">
-        {/* ส่วนของฟอร์ม */}
-        <div className="bg-white rounded-lg p-6 shadow">
-          <h1 className="text-2xl font-bold mb-6">Account Settings</h1>
-          {user ? (
+          <div className="p-8 flex-grow">
+            <h1 className="text-2xl font-bold text-gray-800 mb-6">
+              Account Settings
+            </h1>
             <form onSubmit={handleSubmit(onSubmit)}>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label
-                    htmlFor="firstName"
-                    className="block mb-2 text-sm font-medium"
-                  >
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
                     First name*
                   </label>
                   <input
-                    type="text"
-                    id="firstName"
                     {...register('firstName', {
                       required: 'First name is required',
                     })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    defaultValue={user?.firstname}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   {errors.firstName && (
-                    <span className="text-red-500">
+                    <span className="text-red-500 text-sm">
                       {errors.firstName.message}
                     </span>
                   )}
                 </div>
                 <div>
-                  <label
-                    htmlFor="lastName"
-                    className="block mb-2 text-sm font-medium"
-                  >
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
                     Last name*
                   </label>
                   <input
-                    type="text"
-                    id="lastName"
                     {...register('lastName', {
                       required: 'Last name is required',
                     })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    defaultValue={user?.lastname}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   {errors.lastName && (
-                    <span className="text-red-500">
+                    <span className="text-red-500 text-sm">
                       {errors.lastName.message}
                     </span>
                   )}
                 </div>
                 <div>
-                  <label
-                    htmlFor="email"
-                    className="block mb-2 text-sm font-medium"
-                  >
-                    E-mail*
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    {...register('email', {
-                      required: 'Email is required',
-                      pattern: {
-                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                        message: 'Invalid email address',
-                      },
-                    })}
-                    className="w-full px-3 py-2 border rounded-md"
-                  />
-                  {errors.email && (
-                    <span className="text-red-500">{errors.email.message}</span>
-                  )}
-                </div>
-                <div>
-                  <label
-                    htmlFor="gender"
-                    className="block mb-2 text-sm font-medium"
-                  >
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
                     Gender
                   </label>
                   <select
-                    id="gender"
                     {...register('gender')}
-                    className="w-full px-3 py-2 border rounded-md"
+                    value={selectedGender}
+                    onChange={(e) => setSelectedGender(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">-Select-</option>
                     <option value="male">Male</option>
@@ -184,81 +184,90 @@ const UserDashboardPage = () => {
                   </select>
                 </div>
                 <div>
-                  <label
-                    htmlFor="dateOfBirth"
-                    className="block mb-2 text-sm font-medium"
-                  >
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
                     Date of birth
                   </label>
                   <input
                     type="date"
-                    id="dateOfBirth"
                     {...register('dateOfBirth')}
-                    className="w-full px-3 py-2 border rounded-md"
+                    defaultValue={user?.dateOfBirth}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label
-                    htmlFor="country"
-                    className="block mb-2 text-sm font-medium"
-                  >
-                    Country*
-                  </label>
-                  <input
-                    type="text"
-                    id="country"
-                    {...register('country', {
-                      required: 'Country is required',
-                    })}
-                    className="w-full px-3 py-2 border rounded-md"
-                  />
-                  {errors.country && (
-                    <span className="text-red-500">
-                      {errors.country.message}
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <label
-                    htmlFor="phoneNumber"
-                    className="block mb-2 text-sm font-medium"
-                  >
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
                     Phone number*
                   </label>
                   <div className="flex">
-                    <select className="w-20 px-3 py-2 border rounded-l-md">
+                    <select className="w-20 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                       <option>+66</option>
                     </select>
                     <input
                       type="tel"
-                      id="phoneNumber"
                       {...register('phoneNumber', {
                         required: 'Phone number is required',
+                        pattern: {
+                          value: /^\d{9}$/,
+                          message: 'Phone number must be 9 digits',
+                        },
                       })}
-                      className="flex-grow px-3 py-2 border border-l-0 rounded-r-md"
+                      defaultValue={user?.phone}
+                      className="flex-grow px-3 py-2 border border-gray-300 border-l-0 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      onKeyDown={(e) => {
+                        if (
+                          (!/^\d$/.test(e.key) && e.key !== 'Backspace') ||
+                          (e.target.value.length >= 9 && e.key !== 'Backspace')
+                        ) {
+                          e.preventDefault();
+                        }
+                      }}
                     />
                   </div>
                   {errors.phoneNumber && (
-                    <span className="text-red-500">
+                    <span className="text-red-500 text-sm">
                       {errors.phoneNumber.message}
                     </span>
                   )}
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                    E-mail
+                  </label>
+                  <input
+                    type="email"
+                    {...register('email')}
+                    defaultValue={user?.email}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+                    disabled
+                  />
                 </div>
               </div>
               <div className="mt-6 text-right">
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                  className="btn btn-primary"
+                  disabled={!isDirty && !selectedImage}
                 >
-                  Update
+                  Update Profile
                 </button>
               </div>
             </form>
-          ) : (
-            <p>Loading user data...</p>
-          )}
+          </div>
         </div>
       </div>
+
+      {/* DaisyUI Modal */}
+      <dialog id="update_modal" className="modal">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg">{modalContent.title}</h3>
+          <p className="py-4">{modalContent.message}</p>
+          <div className="modal-action">
+            <form method="dialog">
+              <button className="btn">Close</button>
+            </form>
+          </div>
+        </div>
+      </dialog>
     </div>
   );
 };

@@ -39,7 +39,7 @@ const App = () => {
             <Route path="*" element={<NotFound />} />
             <Route path="/admin" element={<CreateTripForm />} />
           </Routes>
-          {/* <Footer /> */}
+          <Footer />
         </UserProvider>
       </BrowserRouter>
     </>

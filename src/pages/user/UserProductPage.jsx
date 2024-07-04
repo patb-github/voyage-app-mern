@@ -188,7 +188,7 @@ const UserProductPage = () => {
   };
 
   return (
-    <div className="h-full bg-cover bg-center bg-no-repeat bg-[url('/bg.svg')] md:py-16 md:px-48">
+    <div className="h-full bg-cover bg-center bg-no-repeat bg-[url('/bg-desktop.webp')] md:py-16 md:px-48">
       <section className="bg-white md:rounded-3xl h-full">
         {/* ส่วนของปุ่มกลับ และหัวข้อ */}
         <div className="flex justify-center relative z-10">
