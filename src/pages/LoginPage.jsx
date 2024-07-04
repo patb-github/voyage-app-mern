@@ -40,7 +40,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-center bg-cover bg-no-repeat bg-[url('/bg-desktop.png')] flex items-center justify-center px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-center bg-cover bg-no-repeat bg-[url('/bg-desktop.webp')] flex items-center justify-center px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl shadow-2xl">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-blue-500">
