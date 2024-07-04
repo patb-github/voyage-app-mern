@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 // import { useContext } from 'react';
 // import UserContext from './UserContext';
-function CartItemUi({
+function CartItem({
   id,
   title,
   imageSrc,
@@ -85,4 +85,4 @@ function CartItemUi({
   );
 }
 
-export default CartItemUi;
+export default CartItem;

@@ -1,7 +1,7 @@
 import { useState, useContext } from 'react';
 import classnames from 'classnames';
-import MyTripsComponent from './MyTripsComponent';
-import UserContext from './UserContext';
+import MyTripsComponent from '../../components/MyTripsComponent';
+import UserContext from '../../context/UserContext';
 
 const tabs = [
   { name: 'Pending', label: 'Pending' },

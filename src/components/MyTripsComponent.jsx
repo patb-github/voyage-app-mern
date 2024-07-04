@@ -1,5 +1,3 @@
-import React from 'react';
-
 const MyTripsComponent = ({ user, activeTab }) => {
   const filteredOrders = user?.orders?.filter(
     (order) => order.orderStatus.toLowerCase() === activeTab.toLowerCase()
