@@ -1,5 +1,4 @@
-// src/pages/LandingPage.js
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -47,27 +46,30 @@ const offers = [
   },
 ];
 
-const RecommendedItems = [
-  {
-    id: 1,
-    imageSrc: '/destination/universal.jpg',
-    title: 'Singapore Sling: Thrills, Lights, and City Delights',
-    location: 'Singapore',
-    rating: 4.7,
-    price: 599,
-  },
-  {
-    id: 2,
-    imageSrc: '/destination/okinawaAquarium.jpg',
-    title: 'Okinawa Escape: Castles, Corals, and Culinary Delights',
-    location: 'Japan',
-    rating: 4.8,
-    price: 899,
-  },
-];
-
 const LandingPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [recommendedItems, setRecommendedItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRecommendedItems = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch('http://localhost:3000/api/trips/');
+        if (!response.ok) {
+          throw new Error('Failed to fetch recommended items');
+        }
+        const data = await response.json();
+        setRecommendedItems(data.trips || []);
+      } catch (error) {
+        console.error('Error fetching recommended items:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRecommendedItems();
+  }, []);
 
   return (
     <div className="bg-gray-100 min-h-screen">
@@ -106,11 +108,26 @@ const LandingPage = () => {
 
         <section>
           <h2 className="text-3xl font-semibold mb-6">Recommended for You</h2>
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {RecommendedItems.map((item) => (
-              <DestinationCard key={item.id} {...item} />
-            ))}
-          </div>
+          {isLoading ? (
+            <p>Loading...</p>
+          ) : recommendedItems.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              {recommendedItems.map((item) => (
+                <DestinationCard
+                  key={item._id}
+                  _id={item._id}
+                  name={item.name}
+                  destination_from={item.destination_from}
+                  destination_to={item.destination_to}
+                  rating={item.rating}
+                  price={item.price}
+                  images={item.images}
+                />
+              ))}
+            </div>
+          ) : (
+            <p>No recommended items available.</p>
+          )}
         </section>
 
         <div className="flex justify-center mt-12">

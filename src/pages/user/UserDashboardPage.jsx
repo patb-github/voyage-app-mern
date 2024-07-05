@@ -1,53 +1,67 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useContext, useRef, useMemo, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import UserContext from '../../context/UserContext';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from "jwt-decode";
+
+// Constants
+const API_BASE_URL = 'http://localhost:3000/api';
+const DEFAULT_AVATAR = '/user/profile.jpg';
+
+// Function to get current date in YYYY-MM-DD format
+const getCurrentDate = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 const UserDashboardPage = () => {
   const { user, setUser } = useContext(UserContext);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [selectedGender, setSelectedGender] = useState('');
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const navigate = useNavigate();
   const fileInputRef = useRef(null);
-  const [modalContent, setModalContent] = useState({ title: '', message: '' });
 
   const {
     register,
     handleSubmit,
     formState: { errors, isDirty },
     reset,
+    setValue,
   } = useForm();
 
   useEffect(() => {
     if (user) {
+      const formattedDate = user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : '';
       reset({
         firstName: user.firstname,
         lastName: user.lastname,
-        dateOfBirth: user.dateOfBirth,
+        dateOfBirth: formattedDate,
         country: user.country,
         phoneNumber: user.phone,
         email: user.email,
         gender: user.gender,
       });
-      setSelectedGender(user.gender || '');
     }
   }, [user, reset]);
 
-  const handleImageChange = (event) => {
+  const handleImageChange = useCallback((event) => {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => setSelectedImage(reader.result);
       reader.readAsDataURL(file);
     }
-  };
+  }, []);
 
-  const triggerFileInput = () => {
-    fileInputRef.current.click();
-  };
-
-  const showModal = () => {
-    document.getElementById('update_modal').showModal();
-  };
+  const triggerFileInput = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
 
   const onSubmit = async (data) => {
     const updatedFields = {
@@ -58,43 +72,74 @@ const UserDashboardPage = () => {
       dateOfBirth: data.dateOfBirth,
       country: data.country,
       phone: data.phoneNumber,
+      ...(selectedImage && { profileImage: selectedImage }),
     };
 
-    if (selectedImage) {
-      updatedFields.profileImage = selectedImage;
-    }
-
     try {
-      console.log('Before update:', user);
-      const response = await axios.put(
-        `http://localhost:3000/api/profile/${user.id}`,
-        updatedFields
+      const token = localStorage.getItem('authToken');
+      if (!token) throw new Error('No authentication token found');
+
+      await axios.put(
+        `${API_BASE_URL}/profile/${user.id}`,
+        updatedFields,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
       );
-      console.log('After update:', response.data);
 
-      setUser((prevUser) => ({
-        ...prevUser,
-        ...response.data,
-      }));
-
-      console.log('After setUser:', user);
-      setModalContent({
-        title: 'Success',
-        message: 'Profile updated successfully!',
-      });
-      showModal();
-
-      reset(response.data);
-      setSelectedGender(response.data.gender || '');
+      setShowPasswordConfirm(true);
     } catch (error) {
       console.error('Error updating user data:', error);
-      setModalContent({
-        title: 'Error',
-        message: 'Failed to update profile. Please try again.',
-      });
-      showModal();
+      // Handle error (e.g., show error message to user)
     }
   };
+
+  const handlePasswordConfirm = async () => {
+    try {
+      setPasswordError('');
+      const response = await axios.post(`${API_BASE_URL}/users/login`, {
+        email: user.email,
+        password: password
+      });
+
+      const { token } = response.data;
+      if (token) {
+        localStorage.setItem('authToken', token);
+        const decodedToken = jwtDecode(token);
+
+        const updatedUser = {
+          id: decodedToken.id,
+          firstname: decodedToken.firstname,
+          lastname: decodedToken.lastname,
+          email: decodedToken.email,
+          dateOfBirth: decodedToken.dateOfBirth,
+          country: decodedToken.country,
+          phone: decodedToken.phone,
+          gender: decodedToken.gender,
+          profilePicture: decodedToken.profilePicture
+        };
+
+        setUser(updatedUser);
+        setShowPasswordConfirm(false);
+        setPassword('');
+        reset(updatedUser);
+      } else {
+        throw new Error('Login failed: No token in response');
+      }
+    } catch (error) {
+      console.error('Error confirming password:', error);
+      setPasswordError('Invalid password. Please try again.');
+    }
+  };
+
+  const formFields = useMemo(() => [
+    { name: 'firstName', label: 'First name', required: 'First name is required' },
+    { name: 'lastName', label: 'Last name', required: 'Last name is required' },
+    { name: 'gender', label: 'Gender', type: 'select', options: ['male', 'female', 'other'] },
+    { name: 'dateOfBirth', label: 'Date of birth', type: 'date', max: getCurrentDate() },
+    { name: 'phoneNumber', label: 'Phone number', required: 'Phone number is required', pattern: { value: /^\d{10}$/, message: 'Phone number must be 10 digits' } },
+    { name: 'email', label: 'E-mail', type: 'email', disabled: true },
+  ], []);
 
   return (
     <div className="bg-gray-100 min-h-screen py-8">
@@ -103,9 +148,7 @@ const UserDashboardPage = () => {
           <div className="md:flex-shrink-0 p-8 bg-gray-50">
             <div className="text-center">
               <img
-                src={
-                  selectedImage || user?.profileImage || '/default-avatar.png'
-                }
+                src={selectedImage || user?.profilePicture || DEFAULT_AVATAR}
                 alt="Profile"
                 className="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-white shadow-lg"
               />
@@ -133,114 +176,37 @@ const UserDashboardPage = () => {
             </h1>
             <form onSubmit={handleSubmit(onSubmit)}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    First name*
-                  </label>
-                  <input
-                    {...register('firstName', {
-                      required: 'First name is required',
-                    })}
-                    defaultValue={user?.firstname}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  {errors.firstName && (
-                    <span className="text-red-500 text-sm">
-                      {errors.firstName.message}
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Last name*
-                  </label>
-                  <input
-                    {...register('lastName', {
-                      required: 'Last name is required',
-                    })}
-                    defaultValue={user?.lastname}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  {errors.lastName && (
-                    <span className="text-red-500 text-sm">
-                      {errors.lastName.message}
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Gender
-                  </label>
-                  <select
-                    {...register('gender')}
-                    value={selectedGender}
-                    onChange={(e) => setSelectedGender(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">-Select-</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Date of birth
-                  </label>
-                  <input
-                    type="date"
-                    {...register('dateOfBirth')}
-                    defaultValue={user?.dateOfBirth}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Phone number*
-                  </label>
-                  <div className="flex">
-                    <select className="w-20 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      <option>+66</option>
-                    </select>
-                    <input
-                      type="tel"
-                      {...register('phoneNumber', {
-                        required: 'Phone number is required',
-                        pattern: {
-                          value: /^\d{9}$/,
-                          message: 'Phone number must be 9 digits',
-                        },
-                      })}
-                      defaultValue={user?.phone}
-                      className="flex-grow px-3 py-2 border border-gray-300 border-l-0 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      onKeyDown={(e) => {
-                        if (
-                          (!/^\d$/.test(e.key) && e.key !== 'Backspace') ||
-                          (e.target.value.length >= 9 && e.key !== 'Backspace')
-                        ) {
-                          e.preventDefault();
-                        }
-                      }}
-                    />
+                {formFields.map((field) => (
+                  <div key={field.name}>
+                    <label className="block mb-2 text-sm font-medium text-gray-700">
+                      {field.label}{field.required ? '*' : ''}
+                    </label>
+                    {field.type === 'select' ? (
+                      <select
+                        {...register(field.name)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">-Select-</option>
+                        {field.options.map(option => (
+                          <option key={option} value={option}>{option.charAt(0).toUpperCase() + option.slice(1)}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type={field.type || 'text'}
+                        {...register(field.name, { required: field.required, pattern: field.pattern })}
+                        className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${field.disabled ? 'bg-gray-100' : ''}`}
+                        disabled={field.disabled}
+                        max={field.max}
+                      />
+                    )}
+                    {errors[field.name] && (
+                      <span className="text-red-500 text-sm">
+                        {errors[field.name].message}
+                      </span>
+                    )}
                   </div>
-                  {errors.phoneNumber && (
-                    <span className="text-red-500 text-sm">
-                      {errors.phoneNumber.message}
-                    </span>
-                  )}
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    E-mail
-                  </label>
-                  <input
-                    type="email"
-                    {...register('email')}
-                    defaultValue={user?.email}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
-                    disabled
-                  />
-                </div>
+                ))}
               </div>
               <div className="mt-6 text-right">
                 <button
@@ -256,15 +222,28 @@ const UserDashboardPage = () => {
         </div>
       </div>
 
-      {/* DaisyUI Modal */}
-      <dialog id="update_modal" className="modal">
+      {/* Password Confirmation Modal */}
+      <dialog id="password_confirm_modal" className={`modal ${showPasswordConfirm ? 'modal-open' : ''}`}>
         <div className="modal-box">
-          <h3 className="font-bold text-lg">{modalContent.title}</h3>
-          <p className="py-4">{modalContent.message}</p>
+          <h3 className="font-bold text-lg">Confirm Your Password</h3>
+          <p className="py-4">Please enter your password to confirm the changes.</p>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {passwordError && (
+            <p className="text-red-500 text-sm mt-2">{passwordError}</p>
+          )}
           <div className="modal-action">
-            <form method="dialog">
-              <button className="btn">Close</button>
-            </form>
+            <button onClick={handlePasswordConfirm} className="btn btn-primary">Confirm</button>
+            <button onClick={() => {
+              setShowPasswordConfirm(false);
+              setPassword('');
+              setPasswordError('');
+            }} className="btn">Cancel</button>
           </div>
         </div>
       </dialog>

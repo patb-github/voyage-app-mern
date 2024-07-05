@@ -27,8 +27,6 @@ const LoginPage = () => {
       const { token } = res.data;
       if (token) {
         localStorage.setItem('authToken', token);
-  
-        // เปลี่ยนจาก jwt_decode เป็น jwtDecode
         const decodedToken = jwtDecode(token);
         console.log('Decoded token:', decodedToken);
   
@@ -37,13 +35,24 @@ const LoginPage = () => {
           firstname: decodedToken.firstname,
           lastname: decodedToken.lastname,
           email: decodedToken.email,
-          // เพิ่มข้อมูลอื่นๆ ตามที่ต้องการ
+          dateOfBirth: decodedToken.dateOfBirth,
+          country: decodedToken.country,
+          phone: decodedToken.phone,
+          gender: decodedToken.gender,
+          profilePicture: decodedToken.profilePicture,
+          isAdmin: decodedToken.isAdmin // เพิ่ม isAdmin เข้าไปใน user object
         };
   
         setLoginError(false);
         setUser(user);
-        console.log('Login successful. Navigating to home page.');
-        navigate('/');
+        console.log('Login successful. Navigating to appropriate page.');
+        
+        // ตรวจสอบ isAdmin และนำทางไปยังหน้าที่เหมาะสม
+        if (decodedToken.isAdmin) {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
       } else {
         console.log('Login failed: No token in response');
         setLoginError(true);

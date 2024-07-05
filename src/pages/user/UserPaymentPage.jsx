@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
 
-function Payment() {
+function UserPaymentPage() {
   const [user, setUser] = useState(null); // เก็บข้อมูลผู้ใช้
   const [orderFromCart, setOrderFromCart] = useState(null); // เก็บข้อมูลออเดอร์
   const navigate = useNavigate();
@@ -198,4 +198,4 @@ function Payment() {
   );
 }
 
-export default Payment;
+export default UserPaymentPage;

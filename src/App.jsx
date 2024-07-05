@@ -15,8 +15,9 @@ import UserPasswordChange from './pages/user/UserPasswordChange';
 import UserEditBookingPage from './pages/user/UserEditBookingPage';
 import UserCheckout from './pages/user/UserCheckout';
 // admin section
-import CreateTripForm from './pages/admin/CreateTripForm';
+import AdminCreateTripPage from './pages/admin/AdminCreateTripPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminEditTripPage from './pages/admin/AdminEditTripPage';
 import Footer from './components/Footer';
 
 const App = () => {
@@ -29,7 +30,7 @@ const App = () => {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/package/:tripname" element={<UserProductPage />} />
+            <Route path="/package/:id" element={<UserProductPage />} />
             <Route path="/member" element={<UserDashboardPage />} />
             <Route path="/cart" element={<UserCartPage />} />
             <Route path="/payment" element={<UserPaymentPage />} />
@@ -40,7 +41,8 @@ const App = () => {
             <Route path="*" element={<NotFound />} />
             {/* admin section */}
             <Route path="/admin" element={<AdminDashboardPage />} />
-            <Route path="/create" element={<CreateTripForm />} />
+            <Route path="/admin/create-trip" element={<AdminCreateTripPage />} />
+            <Route path="/admin/edit-trip/:id" element={<AdminEditTripPage />} />
           </Routes>
           <Footer />
         </UserProvider>
