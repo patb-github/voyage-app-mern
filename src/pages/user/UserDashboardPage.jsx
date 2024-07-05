@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import UserContext from '../../context/UserContext';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from "jwt-decode";
 
 // Constants
 const API_BASE_URL = 'http://localhost:3000/api';
@@ -19,7 +18,7 @@ const getCurrentDate = () => {
 };
 
 const UserDashboardPage = () => {
-  const { user, setUser } = useContext(UserContext);
+  const { user, setUser, login } = useContext(UserContext);
   const [selectedImage, setSelectedImage] = useState(null);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [password, setPassword] = useState('');
@@ -97,34 +96,17 @@ const UserDashboardPage = () => {
   const handlePasswordConfirm = async () => {
     try {
       setPasswordError('');
-      const response = await axios.post(`${API_BASE_URL}/users/login`, {
+      const loginResult = await login({
         email: user.email,
         password: password
       });
 
-      const { token } = response.data;
-      if (token) {
-        localStorage.setItem('authToken', token);
-        const decodedToken = jwtDecode(token);
-
-        const updatedUser = {
-          id: decodedToken.id,
-          firstname: decodedToken.firstname,
-          lastname: decodedToken.lastname,
-          email: decodedToken.email,
-          dateOfBirth: decodedToken.dateOfBirth,
-          country: decodedToken.country,
-          phone: decodedToken.phone,
-          gender: decodedToken.gender,
-          profilePicture: decodedToken.profilePicture
-        };
-
-        setUser(updatedUser);
+      if (loginResult.success) {
         setShowPasswordConfirm(false);
         setPassword('');
-        reset(updatedUser);
+        reset(loginResult.user);
       } else {
-        throw new Error('Login failed: No token in response');
+        throw new Error('Login failed');
       }
     } catch (error) {
       console.error('Error confirming password:', error);
