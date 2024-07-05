@@ -1,306 +1,151 @@
 import { useState, useContext } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faCartShopping,
   faLocationDot,
   faStar,
+  faCalendarCheck
 } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link, useParams, Navigate } from 'react-router-dom';
 import { allTrips, getTripByName } from '../../assets/allTrips';
 import UserContext from '../../context/UserContext';
 
 const ContentHead = ({ trip }) => {
   return (
-    <div>
-      <p className="text-2xl font-extrabold py-4 px-8 md:px-0">{trip.title}</p>
-      <div className="flex flex-row place-content-between px-8 md:px-0">
-        <div className="flex gap-2 content-center">
-          <FontAwesomeIcon
-            icon={faLocationDot}
-            className="fa-xl"
-            style={{ color: '#fd003a' }}
-          />
-          <p>{`${trip.destination_to}, ${trip.country}`}</p>
+    <div className="rounded-3xl shadow-lg px-8 py-6 mb-6 bg-gradient-to-r from-indigo-50 to-blue-50">
+      <h2 className="text-2xl font-extrabold py-4 text-indigo-800">New York Adventure: Statue of Liberty, Broadway, The Peninsula New York</h2>
+      <div className="flex justify-between items-center bg-white rounded-xl p-4 shadow-md">
+        <div className="flex-col flex items-center">
+          <p className="font-extrabold text-xl text-indigo-700">Your City</p>
         </div>
-        <div className="flex gap-2">
-          <FontAwesomeIcon
-            icon={faStar}
-            className="fa-xl"
-            style={{ color: '#ffc107' }}
-          />
-          <p>{`${trip.rating} (${trip.num_reviews} รีวิว)`}</p>
+        <div className="flex-col flex items-center">
+          <img src="/planeBlue.svg" alt="Plane icon" className="w-10 h-10" />
+          <p className="font-semibold text-red-500 mt-2">(5 Days 4 Nights)</p>
+        </div>
+        <div className="flex-col flex items-center">
+          <p className="font-extrabold text-xl text-indigo-700">New York</p>
         </div>
       </div>
-      <div className="flex justify-between md:justify-center items-center py-4 px-12 md:gap-12">
-        <div className="flex-col flex items-center gap-2">
-          <p className="font-extrabold text-xl">{trip.destination_from}</p>
-          <p className="font-bold bg-gray-200 rounded-full p-2">
-            {trip.start_date}
-          </p>
+      <div className="flex justify-between mt-4">
+        <div className="flex items-center">
+          <FontAwesomeIcon icon={faLocationDot} className="text-red-500 mr-2" />
+          <p>New York, USA</p>
         </div>
-        <div className="flex-col flex items-center gap-2">
-          <img src="/planeBlue.svg" alt="" />
-          <p className="font-semibold text-red-500">(4 วัน 3 คืน)</p>
-        </div>
-        <div className="flex-col flex items-center gap-2">
-          <p className="font-extrabold text-xl">{trip.destination_to}</p>
-          <p className="font-bold bg-gray-200 rounded-full p-2">
-            {trip.end_date}
-          </p>
+        <div className="flex items-center">
+          <FontAwesomeIcon icon={faStar} className="text-yellow-400 mr-2" />
+          <p>4.8 (1,234 reviews)</p>
         </div>
       </div>
+      <button className="flex mt-4 text-lg text-indigo-600 items-center hover:underline">
+        <span>Read full program details</span>
+        <span className="text-2xl ml-2">&#8227;</span>
+      </button>
+      <button className="flex mt-2 text-lg text-indigo-600 items-center hover:underline">
+        <span>Policy | Things to know before traveling</span>
+        <span className="text-2xl ml-2">&#8227;</span>
+      </button>
     </div>
   );
 };
 
-const ProductDetails = ({ showDetail, setShowDetail, trip }) => {
+const ProductDetails = ({ trip }) => {
   return (
-    <div
-      className={`${
-        showDetail ? '' : 'hidden'
-      } md:flex md:flex-col md:pb-2 md:h-full pb-[88px]`}
-    >
-      <p className="text-xl font-normal px-8 pt-4 text-center md:hidden">
-        {trip.description}
+    <div className="rounded-3xl shadow-lg px-8 py-6 mb-6 bg-white">
+      <h2 className="text-2xl font-extrabold py-4 text-indigo-800">Package Details</h2>
+      <p className="text-lg font-normal py-4 text-gray-700">
+        New York, USA 5 Days 4 Nights package including flights, accommodation, restaurants, and Statue of Liberty tickets. Watch a world-class Broadway show. 24/7 personal assistant service from start to finish. Package for 1 person.
       </p>
-      <div
-        className="flex flex-col content-center px-8
-                    md:rounded-3xl md:shadow-xl md:grow
-                    md:outline md:outline-1 md:outline-gray-200"
-      >
-        <h2 className="font-semibold text-3xl text-center py-8">
-          สิ่งที่รวมในแพ็คเกจ
-        </h2>
-        <ul>
-          {trip.subexpenses.map((item, i) => (
-            <li key={i} className="flex justify-between">
-              <p className="text-xl font-normal">{item[0]}</p>
-              <p className="text-xl font-normal">{`฿${item[1]}`}</p>
-            </li>
-          ))}
-        </ul>
-        <br />
-        <br />
-        <div className="mt-auto flex justify-between py-4 border-t border-black">
-          <p className="text-xl font-normal align-middle">ยอดรวม</p>
-          <p className="text-2xl font-semibold align-middle">฿{trip.price}</p>
-        </div>
-        <p
-          className="font-semibold underline text-center md:hidden"
-          onClick={() => setShowDetail(false)}
-        >
-          ดูรายละเอียดแบบย่อ
-        </p>
-      </div>
-    </div>
-  );
-};
-
-const ProductCarousel = ({ classes, trip }) => {
-  return (
-    <div className={`carousel w-full ${classes}`}>
-      <div id="slide1" className="carousel-item relative w-full">
-        <img src={trip.imageSrc} className="w-full" />
-        <div className="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 top-1/2">
-          <a href="#slide4" className="btn btn-circle">
-            ❮
-          </a>
-          <a href="#slide2" className="btn btn-circle">
-            ❯
-          </a>
-        </div>
-      </div>
-      <div id="slide2" className="carousel-item relative w-full">
-        <img
-          src="https://img.daisyui.com/images/stock/photo-1609621838510-5ad474b7d25d.jpg"
-          className="w-full"
-        />
-        <div className="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 top-1/2">
-          <a href="#slide1" className="btn btn-circle">
-            ❮
-          </a>
-          <a href="#slide3" className="btn btn-circle">
-            ❯
-          </a>
-        </div>
-      </div>
-      <div id="slide3" className="carousel-item relative w-full">
-        <img
-          src="https://img.daisyui.com/images/stock/photo-1414694762283-acccc27bca85.jpg"
-          className="w-full"
-        />
-        <div className="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 top-1/2">
-          <a href="#slide2" className="btn btn-circle">
-            ❮
-          </a>
-          <a href="#slide4" className="btn btn-circle">
-            ❯
-          </a>
-        </div>
-      </div>
-      <div id="slide4" className="carousel-item relative w-full">
-        <img
-          src="https://img.daisyui.com/images/stock/photo-1665553365602-b2fb8e5d1707.jpg"
-          className="w-full"
-        />
-        <div className="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 top-1/2">
-          <a href="#slide3" className="btn btn-circle">
-            ❮
-          </a>
-          <a href="#slide1" className="btn btn-circle">
-            ❯
-          </a>
-        </div>
-      </div>
+      <ul>
+        <li className="flex justify-between py-2 border-b border-gray-200">
+          <p className="text-lg font-normal">Round-trip flight tickets</p>
+          <p className="text-lg font-normal">$35,000</p>
+        </li>
+        <li className="flex justify-between py-2 border-b border-gray-200">
+          <p className="text-lg font-normal">The Peninsula New York 5 Days 4 Nights with breakfast</p>
+          <p className="text-lg font-normal">$40,700</p>
+        </li>
+        <li className="flex justify-between py-2 border-b border-gray-200">
+          <p className="text-lg font-normal">Statue of Liberty tickets</p>
+          <p className="text-lg font-normal">$1,700</p>
+        </li>
+        <li className="flex justify-between py-2 border-b border-gray-200">
+          <p className="text-lg font-normal">Airport transfer and 24/7 personal assistant service</p>
+          <p className="text-lg font-normal">Included</p>
+        </li>
+      </ul>
     </div>
   );
 };
 
 const UserProductPage = () => {
-  const [showDetail, setShowDetail] = useState(false);
-  const [showMedal, setShowMedal] = useState(false); // State for medal
-  const { user, setUserData } = useContext(UserContext); // Access user context
+  const [showMedal, setShowMedal] = useState(false);
+  const { user, setUserData } = useContext(UserContext);
   const { tripname } = useParams();
   const trip = getTripByName(allTrips, tripname);
   if (trip === null) {
     return <Navigate to="/error" />;
   }
 
-  const handleAddToCart = () => {
-    if (user) {
-      const updatedCart = [
-        ...user.cart,
-        { ...trip, isChecked: false, total: trip.price },
-      ];
-      setUserData((prevUserData) =>
-        prevUserData.map((u) =>
-          u.id === user.id
-            ? {
-                ...u,
-                cart: updatedCart,
-              }
-            : u
-        )
-      );
-    }
+  const handleBooking = () => {
+    // Add booking logic here
     setShowMedal(true);
-    setTimeout(() => setShowMedal(false), 3000); // Hide medal after 3 seconds
+    setTimeout(() => setShowMedal(false), 3000);
   };
 
   return (
-    <div className="h-full bg-cover bg-center bg-no-repeat bg-[url('/bg-desktop.webp')] md:py-16 md:px-48">
-      <section className="bg-white md:rounded-3xl h-full">
-        {/* ส่วนของปุ่มกลับ และหัวข้อ */}
-        <div className="flex justify-center relative z-10">
-          <Link to="../landingpage">
-            <button className="btn rounded-full bg-white hover:bg-white w-12 fixed top-5 left-5 md:hidden">
-              <img src="/back_button.svg" alt="Back Button" />
-            </button>
-          </Link>
-          <p className="text-4xl font-extrabold pt-8 pb-10 hidden md:block">
-            ตัวเลือกการจอง
-          </p>
+    <div className="min-h-screen bg-[url('/bg-desktop.webp')] py-8 px-4 md:py-16 md:px-48">
+      <section className="bg-white rounded-3xl shadow-2xl">
+        <div className="text-center">
+          <h1 className="text-4xl md:text-5xl font-extrabold pt-8 pb-10 text-indigo-700">
+            Booking Details
+          </h1>
         </div>
-
-        {/* ส่วนเนื้อหาหลัก */}
-        <div className="flex flex-col md:flex-row md:pb-8">
-          {/* ส่วนรูปภาพและคำอธิบายแพ็คเกจ */}
-          <div className="md:flex md:flex-col md:h-auto md:w-[50%] md:px-16 md:border-r md:border-r-black">
-            <ProductCarousel
-              classes={
-                'md:rounded-3xl fixed bottom-[50%] h-[50%] w-full object-cover md:relative md:h-[60%] md:bottom-auto'
-              }
-              trip={trip}
+        <div className="md:flex md:pb-6">
+          {/* Full-screen image for mobile */}
+          <div className="md:hidden">
+            <img
+              src={trip.imageSrc}
+              alt={trip.title}
+              className="w-full h-screen object-cover"
             />
-            <dialog id="my_modal_2" className="modal">
-              <div className="modal-box">
-                <h3 className="font-bold text-lg">Hello!</h3>
-                <p className="py-4">
-                  Press ESC key or ✕ or click outside to close
-                </p>
-                <form method="dialog">
-                  <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
-                    ✕
-                  </button>
-                  <ProductCarousel trip={trip} />
-                </form>
-              </div>
-              <form method="dialog" className="modal-backdrop">
-                <button>close</button>
-              </form>
-            </dialog>
-            <div className="hidden md:block">
-              <ContentHead trip={trip} />
-            </div>
-            <p className="text-xl font-normal px-8 md:px-0 text-center">
+          </div>
+          
+          {/* Desktop layout */}
+          <div className="hidden md:block md:w-1/2 px-16 border-r border-gray-200">
+            <img
+              src={trip.imageSrc}
+              alt={trip.title}
+              className="rounded-3xl shadow-lg transform hover:scale-105 transition duration-300"
+            />
+            <p className="text-lg font-normal py-4 text-gray-700">
               {trip.description}
             </p>
           </div>
-
-          {/* ส่วนรายละเอียดการจอง */}
-          <div
-            className="fixed top-[45%] h-[55%] w-full bg-white rounded-t-[2rem] flex flex-col justify-between overflow-y-auto
-                          md:relative md:w-[50%] md:h-auto md:px-16 md:overflow-y-visible md:pb-0"
-          >
-            <div className="md:hidden">
-              <ContentHead trip={trip} />
-              <div
-                className={`bg-[#B9FFFB] rounded-3xl px-6 py-3 mx-12 ${
-                  showDetail ? 'hidden' : ''
-                }`}
-              >
-                <p>
-                  โปรแกรมท่องเที่ยว โอกินาว่า แบบ All in one ไม่ต้อง
-                  ปวดหัวกับการจอง ตั๋วเครื่องบิน โรงแรม ร้านอาหาร เพราะ Vovage
-                  จัดการให้หมดแล้ว
-                </p>
-                <p
-                  className="font-semibold underline"
-                  onClick={() => setShowDetail(true)}
-                >
-                  ดูรายละเอียดแบบเต็มๆ
-                </p>
+          <div className="md:w-1/2 md:px-10">
+            <ContentHead trip={trip} />
+            <ProductDetails trip={trip} />
+            <div className="flex justify-between px-6 py-4 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl mt-4 text-white">
+              <div className="flex flex-col">
+                <p className="text-sm font-bold">Total Payment</p>
+                <p className="text-3xl font-bold">$77,400</p>
               </div>
-            </div>
-            <ProductDetails
-              showDetail={showDetail}
-              setShowDetail={setShowDetail}
-              trip={trip}
-            />
-            <div className="fixed bottom-0 w-full bg-white md:bg-transparent md:relative md:mt-auto">
-              <div className="shadow-md h-2 md:shadow-none"></div>
-              <div className="flex justify-between md:justify-start p-4 text-base-content px-8 md:px-0">
-                <div className="flex flex-col justify-center md:hidden">
-                  <p className="text-xs font-bold">ยอดชำระเงินทั้งหมด</p>
-                  <p className="text-2xl font-bold">{`฿${trip.price}`}</p>
-                </div>
-                <div className="flex content-center gap-3 md:w-full md:justify-end">
-                  <div className="flex gap-3">
-                    <button
-                      className="btn btn-circle outline outline-1 outline-gray-300 bg-white"
-                      onClick={handleAddToCart}
-                    >
-                      <FontAwesomeIcon
-                        icon={faCartShopping}
-                        className="fa-2x"
-                        style={{ color: '#000000' }}
-                      />
-                    </button>
-                    {showMedal && (
-                      <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg">
-                        สินค้าเพิ่มใส่ในตะกร้าแล้ว
-                      </div>
-                    )}
-                  </div>
-                  <button className="btn rounded-full bg-[#5F97FB] text-white text-xl">
-                    ชำระเงิน
-                  </button>
-                </div>
+              <div className="flex space-x-2">
+                <button 
+                  className="btn bg-white text-indigo-700 hover:bg-indigo-100 rounded-full px-4 transition duration-300 flex items-center"
+                  onClick={handleBooking}
+                >
+                  <FontAwesomeIcon icon={faCalendarCheck} className="mr-2" />
+                  Book Now
+                </button>
               </div>
             </div>
           </div>
         </div>
       </section>
+      {showMedal && (
+        <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg">
+          Booking initiated
+        </div>
+      )}
     </div>
   );
 };

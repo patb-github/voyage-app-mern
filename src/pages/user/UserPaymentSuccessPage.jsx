@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-const PaymentSuccess = () => {
+const UserPaymentSuccessPage = () => {
   return (
     <div>
       <section className="PaymentSuccess">
@@ -32,4 +32,4 @@ const PaymentSuccess = () => {
   );
 };
 
-export default PaymentSuccess;
+export default UserPaymentSuccessPage;

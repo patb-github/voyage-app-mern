@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useState, useContext } from 'react';
 import UserContext from '../context/UserContext';
 import axios from 'axios';
-
+import { jwtDecode } from "jwt-decode";
 const LoginPage = () => {
   const {
     register,
@@ -22,17 +22,35 @@ const LoginPage = () => {
         'http://localhost:3000/api/users/login',
         data
       );
-      const user = res.data.user;
-
-      if (user) {
+      console.log('Login response:', res);
+  
+      const { token } = res.data;
+      if (token) {
+        localStorage.setItem('authToken', token);
+  
+        // เปลี่ยนจาก jwt_decode เป็น jwtDecode
+        const decodedToken = jwtDecode(token);
+        console.log('Decoded token:', decodedToken);
+  
+        const user = {
+          id: decodedToken.id,
+          firstname: decodedToken.firstname,
+          lastname: decodedToken.lastname,
+          email: decodedToken.email,
+          // เพิ่มข้อมูลอื่นๆ ตามที่ต้องการ
+        };
+  
         setLoginError(false);
         setUser(user);
+        console.log('Login successful. Navigating to home page.');
         navigate('/');
       } else {
+        console.log('Login failed: No token in response');
         setLoginError(true);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Login error:', err);
+      console.log('Error response:', err.response);
       setLoginError(true);
     } finally {
       setIsLoading(false);
