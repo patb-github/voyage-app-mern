@@ -85,7 +85,7 @@ const Navbar = () => {
                     <span className="sr-only">Open user menu</span>
                     <img
                       className="h-8 w-8 rounded-full object-cover"
-                      src={user?.profileImage || '/profile.jpg'}
+                      src={user?.profilePicture || '/user/profile.jpg'}
                       alt=""
                     />
                     <span className="ml-2 text-sm font-medium hidden md:inline-block">

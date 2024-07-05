@@ -1,17 +1,16 @@
-// src/components/DestinationCard.js
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMapMarkerAlt, faStar } from '@fortawesome/free-solid-svg-icons';
 
-const DestinationCard = ({ imageSrc, title, location, rating, price }) => (
+const DestinationCard = ({ _id, name, destination_from, destination_to, rating, price, images }) => (
   <motion.div whileHover={{ y: -5 }} transition={{ duration: 0.3 }}>
-    <Link to={`/package/${title}`} className="block">
+    <Link to={`/package/${_id}`} className="block">
       <div className="card bg-white shadow-xl rounded-lg overflow-hidden">
-        <img className="w-full h-48 object-cover" src={imageSrc} alt={title} />
+        <img className="w-full h-48 object-cover" src={images[0] || '/destination/default.jpg'} alt={name} />
         <div className="p-2 sm:p-4">
           <h3 className="font-bold text-base sm:text-lg mb-1 sm:mb-2 line-clamp-2">
-            {title}
+            {name}
           </h3>
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center">
@@ -19,7 +18,7 @@ const DestinationCard = ({ imageSrc, title, location, rating, price }) => (
                 icon={faMapMarkerAlt}
                 className="w-4 h-4 mr-1 text-gray-600"
               />
-              <p className="text-sm text-gray-600">{location}</p>
+              <p className="text-sm text-gray-600">{`${destination_from} to ${destination_to}`}</p>
             </div>
             <div className="flex items-center">
               <FontAwesomeIcon
