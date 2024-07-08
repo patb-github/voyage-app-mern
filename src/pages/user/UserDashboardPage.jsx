@@ -71,20 +71,23 @@ const UserDashboardPage = () => {
       dateOfBirth: data.dateOfBirth,
       country: data.country,
       phone: data.phoneNumber,
-      ...(selectedImage && { profileImage: selectedImage }),
+      ...(selectedImage && { profilePicture: selectedImage }),
     };
 
+    console.log(updatedFields);
     try {
       const token = localStorage.getItem('authToken');
       if (!token) throw new Error('No authentication token found');
 
-      await axios.put(
+      const res = await axios.put(
         `${API_BASE_URL}/profile/${user.id}`,
         updatedFields,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
+
+      console.log('Response:', res);
 
       setShowPasswordConfirm(true);
     } catch (error) {
