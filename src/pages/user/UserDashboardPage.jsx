@@ -30,6 +30,8 @@ const UserDashboardPage = () => {
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [updatedData, setUpdatedData] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
@@ -83,46 +85,46 @@ const UserDashboardPage = () => {
       ...(selectedImage && { profilePicture: selectedImage }),
     };
 
-    console.log(updatedFields);
-    try {
-      const token = localStorage.getItem('authToken');
-      if (!token) throw new Error('No authentication token found');
-
-      const res = await axios.put(
-        `${API_BASE_URL}/profile/${user.id}`,
-        updatedFields,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      console.log('Response:', res);
-
-      setShowPasswordConfirm(true);
-    } catch (error) {
-      console.error('Error updating user data:', error);
-      // Handle error (e.g., show error message to user)
-    }
+    setUpdatedData(updatedFields);
+    setShowPasswordConfirm(true);
   };
 
   const handlePasswordConfirm = async () => {
     try {
       setPasswordError('');
+      setIsUpdating(true);
+
       const loginResult = await login({
         email: user.email,
         password: password,
       });
 
       if (loginResult.success) {
+        const token = localStorage.getItem('authToken');
+        if (!token) throw new Error('No authentication token found');
+
+        const res = await axios.put(
+          `${API_BASE_URL}/profile/${user.id}`,
+          updatedData,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        console.log('Response:', res);
+
         setShowPasswordConfirm(false);
         setPassword('');
         reset(loginResult.user);
+        setUpdatedData(null);
       } else {
         throw new Error('Login failed');
       }
     } catch (error) {
-      console.error('Error confirming password:', error);
-      setPasswordError('Invalid password. Please try again.');
+      console.error('Error confirming password or updating profile:', error);
+      setPasswordError('Invalid password or update failed. Please try again.');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -243,9 +245,16 @@ const UserDashboardPage = () => {
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  disabled={!isDirty && !selectedImage}
+                  disabled={(!isDirty && !selectedImage) || isUpdating}
                 >
-                  Update Profile
+                  {isUpdating ? (
+                    <>
+                      <span className="loading loading-spinner"></span>
+                      Updating...
+                    </>
+                  ) : (
+                    'Update Profile'
+                  )}
                 </button>
               </div>
             </form>
@@ -274,16 +283,29 @@ const UserDashboardPage = () => {
             <p className="text-red-500 text-sm mt-2">{passwordError}</p>
           )}
           <div className="modal-action">
-            <button onClick={handlePasswordConfirm} className="btn btn-primary">
-              Confirm
+            <button
+              onClick={handlePasswordConfirm}
+              className="btn btn-primary"
+              disabled={isUpdating}
+            >
+              {isUpdating ? (
+                <>
+                  <span className="loading loading-spinner"></span>
+                  Updating...
+                </>
+              ) : (
+                'Confirm'
+              )}
             </button>
             <button
               onClick={() => {
                 setShowPasswordConfirm(false);
                 setPassword('');
                 setPasswordError('');
+                setUpdatedData(null);
               }}
               className="btn"
+              disabled={isUpdating}
             >
               Cancel
             </button>
