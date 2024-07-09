@@ -7,7 +7,6 @@ import {
   faEdit,
   faTrash,
   faSpinner,
-  faCheckCircle,
 } from '@fortawesome/free-solid-svg-icons';
 
 const PackageTripManage = () => {
@@ -17,7 +16,6 @@ const PackageTripManage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tripToDelete, setTripToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
 
   useEffect(() => {
     const fetchTrips = async () => {
@@ -45,7 +43,6 @@ const PackageTripManage = () => {
   };
 
   const confirmDelete = async () => {
-    setModalMessage('Deleting trip...');
     setIsDeleting(true);
 
     try {
@@ -55,21 +52,16 @@ const PackageTripManage = () => {
       );
 
       if (response.ok) {
-        setModalMessage('Trip deleted successfully!');
         setTrips(trips.filter((trip) => trip._id !== tripToDelete));
       } else {
-        setModalMessage('Error deleting trip. Please try again.');
+        console.error('Error deleting trip. Please try again.');
       }
     } catch (error) {
       console.error('Error deleting trip:', error);
-      setModalMessage('Error deleting trip. Please try again.');
     } finally {
       setIsDeleting(false);
-      setTimeout(() => {
-        setIsModalOpen(false);
-        setTripToDelete(null);
-        setModalMessage('');
-      }, 1500);
+      setIsModalOpen(false);
+      setTripToDelete(null);
     }
   };
 
@@ -143,47 +135,32 @@ const PackageTripManage = () => {
         {/* DaisyUI Modal */}
         <div className={`modal ${isModalOpen ? 'modal-open' : ''}`}>
           <div className="modal-box relative">
-            <h3 className="font-bold text-lg">{modalMessage}</h3>
-            <p className="py-4 font-bold">
-              Confirm trip deletion. This action is permanent and cannot be
-              undone.
-            </p>
-            {isDeleting && (
-              <FontAwesomeIcon
-                icon={faSpinner}
-                spin
-                className="absolute top-4 right-4 text-2xl text-blue-500"
-              />
-            )}
-
-            <div className="modal-action">
-              {!isDeleting && !tripToDelete && (
-                <button
-                  className="btn btn-primary"
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  <FontAwesomeIcon icon={faCheckCircle} className="mr-2" /> OK
-                </button>
-              )}
-              {!isDeleting && tripToDelete && (
-                <>
-                  <button
-                    className={`btn btn-error ${isDeleting ? 'loading' : ''}`}
-                    onClick={confirmDelete}
-                    disabled={isDeleting}
-                  >
-                    {isDeleting ? (
-                      <FontAwesomeIcon icon={faSpinner} spin />
-                    ) : (
-                      'Delete'
-                    )}
+            {!isDeleting && (
+              <>
+                <h3 className="font-bold text-lg">Confirm Delete</h3>
+                <p className="py-4 font-bold">
+                  Are you sure you want to delete this trip? This action is
+                  permanent and cannot be undone.
+                </p>
+                <div className="modal-action">
+                  <button className="btn btn-error" onClick={confirmDelete}>
+                    Delete
                   </button>
                   <button className="btn" onClick={() => setIsModalOpen(false)}>
                     Cancel
                   </button>
-                </>
-              )}
-            </div>
+                </div>
+              </>
+            )}
+            {isDeleting && (
+              <div className="flex justify-center items-center">
+                <FontAwesomeIcon
+                  icon={faSpinner}
+                  spin
+                  className="text-2xl text-blue-500"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

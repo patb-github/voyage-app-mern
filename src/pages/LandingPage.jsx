@@ -20,7 +20,7 @@ const Offer = ({ imageSrc, altText, title }) => (
   </motion.div>
 );
 
-const offers = [
+const recommended = [
   {
     id: 1,
     imageSrc: '/destination/discount.jpg',
@@ -108,7 +108,7 @@ const LandingPage = () => {
             Latest Travel Promotions
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {offers.map((offer) => (
+            {recommended.map((offer) => (
               <Offer key={offer.id} {...offer} />
             ))}
           </div>
