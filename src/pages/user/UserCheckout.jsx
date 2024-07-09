@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faSave,
@@ -9,12 +9,23 @@ import {
   faCreditCard,
 } from '@fortawesome/free-solid-svg-icons';
 import { format, addDays } from 'date-fns';
+import UserContext from '../../context/UserContext';
+import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
 
 function UserCheckout() {
+  const { user, setUser } = useContext(UserContext);
+  const [isLogin, setIsLogin] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentVoyager, setCurrentVoyager] = useState('');
   const [voyagers, setVoyagers] = useState({});
   const [departureDate, setDepartureDate] = useState(new Date());
+  const navigate = useNavigate();
+  const { id } = useParams();
+
+  useEffect(() => {
+    setIsLogin(user !== null);
+  }, [user]);
 
   useEffect(() => {
     // Set initial departure date to tomorrow
@@ -91,6 +102,36 @@ function UserCheckout() {
     const selectedDate = new Date(e.target.value);
     if (selectedDate >= new Date()) {
       setDepartureDate(selectedDate);
+    }
+  };
+
+  const addToCart = async () => {
+    if (!isLogin) {
+      navigate('/login');
+      return;
+    } 
+    // console.log(user);
+    // console.log(localStorage.getItem('authToken'));
+    const cartItem = {
+      trip_id: id,
+      departure_date: departureDate,
+      travelers: []
+    }
+    for (let voyager in voyagers) {
+      cartItem.travelers.push(voyagers[voyager]);
+    }
+    // console.log('voyagers:', voyagers);
+    // console.log('departureDate:', departureDate);
+    // console.log('cartItem:', cartItem);
+    try {
+      const response = await axios.post('http://localhost:3000/api/cart', cartItem, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+        },
+      });
+      console.log(response.data);
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -235,7 +276,9 @@ function UserCheckout() {
                 <p className="text-3xl font-bold">฿ 52,400</p>
               </div>
               <div className="flex space-x-2">
-                <button className="btn bg-white text-indigo-700 hover:bg-indigo-100 rounded-full px-4 transition duration-300 flex items-center">
+                <button className="btn bg-white text-indigo-700 hover:bg-indigo-100 rounded-full px-4 transition duration-300 flex items-center"
+                        onClick={addToCart}
+                >
                   <FontAwesomeIcon icon={faShoppingCart} className="mr-2" />
                   Add to Cart
                 </button>
