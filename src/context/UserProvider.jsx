@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import UserContext from './UserContext';
 import axios from 'axios';
-import { jwtDecode } from "jwt-decode";
+import { jwtDecode } from 'jwt-decode';
 
 const UserProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
@@ -52,7 +52,6 @@ const UserProvider = ({ children }) => {
       if (token) {
         setToken(token);
         const decodedToken = jwtDecode(token);
-        console.log('Decoded token:', decodedToken);
 
         const user = {
           id: decodedToken.id,
@@ -64,7 +63,7 @@ const UserProvider = ({ children }) => {
           phone: decodedToken.phone,
           gender: decodedToken.gender,
           profilePicture: decodedToken.profilePicture,
-          isAdmin: decodedToken.isAdmin
+          isAdmin: decodedToken.isAdmin,
         };
 
         setUser(user);

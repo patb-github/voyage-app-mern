@@ -37,17 +37,18 @@ const Navbar = () => {
     setIsOpen(!isOpen);
   };
 
-  console.log(user)
-
   return (
     <nav className="bg-white shadow-md relative z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-        <div className="flex-shrink-0">
-  <Link to={user?.isAdmin ? "/admin" : "/"} className="flex items-center">
-    <img className="w-40" src="/voyageLogo.webp" alt="Voyage Logo" />
-  </Link>
-</div>
+          <div className="flex-shrink-0">
+            <Link
+              to={user?.isAdmin ? '/admin' : '/'}
+              className="flex items-center"
+            >
+              <img className="w-40" src="/voyageLogo.webp" alt="Voyage Logo" />
+            </Link>
+          </div>
 
           <div className="flex items-center">
             {isLogin ? (
@@ -146,8 +147,7 @@ const Navbar = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="hidden">
-                  </div>
+                  <div className="hidden"></div>
                 )}
               </div>
             ) : (

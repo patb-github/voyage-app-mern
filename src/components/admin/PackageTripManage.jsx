@@ -8,6 +8,24 @@ const PackageTripManage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [trips, setTrips] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const handleDeleteTrip = async (tripId) => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/trips/${tripId}`,
+        { method: 'DELETE' }
+      );
+      if (response.ok) {
+        // Refresh the trips list or remove the deleted trip from the UI
+        alert('ลบข้อมูลทริปเรียบร้อยแล้ว');
+        setTrips(trips.filter((trip) => trip._id !== tripId));
+      } else {
+        alert('เกิดข้อผิดพลาดในการลบทริป');
+      }
+    } catch (error) {
+      console.error('Error deleting trip:', error);
+      alert('เกิดข้อผิดพลาดในการลบทริป');
+    }
+  };
 
   useEffect(() => {
     const fetchTrips = async () => {
@@ -37,13 +55,21 @@ const PackageTripManage = () => {
       <div>
         <h3 className="font-semibold text-lg">{trip.name}</h3>
         <p className="text-sm text-gray-600">{`${trip.destination_from} to ${trip.destination_to}`}</p>
-        <p className="text-sm text-blue-600 font-bold">${trip.price.toLocaleString()}</p>
+        <p className="text-sm text-blue-600 font-bold">
+          ${trip.price.toLocaleString()}
+        </p>
       </div>
       <div>
-        <Link to={`/admin/edit-trip/${trip._id}`} className="btn btn-sm btn-outline btn-primary mr-2">
+        <Link
+          to={`/admin/edit-trip/${trip._id}`}
+          className="btn btn-sm btn-outline btn-primary mr-2"
+        >
           <FontAwesomeIcon icon={faEdit} />
         </Link>
-        <button className="btn btn-sm btn-outline btn-error">
+        <button
+          className="btn btn-sm btn-outline btn-error"
+          onClick={() => handleDeleteTrip(trip._id)}
+        >
           <FontAwesomeIcon icon={faTrash} />
         </button>
       </div>
@@ -54,7 +80,7 @@ const PackageTripManage = () => {
     <div className="bg-gray-100 min-h-screen p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Manage Package Trips</h1>
-        
+
         <div className="mb-6 relative">
           <input
             type="text"
@@ -63,7 +89,10 @@ const PackageTripManage = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <FontAwesomeIcon icon={faSearch} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <FontAwesomeIcon
+            icon={faSearch}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          />
         </div>
 
         <Link to="/admin/create-trip" className="btn btn-primary mb-6">
