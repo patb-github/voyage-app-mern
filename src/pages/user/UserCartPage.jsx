@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import CartItem from '../../components/user/CartItem';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 function UserCartPage() {
   const [user, setUser] = useState({
@@ -44,6 +45,19 @@ function UserCartPage() {
     }, 0);
     setTotalAmount(newTotalAmount);
     console.log('User cart:', user.cart); // Log the user's cart data
+
+    //=========== API CALL ==============
+    const fetchCart = async () => {
+      const res = await axios.get('http://localhost:3000/api/cart', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+        }
+      });
+      console.log(res); 
+    }
+
+    fetchCart();
+    //==================================
   }, [currentUserCartItems]);
 
   const handleCheckboxChange = (itemId) => {
@@ -60,6 +74,18 @@ function UserCartPage() {
       ...prevUser,
       cart: prevUser.cart.filter((item) => item.id !== itemId),
     }));
+    //=========== API CALL ==============
+    const deleteFromCart = async (itemId) => {
+      const res = await axios.get(`http://localhost:3000/api/cart/${itemId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+        }
+      });
+      console.log(res); 
+    }
+
+    deleteFromCart(itemId);
+    //==================================
   };
 
   const handleApplyPromo = (data) => {
