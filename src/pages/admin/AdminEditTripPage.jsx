@@ -24,9 +24,9 @@ function AdminEditTripPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [existingImages, setExistingImages] = useState([]);
   const [newImages, setNewImages] = useState([]);
-  const [currentRating, setCurrentRating] = useState(0);
 
   const watchRating = watch('rating');
+  const currentRating = parseFloat(watchRating || 0).toFixed(1);
 
   const handleBack = () => {
     navigate(-1);
@@ -46,7 +46,6 @@ function AdminEditTripPage() {
         });
         setValue('sub_expenses', tripData.sub_expenses || []);
         setExistingImages(tripData.images || []);
-        setCurrentRating(tripData.rating || 0);
       } catch (error) {
         console.error('Error fetching trip data:', error);
         setErrorMessage('Error fetching trip data. Please try again.');
@@ -56,37 +55,56 @@ function AdminEditTripPage() {
     fetchTripData();
   }, [id, setValue]);
 
-  useEffect(() => {
-    setCurrentRating(parseFloat(watchRating || 0).toFixed(1));
-  }, [watchRating]);
-
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      // สร้าง object ใหม่สำหรับส่งข้อมูล
-      const tripData = {
-        ...data,
-        sub_expenses: data.sub_expenses.map((expense) => ({
-          expense_name: expense.expense_name,
-          expense_amount: parseFloat(expense.expense_amount),
-          _id: expense._id, // ถ้ามี _id
-        })),
-        images: [
-          ...existingImages,
-          ...newImages.map((file) => URL.createObjectURL(file)),
-        ],
-      };
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('duration_days', data.duration_days);
+      formData.append('destination_from', data.destination_from);
+      formData.append('destination_to', data.destination_to);
+      formData.append('rating', data.rating);
+      formData.append('price', data.price);
+      formData.append('description', data.description);
 
-      console.log('Sending data:', tripData);
+      // Append sub_expenses as an array of objects
+      data.sub_expenses.forEach((exp, index) => {
+        formData.append(
+          `sub_expenses[${index}][expense_name]`,
+          exp.expense_name
+        );
+        formData.append(
+          `sub_expenses[${index}][expense_amount]`,
+          exp.expense_amount
+        );
+      });
+
+      // Append existing images
+      existingImages.forEach((image, index) => {
+        formData.append(`existingImages[${index}]`, image);
+      });
+
+      // Append new images
+      newImages.forEach((image, index) => {
+        formData.append('images', image);
+      });
+
+      // Log FormData contents for debugging
+      for (let pair of formData.entries()) {
+        console.log(`${pair[0]}: ${pair[1]}`);
+      }
 
       const response = await axios.patch(
         `http://localhost:3000/api/trips/${id}`,
-        tripData,
+        formData,
         {
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         }
       );
-      console.log('Response:', response.data);
+
+      console.log('Trip updated:', response.data);
       setSuccessMessage('Trip updated successfully!');
     } catch (error) {
       console.error(
@@ -98,11 +116,11 @@ function AdminEditTripPage() {
       setIsLoading(false);
     }
   };
+
   const handleNewImageUpload = (e) => {
     const files = Array.from(e.target.files);
     setNewImages((prevImages) => [...prevImages, ...files]);
   };
-
   const removeExistingImage = (index) => {
     setExistingImages((prevImages) => prevImages.filter((_, i) => i !== index));
   };
@@ -148,6 +166,31 @@ function AdminEditTripPage() {
                 {errors.name && (
                   <span className="text-red-500 text-sm mt-1">
                     {errors.name.message}
+                  </span>
+                )}
+              </div>
+              <div className="form-control">
+                <label
+                  htmlFor="duration_days"
+                  className="label text-gray-700 font-semibold"
+                >
+                  Duration (days)
+                </label>
+                <input
+                  id="duration_days"
+                  type="number"
+                  className={`input input-bordered w-full ${
+                    errors.duration_days ? 'input-error' : ''
+                  }`}
+                  {...register('duration_days', {
+                    required: 'Duration is required',
+                    min: 1,
+                  })}
+                  placeholder="Enter duration in days"
+                />
+                {errors.duration_days && (
+                  <span className="text-red-500 text-sm mt-1">
+                    {errors.duration_days.message}
                   </span>
                 )}
               </div>
@@ -266,18 +309,6 @@ function AdminEditTripPage() {
                   <div key={value} className="flex flex-col items-center">
                     <div className="h-2 border-l border-gray-300"></div>
                     <span className="mt-1">{value}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="w-full flex justify-between px-2 mt-1">
-                {[0, 1, 2, 3, 4].map((value) => (
-                  <div key={value} className="flex justify-between w-full">
-                    {[0.2, 0.4, 0.6, 0.8].map((decimal, index) => (
-                      <div
-                        key={index}
-                        className="h-1 border-l border-gray-300"
-                      ></div>
-                    ))}
                   </div>
                 ))}
               </div>
