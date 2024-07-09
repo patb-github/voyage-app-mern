@@ -1,71 +1,37 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import UserContext from '../context/UserContext';
-import axios from 'axios';
-import { jwtDecode } from "jwt-decode";
+
 const LoginPage = () => {
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
-  const [loginError, setLoginError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { setUser } = useContext(UserContext);
+  const { user, login, loginError } = useContext(UserContext);
+
+  useEffect(() => {
+    if (user) {
+      navigate(user.isAdmin ? '/admin' : '/');
+    }
+  }, [user, navigate]);
 
   const onSubmit = async (data) => {
     setIsLoading(true);
-    try {
-      const res = await axios.post(
-        'http://localhost:3000/api/users/login',
-        data
-      );
-      console.log('Login response:', res);
-  
-      const { token } = res.data;
-      if (token) {
-        localStorage.setItem('authToken', token);
-        const decodedToken = jwtDecode(token);
-        console.log('Decoded token:', decodedToken);
-  
-        const user = {
-          id: decodedToken.id,
-          firstname: decodedToken.firstname,
-          lastname: decodedToken.lastname,
-          email: decodedToken.email,
-          dateOfBirth: decodedToken.dateOfBirth,
-          country: decodedToken.country,
-          phone: decodedToken.phone,
-          gender: decodedToken.gender,
-          profilePicture: decodedToken.profilePicture,
-          isAdmin: decodedToken.isAdmin // เพิ่ม isAdmin เข้าไปใน user object
-        };
-  
-        setLoginError(false);
-        setUser(user);
-        console.log('Login successful. Navigating to appropriate page.');
-        
-        // ตรวจสอบ isAdmin และนำทางไปยังหน้าที่เหมาะสม
-        if (decodedToken.isAdmin) {
-          navigate('/admin');
-        } else {
-          navigate('/');
-        }
-      } else {
-        console.log('Login failed: No token in response');
-        setLoginError(true);
-      }
-    } catch (err) {
-      console.error('Login error:', err);
-      console.log('Error response:', err.response);
-      setLoginError(true);
-    } finally {
-      setIsLoading(false);
+    const result = await login(data);
+    setIsLoading(false);
+    
+    if (result.success) {
+      navigate(result.isAdmin ? '/admin' : '/');
     }
   };
 
+  if (user) {
+    return null; // หรือแสดงข้อความ loading ในขณะที่ redirect
+  }
   return (
     <div className="min-h-screen bg-center bg-cover bg-no-repeat bg-[url('/bg-desktop.webp')] flex items-center justify-center px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl shadow-2xl">

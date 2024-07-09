@@ -1,9 +1,15 @@
-import React, { useState, useEffect, useContext, useRef, useMemo, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useContext,
+  useRef,
+  useMemo,
+  useCallback,
+} from 'react';
 import { useForm } from 'react-hook-form';
 import UserContext from '../../context/UserContext';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from "jwt-decode";
 
 // Constants
 const API_BASE_URL = 'http://localhost:3000/api';
@@ -19,11 +25,13 @@ const getCurrentDate = () => {
 };
 
 const UserDashboardPage = () => {
-  const { user, setUser } = useContext(UserContext);
+  const { user, setUser, login } = useContext(UserContext);
   const [selectedImage, setSelectedImage] = useState(null);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [updatedData, setUpdatedData] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
@@ -37,7 +45,9 @@ const UserDashboardPage = () => {
 
   useEffect(() => {
     if (user) {
-      const formattedDate = user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : '';
+      const formattedDate = user.dateOfBirth
+        ? new Date(user.dateOfBirth).toISOString().split('T')[0]
+        : '';
       reset({
         firstName: user.firstname,
         lastName: user.lastname,
@@ -75,74 +85,86 @@ const UserDashboardPage = () => {
       ...(selectedImage && { profilePicture: selectedImage }),
     };
 
-    console.log(updatedFields);
-    try {
-      const token = localStorage.getItem('authToken');
-      if (!token) throw new Error('No authentication token found');
-
-      const res = await axios.put(
-        `${API_BASE_URL}/profile/${user.id}`,
-        updatedFields,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-
-      console.log('Response:', res);
-
-      setShowPasswordConfirm(true);
-    } catch (error) {
-      console.error('Error updating user data:', error);
-      // Handle error (e.g., show error message to user)
-    }
+    setUpdatedData(updatedFields);
+    setShowPasswordConfirm(true);
   };
 
   const handlePasswordConfirm = async () => {
     try {
       setPasswordError('');
-      const response = await axios.post(`${API_BASE_URL}/users/login`, {
+      setIsUpdating(true);
+
+      const loginResult = await login({
         email: user.email,
-        password: password
+        password: password,
       });
 
-      const { token } = response.data;
-      if (token) {
-        localStorage.setItem('authToken', token);
-        const decodedToken = jwtDecode(token);
+      if (loginResult.success) {
+        const token = localStorage.getItem('authToken');
+        if (!token) throw new Error('No authentication token found');
 
-        const updatedUser = {
-          id: decodedToken.id,
-          firstname: decodedToken.firstname,
-          lastname: decodedToken.lastname,
-          email: decodedToken.email,
-          dateOfBirth: decodedToken.dateOfBirth,
-          country: decodedToken.country,
-          phone: decodedToken.phone,
-          gender: decodedToken.gender,
-          profilePicture: decodedToken.profilePicture
-        };
+        const res = await axios.put(
+          `${API_BASE_URL}/profile/${user.id}`,
+          updatedData,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
-        setUser(updatedUser);
+        console.log('Response:', res);
+
         setShowPasswordConfirm(false);
         setPassword('');
-        reset(updatedUser);
+        reset(loginResult.user);
+        setUpdatedData(null);
       } else {
-        throw new Error('Login failed: No token in response');
+        throw new Error('Login failed');
       }
     } catch (error) {
-      console.error('Error confirming password:', error);
-      setPasswordError('Invalid password. Please try again.');
+      console.error('Error confirming password or updating profile:', error);
+      setPasswordError('Invalid password or update failed. Please try again.');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
-  const formFields = useMemo(() => [
-    { name: 'firstName', label: 'First name', required: 'First name is required' },
-    { name: 'lastName', label: 'Last name', required: 'Last name is required' },
-    { name: 'gender', label: 'Gender', type: 'select', options: ['male', 'female', 'other'] },
-    { name: 'dateOfBirth', label: 'Date of birth', type: 'date', max: getCurrentDate() },
-    { name: 'phoneNumber', label: 'Phone number', required: 'Phone number is required', pattern: { value: /^\d{10}$/, message: 'Phone number must be 10 digits' } },
-    { name: 'email', label: 'E-mail', type: 'email', disabled: true },
-  ], []);
+  const formFields = useMemo(
+    () => [
+      {
+        name: 'firstName',
+        label: 'First name',
+        required: 'First name is required',
+      },
+      {
+        name: 'lastName',
+        label: 'Last name',
+        required: 'Last name is required',
+      },
+      {
+        name: 'gender',
+        label: 'Gender',
+        type: 'select',
+        options: ['male', 'female', 'other'],
+      },
+      {
+        name: 'dateOfBirth',
+        label: 'Date of birth',
+        type: 'date',
+        max: getCurrentDate(),
+      },
+      {
+        name: 'phoneNumber',
+        label: 'Phone number',
+        required: 'Phone number is required',
+        pattern: {
+          value: /^\d{10}$/,
+          message: 'Phone number must be 10 digits',
+        },
+      },
+      { name: 'email', label: 'E-mail', type: 'email', disabled: true },
+    ],
+    []
+  );
 
   return (
     <div className="bg-gray-100 min-h-screen py-8">
@@ -182,7 +204,8 @@ const UserDashboardPage = () => {
                 {formFields.map((field) => (
                   <div key={field.name}>
                     <label className="block mb-2 text-sm font-medium text-gray-700">
-                      {field.label}{field.required ? '*' : ''}
+                      {field.label}
+                      {field.required ? '*' : ''}
                     </label>
                     {field.type === 'select' ? (
                       <select
@@ -190,15 +213,22 @@ const UserDashboardPage = () => {
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">-Select-</option>
-                        {field.options.map(option => (
-                          <option key={option} value={option}>{option.charAt(0).toUpperCase() + option.slice(1)}</option>
+                        {field.options.map((option) => (
+                          <option key={option} value={option}>
+                            {option.charAt(0).toUpperCase() + option.slice(1)}
+                          </option>
                         ))}
                       </select>
                     ) : (
                       <input
                         type={field.type || 'text'}
-                        {...register(field.name, { required: field.required, pattern: field.pattern })}
-                        className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${field.disabled ? 'bg-gray-100' : ''}`}
+                        {...register(field.name, {
+                          required: field.required,
+                          pattern: field.pattern,
+                        })}
+                        className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          field.disabled ? 'bg-gray-100' : ''
+                        }`}
                         disabled={field.disabled}
                         max={field.max}
                       />
@@ -215,9 +245,16 @@ const UserDashboardPage = () => {
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  disabled={!isDirty && !selectedImage}
+                  disabled={(!isDirty && !selectedImage) || isUpdating}
                 >
-                  Update Profile
+                  {isUpdating ? (
+                    <>
+                      <span className="loading loading-spinner"></span>
+                      Updating...
+                    </>
+                  ) : (
+                    'Update Profile'
+                  )}
                 </button>
               </div>
             </form>
@@ -226,10 +263,15 @@ const UserDashboardPage = () => {
       </div>
 
       {/* Password Confirmation Modal */}
-      <dialog id="password_confirm_modal" className={`modal ${showPasswordConfirm ? 'modal-open' : ''}`}>
+      <dialog
+        id="password_confirm_modal"
+        className={`modal ${showPasswordConfirm ? 'modal-open' : ''}`}
+      >
         <div className="modal-box">
           <h3 className="font-bold text-lg">Confirm Your Password</h3>
-          <p className="py-4">Please enter your password to confirm the changes.</p>
+          <p className="py-4">
+            Please enter your password to confirm the changes.
+          </p>
           <input
             type="password"
             value={password}
@@ -241,12 +283,32 @@ const UserDashboardPage = () => {
             <p className="text-red-500 text-sm mt-2">{passwordError}</p>
           )}
           <div className="modal-action">
-            <button onClick={handlePasswordConfirm} className="btn btn-primary">Confirm</button>
-            <button onClick={() => {
-              setShowPasswordConfirm(false);
-              setPassword('');
-              setPasswordError('');
-            }} className="btn">Cancel</button>
+            <button
+              onClick={handlePasswordConfirm}
+              className="btn btn-primary"
+              disabled={isUpdating}
+            >
+              {isUpdating ? (
+                <>
+                  <span className="loading loading-spinner"></span>
+                  Updating...
+                </>
+              ) : (
+                'Confirm'
+              )}
+            </button>
+            <button
+              onClick={() => {
+                setShowPasswordConfirm(false);
+                setPassword('');
+                setPasswordError('');
+                setUpdatedData(null);
+              }}
+              className="btn"
+              disabled={isUpdating}
+            >
+              Cancel
+            </button>
           </div>
         </div>
       </dialog>

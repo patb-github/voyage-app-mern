@@ -1,6 +1,6 @@
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import CartItem from "../../components/user/CartItem";
+import CartItem from '../../components/user/CartItem';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 

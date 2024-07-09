@@ -1,8 +1,8 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
-import UserContext from '../context/UserContext'; // Import UserContext
+import UserContext from '../context/UserContext';
 
 const RegisterPage = () => {
   const {
@@ -14,7 +14,13 @@ const RegisterPage = () => {
   const [registrationError, setRegistrationError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { setUser } = useContext(UserContext); // Use UserContext
+  const { user, login } = useContext(UserContext);
+
+  useEffect(() => {
+    if (user) {
+      navigate(user.isAdmin ? '/admin' : '/');
+    }
+  }, [user, navigate]);
 
   const onSubmit = async (data) => {
     setIsLoading(true);
@@ -34,17 +40,12 @@ const RegisterPage = () => {
 
       if (registerResponse.status === 201) {
         // If registration is successful, immediately log in the user
-        const loginResponse = await axios.post(
-          'http://localhost:3000/api/users/login',
-          {
-            email: data.email,
-            password: data.password,
-          }
-        );
+        const loginResult = await login({
+          email: data.email,
+          password: data.password,
+        });
 
-        if (loginResponse.status === 200) {
-          const user = loginResponse.data.user;
-          setUser(user); // Update user in context
+        if (loginResult.success) {
           navigate('/'); // Redirect to home page
         } else {
           setRegistrationError(
@@ -79,6 +80,10 @@ const RegisterPage = () => {
       placeholder: 'Confirm Password',
     },
   ];
+
+  if (user) {
+    return null; // หรือแสดงข้อความ loading ในขณะที่ redirect
+  }
 
   return (
     <div className="min-h-screen bg-center bg-cover bg-no-repeat bg-[url('/bg-desktop.webp')] flex items-center justify-center px-4 sm:px-6 lg:px-8">

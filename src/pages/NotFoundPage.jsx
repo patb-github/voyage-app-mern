@@ -4,7 +4,7 @@ import { faHome, faSearch } from '@fortawesome/free-solid-svg-icons';
 
 function NotFound() {
   return (
-    <div className="min-h-screen bg-[url('/bg-desktop.webp')] py-8 px-4 md:py-16 md:px-8 lg:px-16 flex items-center justify-center">
+    <div className="min-h-screen bg-cover bg-[url('/bg-desktop.webp')] py-8 px-4 md:py-16 md:px-8 lg:px-16 flex items-center justify-center">
       <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-2xl">
         <div className="text-center p-8 md:p-12">
           <div className="mb-8">
@@ -17,7 +17,8 @@ function NotFound() {
             Oops! Page Not Found
           </h1>
           <p className="text-gray-600 mb-8 text-lg">
-            We've searched high and low, but couldn't find the page you're looking for.
+            We've searched high and low, but couldn't find the page you're
+            looking for.
             <br className="hidden md:inline" />
             Let's get you back on track to your perfect adventure!
           </p>
@@ -43,8 +44,11 @@ function NotFound() {
         <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-6 md:p-8">
           <p className="text-center text-indigo-800 font-semibold">
             Need assistance? Contact our support team at{' '}
-            <a href="mailto:support@example.com" className="text-blue-600 hover:underline">
-              support@example.com
+            <a
+              href="mailto:support@example.com"
+              className="text-blue-600 hover:underline"
+            >
+              support@voyage.com
             </a>
           </p>
         </div>

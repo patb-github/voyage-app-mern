@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import DestinationCard from '../components/DestinationCard';
+import axios from 'axios';
 
 const Offer = ({ imageSrc, altText, title }) => (
   <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.3 }}>
@@ -19,7 +20,7 @@ const Offer = ({ imageSrc, altText, title }) => (
   </motion.div>
 );
 
-const offers = [
+const recommended = [
   {
     id: 1,
     imageSrc: '/destination/discount.jpg',
@@ -50,17 +51,19 @@ const LandingPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [recommendedItems, setRecommendedItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRecommendedItems = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('http://localhost:3000/api/trips/');
-        if (!response.ok) {
-          throw new Error('Failed to fetch recommended items');
-        }
-        const data = await response.json();
-        setRecommendedItems(data.trips || []);
+        const response = await axios.get('http://localhost:3000/api/trips/');
+        const allTrips = response.data.trips || [];
+
+        const shuffledTrips = allTrips.sort(() => 0.5 - Math.random());
+        const selectedTrips = shuffledTrips.slice(0, 8);
+
+        setRecommendedItems(selectedTrips);
       } catch (error) {
         console.error('Error fetching recommended items:', error);
       } finally {
@@ -71,6 +74,11 @@ const LandingPage = () => {
     fetchRecommendedItems();
   }, []);
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    navigate(`/search-results?name=${encodeURIComponent(searchTerm)}`);
+  };
+
   return (
     <div className="bg-gray-100 min-h-screen">
       <header className="bg-[url('./slide/santorini.webp')] bg-cover bg-center text-white py-12 relative z-10">
@@ -79,7 +87,7 @@ const LandingPage = () => {
             Your World of Adventures Awaits
           </h1>
           <p className="text-xl mb-8">Discover • Book • Voyage</p>
-          <div className="relative max-w-2xl mx-auto">
+          <form className="relative max-w-2xl mx-auto" onSubmit={handleSearch}>
             <input
               type="text"
               placeholder="Search destinations or activities..."
@@ -90,7 +98,7 @@ const LandingPage = () => {
             <button className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-blue-500 text-white w-10 h-10 flex items-center justify-center rounded-full">
               <FontAwesomeIcon icon={faSearch} className="w-5 h-5" />
             </button>
-          </div>
+          </form>
         </div>
       </header>
 
@@ -100,7 +108,7 @@ const LandingPage = () => {
             Latest Travel Promotions
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {offers.map((offer) => (
+            {recommended.map((offer) => (
               <Offer key={offer.id} {...offer} />
             ))}
           </div>

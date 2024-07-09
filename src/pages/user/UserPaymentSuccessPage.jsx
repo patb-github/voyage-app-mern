@@ -1,30 +1,36 @@
 import { Link } from 'react-router-dom';
-
+import { FaCheckCircle } from 'react-icons/fa';
 const UserPaymentSuccessPage = () => {
   return (
-    <div>
-      <section className="PaymentSuccess">
-        <div className="h-[370px] md:h-[93vh] bg-center bg-cover md:bg-auto md:bg-no-repeat   bg-[url('/bg-desktop.png')]">
-          <div className="px-8 py-8 drop-shadow-xl md:hidden font-bold text-3xl text-white mb-8 "></div>
-
-          <div className="min-h-[75vh] flex flex-col items-center justify-end md:justify-center">
-            <div className="bg-white min-h-[500px] px-16 py-10  rounded-t-3xl md:rounded-3xl shadow-md w-full  md:w-96">
-              <div className="text-3xl text-center font-bold text-blue-500 md:mb-8">
-                <p className="drop-shadow-xl hidden md:block">Thank You!</p>
-              </div>
-              <span className="text-xl text-center text-gray-800 font-bold">
-                <p>Payment done Successfully</p>
-              </span>
-              <p className="mt-2 text-gray-500 text-center">
-                You will be redirected to the home page shortly or click here to
-                return to homepage
-              </p>
-              <Link to="/landingpage">
-                <button className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full mt-2">
-                  Home
-                </button>
-              </Link>
-            </div>
+    <div className="min-h-screen bg-[url('/bg-desktop.webp')] bg-cover bg-center py-8 px-4 md:py-16 md:px-48 flex items-center justify-center">
+      <section className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md">
+        <div className="text-center">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-indigo-700 mb-6">
+            Thank You!
+          </h1>
+          <div className="mb-8">
+            <FaCheckCircle className="mx-auto text-green-500 text-6xl" />
+          </div>
+          <p className="text-2xl font-bold text-indigo-800 mb-4">
+            Payment Successful
+          </p>
+          <p className="text-gray-600 mb-8">
+            Your booking has been confirmed. You will receive a confirmation
+            email shortly.
+          </p>
+          <div className="space-y-4">
+            <Link
+              to="/booking"
+              className="btn btn-primary w-full text-lg font-semibold"
+            >
+              View My Bookings
+            </Link>
+            <Link
+              to="/"
+              className="btn btn-outline btn-primary w-full text-lg font-semibold"
+            >
+              Return to Home
+            </Link>
           </div>
         </div>
       </section>

@@ -57,7 +57,7 @@ const ProductDetails = ({ trip }) => {
         {trip.sub_expenses.map((expense, index) => (
           <li key={index} className="flex justify-between py-2 border-b border-gray-200">
             <p className="text-base md:text-lg font-normal">{expense.expense_name}</p>
-            <p className="text-base md:text-lg font-normal">${expense.expense_amount.toLocaleString()}</p>
+            <p className="text-base md:text-lg font-normal">฿{expense.expense_amount.toLocaleString()}</p>
           </li>
         ))}
       </ul>
@@ -149,7 +149,7 @@ const UserProductPage = () => {
             <div className="flex justify-between px-4 py-4 mb-4 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl mt-4 text-white">
               <div className="flex flex-col">
                 <p className="text-sm font-bold">Total Payment</p>
-                <p className="text-2xl md:text-3xl font-bold">${trip.price.toLocaleString()}</p>
+                <p className="text-2xl md:text-3xl font-bold">฿{trip.price.toLocaleString()}</p>
               </div>
               <div className="flex space-x-2">
                 <button 
