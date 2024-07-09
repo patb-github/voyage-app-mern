@@ -5,7 +5,7 @@ import {
   faStar,
   faCalendarCheck
 } from '@fortawesome/free-solid-svg-icons';
-import { Link, useParams, Navigate } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import UserContext from '../../context/UserContext';
 
 const ContentHead = ({ trip }) => {
@@ -71,6 +71,7 @@ const UserProductPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { user, setUserData } = useContext(UserContext);
   const { id } = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTrip = async () => {
@@ -94,7 +95,12 @@ const UserProductPage = () => {
 
   const handleBooking = () => {
     setShowMedal(true);
-    setTimeout(() => setShowMedal(false), 3000);
+    setTimeout(() => {
+      setShowMedal(false);
+      navigate('/checkout/' + id);
+    }, 1500);
+    // console.log(id);
+    return;
   };
 
   if (isLoading) {
@@ -102,7 +108,8 @@ const UserProductPage = () => {
   }
 
   if (!trip) {
-    return <Navigate to="/error" />;
+    navigate('/error');
+    return;
   }
 
   return (

@@ -40,6 +40,7 @@ const App = () => {
             <Route path="/password-change" element={<UserPasswordChange />} />
             <Route path="/booking-edit" element={<UserEditBookingPage />} />
             <Route path="/checkout" element={<UserCheckout />} />
+            <Route path="/checkout/:id" element={<UserCheckout />} />
             <Route path="*" element={<NotFound />} />
             {/* admin section */}
             <Route path="/admin" element={<AdminDashboardPage />} />
