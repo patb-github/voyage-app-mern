@@ -3,34 +3,46 @@ import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMapMarkerAlt, faStar } from '@fortawesome/free-solid-svg-icons';
 
-const DestinationCard = ({ _id, name, destination_from, destination_to, rating, price, images }) => (
-  <motion.div whileHover={{ y: -5 }} transition={{ duration: 0.3 }}>
-    <Link to={`/package/${_id}`} className="block">
-      <div className="card bg-white shadow-xl rounded-lg overflow-hidden">
-        <img className="w-full h-48 object-cover" src={images[0] || '/destination/default.jpg'} alt={name} />
-        <div className="p-2 sm:p-4">
-          <h3 className="font-bold text-base sm:text-lg mb-1 sm:mb-2 line-clamp-2">
+const DestinationCard = ({
+  _id,
+  name,
+  destination_to,
+  rating,
+  price,
+  images,
+}) => (
+  <motion.div
+    whileHover={{ y: -5 }}
+    transition={{ duration: 0.3 }}
+    className="h-full"
+  >
+    <Link to={`/package/${_id}`} className="block h-full">
+      <div className="bg-white rounded-lg overflow-hidden h-full flex flex-col shadow-sm hover:shadow-md transition-shadow duration-300">
+        <div className="relative h-48">
+          <img
+            className="w-full h-full object-cover"
+            src={images[0] || '/destination/default.jpg'}
+            alt={name}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+          <div className="absolute bottom-2 left-2 text-white font-light text-sm">
+            <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-1" />
+            {destination_to}
+          </div>
+        </div>
+        <div className="p-4 flex-grow flex flex-col justify-between">
+          <h3 className="font-medium text-lg mb-2 text-gray-800 line-clamp-2">
             {name}
           </h3>
-          <div className="flex justify-between items-center mb-2">
+          <div className="flex justify-between items-center mt-auto">
             <div className="flex items-center">
-              <FontAwesomeIcon
-                icon={faMapMarkerAlt}
-                className="w-4 h-4 mr-1 text-gray-600"
-              />
-              <p className="text-sm text-gray-600">{`${destination_from} to ${destination_to}`}</p>
+              <FontAwesomeIcon icon={faStar} className="text-yellow-400 mr-1" />
+              <span className="text-sm text-gray-600">{rating}</span>
             </div>
-            <div className="flex items-center">
-              <FontAwesomeIcon
-                icon={faStar}
-                className="w-4 h-4 text-yellow-500"
-              />
-              <p className="ml-1 text-sm">{rating}</p>
+            <div className="text-blue-600 font-semibold">
+              ${price.toLocaleString()}
             </div>
           </div>
-          <p className="text-lg font-bold text-blue-600">
-            ${price.toLocaleString()}
-          </p>
         </div>
       </div>
     </Link>

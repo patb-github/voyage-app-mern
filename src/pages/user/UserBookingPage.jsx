@@ -1,49 +1,51 @@
 import { useState } from 'react';
 import classnames from 'classnames';
 
-// Mock data
-const mockTrips = [
+// ปรับปรุง Mock data ให้มีการจองหลายทริปในครั้งเดียว
+const mockBookings = [
   {
-    id: '1234',
+    bookingId: 'B001',
     status: 'Pending',
     bookingDate: new Date('2024-07-01T10:00:00'),
-    imageSrc: '/trip-image-1.jpg',
-    title: 'Amazing Space Adventure',
-    departure: 'Earth',
-    departureDate: '2024-08-15',
-    destination: 'Mars',
-    arrivalDate: '2024-08-20',
-    duration: '5 days',
-    voyagerCount: 2,
-    totalAmount: 500000,
-  },
-  {
-    id: '5678',
-    status: 'Completed',
-    bookingDate: new Date('2024-06-15T14:30:00'),
-    imageSrc: '/trip-image-2.jpg',
-    title: 'Lunar Expedition',
-    departure: 'Earth',
-    departureDate: '2024-07-01',
-    destination: 'Moon',
-    arrivalDate: '2024-07-03',
-    duration: '2 days',
-    voyagerCount: 1,
-    totalAmount: 300000,
-  },
-  {
-    id: '9012',
-    status: 'Cancelled',
-    bookingDate: new Date('2024-05-20T09:15:00'),
-    imageSrc: '/trip-image-3.jpg',
-    title: 'Venus Orbit Tour',
-    departure: 'Earth',
-    departureDate: '2024-09-10',
-    destination: 'Venus Orbit',
-    arrivalDate: '2024-09-15',
-    duration: '5 days',
-    voyagerCount: 3,
-    totalAmount: 750000,
+    totalAmount: 5200, // ปรับราคาเป็น USD ที่สมเหตุสมผล
+    trips: [
+      {
+        id: '1234',
+        imageSrc: '/trip-image-1.jpg',
+        title: 'Exotic Bali Getaway',
+        departure: 'Bangkok (BKK)',
+        departureDate: '2024-08-15',
+        destination: 'Bali (DPS)',
+        arrivalDate: '2024-08-20',
+        duration: '5 days',
+        voyagerCount: 2,
+        amount: 2000,
+      },
+      {
+        id: '5678',
+        imageSrc: '/trip-image-2.jpg',
+        title: 'Enchanting Kyoto Exploration',
+        departure: 'Bangkok (BKK)',
+        departureDate: '2024-07-01',
+        destination: 'Kyoto (KIX)',
+        arrivalDate: '2024-07-03',
+        duration: '2 days',
+        voyagerCount: 1,
+        amount: 1200,
+      },
+      {
+        id: '9012',
+        imageSrc: '/trip-image-3.jpg',
+        title: 'Romantic Paris Escape',
+        departure: 'Bangkok (BKK)',
+        departureDate: '2024-09-10',
+        destination: 'Paris (CDG)',
+        arrivalDate: '2024-09-15',
+        duration: '5 days',
+        voyagerCount: 2,
+        amount: 2000,
+      },
+    ],
   },
 ];
 
@@ -53,11 +55,11 @@ const tabs = [
   { name: 'Cancelled', label: 'Cancelled' },
 ];
 
-function TripStatus({ trip }) {
+function BookingStatus({ status }) {
   let statusText = '';
   let statusStyle = '';
 
-  switch (trip.status) {
+  switch (status) {
     case 'Pending':
       statusText = 'Awaiting for payment';
       statusStyle = 'badge badge-warning';
@@ -78,17 +80,80 @@ function TripStatus({ trip }) {
   return <p className={`py-1 px-2 rounded ${statusStyle}`}>{statusText}</p>;
 }
 
+function TripCard({ trip, isExpanded, onToggle }) {
+  return (
+    <div className="bg-white rounded-lg shadow-md p-4 mb-4">
+      <div
+        className="flex justify-between items-center cursor-pointer"
+        onClick={onToggle}
+      >
+        <h3 className="text-lg font-semibold">{trip.title}</h3>
+        <span>{isExpanded ? '▲' : '▼'}</span>
+      </div>
+      {isExpanded && (
+        <div className="mt-4">
+          <div className="flex flex-col md:flex-row">
+            <img
+              src={trip.imageSrc}
+              alt={trip.title}
+              className="w-full md:w-1/3 rounded-lg mb-4 md:mb-0 md:mr-4"
+            />
+            <div className="flex-1">
+              <div className="flex justify-between items-center mb-2">
+                <p>
+                  <span className="font-semibold">From:</span> {trip.departure}
+                </p>
+                <p>
+                  <span className="font-semibold">To:</span> {trip.destination}
+                </p>
+              </div>
+              <div className="flex justify-between items-center mb-2">
+                <p>
+                  <span className="font-semibold">Departure:</span>{' '}
+                  {trip.departureDate}
+                </p>
+                <p>
+                  <span className="font-semibold">Arrival:</span>{' '}
+                  {trip.arrivalDate}
+                </p>
+              </div>
+              <p>
+                <span className="font-semibold">Duration:</span> {trip.duration}
+              </p>
+              <p>
+                <span className="font-semibold">Voyagers:</span>{' '}
+                {trip.voyagerCount}
+              </p>
+              <p className="text-right mt-2 font-semibold">
+                Amount: S{trip.amount.toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function UserBookingPage() {
   const [activeTab, setActiveTab] = useState('Pending');
+  const [expandedTrips, setExpandedTrips] = useState({});
 
-  const filteredTrips = mockTrips.filter(
-    (trip) => trip.status.toLowerCase() === activeTab.toLowerCase()
+  const filteredBookings = mockBookings.filter(
+    (booking) => booking.status.toLowerCase() === activeTab.toLowerCase()
   );
+
+  const toggleTripExpansion = (bookingId, tripId) => {
+    setExpandedTrips((prev) => ({
+      ...prev,
+      [`${bookingId}-${tripId}`]: !prev[`${bookingId}-${tripId}`],
+    }));
+  };
 
   return (
     <section className="md:bg-gray-100 md:pb-80">
       <div className="hidden md:flex md:justify-start">
-        <p className="text-4xl font-bold py-4 pl-[10%]">My Trips</p>
+        <p className="text-4xl font-bold py-4 pl-[10%]">My Bookings</p>
       </div>
       <ul className="menu menu-horizontal bg-white font-bold shadow-lg text-xl md:w-[80%] md:rounded-xl p-0 flex m-auto">
         {tabs.map((tab) => (
@@ -105,86 +170,50 @@ function UserBookingPage() {
         ))}
       </ul>
 
-      <div className="mx-4 md:mx-48 md:mt-11 md:border-t md:border-gray-300 h-[50vh]">
-        {filteredTrips.length > 0 ? (
-          filteredTrips.map((trip) => (
+      <div className="mx-4 md:mx-48 md:mt-11 md:border-t md:border-gray-300">
+        {filteredBookings.length > 0 ? (
+          filteredBookings.map((booking) => (
             <div
-              key={trip.id}
+              key={booking.bookingId}
               className="bg-white mt-2 rounded-2xl shadow-md p-6 md:p-6 my-4"
             >
-              <TripStatus trip={trip} />
-              <div className="flex justify-between items-center mb-2">
-                <p className="text-gray-600 font-bold ">
-                  Booking ID: {trip.id}
+              <BookingStatus status={booking.status} />
+              <div className="flex justify-between items-center mb-4">
+                <p className="text-gray-600 font-bold">
+                  Booking ID: {booking.bookingId}
                 </p>
                 <p className="text-gray-500 text-sm">
                   จองเมื่อ{' '}
-                  {trip.bookingDate.toLocaleDateString('th-TH', {
+                  {booking.bookingDate.toLocaleDateString('th-TH', {
                     day: 'numeric',
                     month: 'long',
                     year: 'numeric',
                   })}{' '}
-                  {trip.bookingDate.toLocaleTimeString('th-TH', {
+                  {booking.bookingDate.toLocaleTimeString('th-TH', {
                     hour: '2-digit',
                     minute: '2-digit',
                   })}{' '}
                   น.
                 </p>
               </div>
-
-              <div className="flex flex-col md:flex-row justify-between mb-4">
-                <img
-                  src={trip.imageSrc}
-                  alt={trip.title}
-                  className="h-full rounded-xl"
-                />
-
-                <div className="w-full md:mx-4">
-                  <p className="text-xl font-semibold mb-2 mx-2">
-                    {trip.title}
-                  </p>
-                  <div className="flex justify-between md:justify-center items-center py-4 px-12 md:gap-12">
-                    <div className="flex-col flex items-center gap-2">
-                      <p className="font-extrabold text-xl">{trip.departure}</p>
-                      <p className="font-bold bg-gray-200 rounded-full p-2">
-                        {trip.departureDate}
-                      </p>
-                    </div>
-                    <div className="flex-col flex items-center gap-2">
-                      <img src="/planeBlue.svg" alt="" />
-                      <p className="font-semibold text-red-500">
-                        {trip.duration}
-                      </p>
-                    </div>
-                    <div className="flex-col flex items-center gap-2">
-                      <p className="font-extrabold text-xl">
-                        {trip.destination}
-                      </p>
-                      <p className="font-bold bg-gray-200 rounded-full p-2">
-                        {trip.arrivalDate}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex flex-col md:flex-row items-center justify-between mt-4 md:mt-8 px-4 md:px-8">
-                    <div className="flex items-center mb-4 md:mb-0">
-                      <h2 className="text-2xl text-info p">
-                        Number of Voyagers
-                      </h2>
-                      <div className="w-7 h-7 ml-2 mr-2 rounded-full bg-blue-500 text-white font-bold text-xl flex items-center justify-center">
-                        {trip.voyagerCount}
-                      </div>
-                    </div>
-
-                    <div className="flex items-baseline gap-2 md:gap-6 text-2xl md:text-3xl font-bold">
-                      <p>Paid amount :</p>
-                      <p className="text-gray-800">
-                        ฿{trip.totalAmount.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+              <div className="mb-4">
+                <p className="text-xl font-semibold">
+                  Total Amount: S{booking.totalAmount.toLocaleString()}
+                </p>
+                <p className="text-gray-600">
+                  Number of Trips: {booking.trips.length}
+                </p>
               </div>
-
+              {booking.trips.map((trip) => (
+                <TripCard
+                  key={trip.id}
+                  trip={trip}
+                  isExpanded={expandedTrips[`${booking.bookingId}-${trip.id}`]}
+                  onToggle={() =>
+                    toggleTripExpansion(booking.bookingId, trip.id)
+                  }
+                />
+              ))}
               <p className="text-gray-500 text-sm mt-4">
                 We recommend you arrive at the airport at least 2 hours before
                 departure to allow ample time for check-in.
