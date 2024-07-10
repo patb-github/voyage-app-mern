@@ -3,35 +3,14 @@ import { useForm } from 'react-hook-form';
 import CartItem from "../../components/user/CartItem";
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { format, addDays } from 'date-fns';
 
 function UserCartPage() {
-  const [user, setUser] = useState({
-    id: 1,
-    cart: [
-      {
-        id: 1,
-        name: 'Product A',
-        price: 100,
-        quantity: 2,
-        total: 200,
-        isChecked: false,
-      },
-    ],
-    orders: [],
-  });
-  const currentUserCartItems = user.cart;
+  const [cart, setCart] = useState([]);
   const promoCode = [{ code: 'testcode', discount: 10 }];
   const navigate = useNavigate();
   const [totalAmount, setTotalAmount] = useState(0);
   const [discount, setDiscount] = useState(0);
-
-  const generateOrderId = () => {
-    const now = new Date();
-    const year = now.getFullYear().toString().slice(-2);
-    const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    const randomNumber = Math.floor(Math.random() * 9000) + 1000;
-    return `VO${year}<span class="math-inline">\{month\}</span>{randomNumber}`;
-  };
 
   const {
     register: registerPromo,
@@ -40,12 +19,6 @@ function UserCartPage() {
   } = useForm();
 
   useEffect(() => {
-    const newTotalAmount = currentUserCartItems.reduce((sum, item) => {
-      return item.isChecked ? sum + item.total : sum;
-    }, 0);
-    setTotalAmount(newTotalAmount);
-    console.log('User cart:', user.cart); // Log the user's cart data
-
     //=========== API CALL ==============
     const fetchCart = async () => {
       const res = await axios.get('http://localhost:3000/api/cart', {
@@ -53,35 +26,46 @@ function UserCartPage() {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
         }
       });
-      console.log(res); 
+      console.log(res.data.cart);
+      setCart(res.data.cart);
+      const newCart = await Promise.all(res.data.cart.map(async (item) => ({ ...item, trip: await toCartItem(item.trip_id, item) })));
+      setCart(newCart.map((item) => ({ ...item, isChecked: false })));
     }
-
     fetchCart();
     //==================================
-  }, [currentUserCartItems]);
+  }, []);
+
+  useEffect(() => {
+    // console.log('Cart:', cart);
+    const newTotalAmount = cart.reduce((sum, item) => {
+      return item.isChecked ? sum + item.total : sum;
+    }, 0);
+    setTotalAmount(newTotalAmount);
+    // console.log('User cart:', cart); // Log the user's cart data
+  }, [cart]);
 
   const handleCheckboxChange = (itemId) => {
-    setUser((prevUser) => ({
-      ...prevUser,
-      cart: prevUser.cart.map((item) =>
-        item.id === itemId ? { ...item, isChecked: !item.isChecked } : item
-      ),
-    }));
+    setCart((prevCart) =>
+      prevCart.map((item) =>
+        item._id === itemId ? { ...item, isChecked: !item.isChecked } : item
+      )
+    );
   };
 
   const handleDelete = (itemId) => {
-    setUser((prevUser) => ({
-      ...prevUser,
-      cart: prevUser.cart.filter((item) => item.id !== itemId),
-    }));
     //=========== API CALL ==============
     const deleteFromCart = async (itemId) => {
-      const res = await axios.get(`http://localhost:3000/api/cart/${itemId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-        }
-      });
-      console.log(res); 
+      try {
+        const res = await axios.delete(`http://localhost:3000/api/cart/${itemId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          }
+        });
+        console.log(res); 
+        setCart(cart.filter((item) => item._id !== itemId));
+      } catch (error) {
+        console.log(error);
+      }
     }
 
     deleteFromCart(itemId);
@@ -140,23 +124,45 @@ function UserCartPage() {
     }
   };
 
+  async function toCartItem(trip_id, item) {
+    const res = await axios.get(`http://localhost:3000/api/trips/${trip_id}`);
+    const trip = res.data.trip;
+    const departureDate = format(item.departure_date, 'EEE d MMM');
+    const arrivalDate = format(addDays(item.departure_date, trip.duration_days - 1), 'EEE d MMM');
+    console.log(trip);
+    return {
+      id: trip._id,
+      title: trip.name,
+      imageSrc: trip.images[0],
+      departure: trip.destination_from,
+      destination: trip.destination_to,
+      duration: trip.duration_days,
+      price: trip.price,
+      departureDate: departureDate,
+      arrivalDate: arrivalDate,
+      total: trip.price * item.travelers.length
+    }
+  }
+  
   return (
     <div className="bg-cover bg-center bg-no-repeat bg-[#FAFAFC] md:bg-[url('/bg-desktop.png')] min-h-screen flex justify-center ">
       <section className="bg-[#FAFAFC] md:rounded-2xl my-6 ">
         <p className="text-2xl font-semibold mb-4 text-center pt-4">
-          แพ็คเก็จที่ใส่ตะกร้าไว้
+          Packages in Your Cart
         </p>
         <div className=" mx-4 lg:mx-6  bg md:flex">
           <div>
-            {user &&
-              currentUserCartItems.map((item) => (
-                <CartItem
-                  key={item.id}
-                  {...item}
-                  onDelete={handleDelete}
-                  onCheckboxChange={handleCheckboxChange}
-                />
-              ))}
+            {cart.map((item) => (
+              <CartItem
+                key={item._id}
+                cartItemId={item._id}
+                {...item.trip}
+                voyagerCount={item.travelers.length}
+                isChecked={item.isChecked}
+                onDelete={handleDelete}
+                onCheckboxChange={handleCheckboxChange}
+              />
+            ))}
           </div>
           <div className="bg-white shadow-xl p-6 md:w-80 card rounded-2xl md:mx-2 my-4 h-fit">
             <form onSubmit={handleSubmitPromo(handleApplyPromo)}>
@@ -213,7 +219,7 @@ function UserCartPage() {
             <div className="modal-box">
               <h3 className="font-bold text-lg">Vovage</h3>
               <p className="py-4">
-                ไม่มีสินค้าที่ถูกเลือก กรุณาเลือกสินค้าก่อนทำการชำระเงิน
+                Please select at least one item to proceed to checkout.
               </p>
               <div className="modal-action">
                 <form method="dialog">
@@ -255,3 +261,4 @@ function UserCartPage() {
 }
 
 export default UserCartPage;
+

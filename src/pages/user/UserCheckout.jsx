@@ -14,23 +14,49 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 
 function UserCheckout() {
-  const { user, setUser } = useContext(UserContext);
+  const { user } = useContext(UserContext);
+  const [trip, setTrip] = useState(null);
   const [isLogin, setIsLogin] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentVoyager, setCurrentVoyager] = useState('');
-  const [voyagers, setVoyagers] = useState({});
+  const [voyagers, setVoyagers] = useState({"1":{firstName: user.firstname, lastName: user.lastname}});
   const [departureDate, setDepartureDate] = useState(new Date());
+  const [isLoading, setIsLoading] = useState(true);
+  const [showMedal, setShowMedal] = useState(false);
   const navigate = useNavigate();
   const { id } = useParams();
-
+  
   useEffect(() => {
     setIsLogin(user !== null);
   }, [user]);
-
+  
   useEffect(() => {
+    console.log(user);
+    const fetchTrip = async () => {
+      setIsLoading(true);
+      try {
+        const response = await axios.get(`http://localhost:3000/api/trips/${id}`);
+        // console.log(response.data.trip);
+        setTrip(response.data.trip);
+      } catch (error) {
+        console.error(error);
+      }
+      setIsLoading(false);
+    };
+    fetchTrip();
+    
     // Set initial departure date to tomorrow
     setDepartureDate(addDays(new Date(), 1));
   }, []);
+  
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!trip) {
+    navigate('/error');
+    return;
+  }
 
   const openModal = (voyager) => {
     setCurrentVoyager(voyager);
@@ -68,6 +94,7 @@ function UserCheckout() {
       voyagers[currentVoyager]?.lastName
     ) {
       closeModal();
+      console.log(voyagers);
     } else {
       alert('Please fill in both first name and last name');
     }
@@ -110,8 +137,7 @@ function UserCheckout() {
       navigate('/login');
       return;
     } 
-    // console.log(user);
-    // console.log(localStorage.getItem('authToken'));
+
     const cartItem = {
       trip_id: id,
       departure_date: departureDate,
@@ -120,18 +146,23 @@ function UserCheckout() {
     for (let voyager in voyagers) {
       cartItem.travelers.push(voyagers[voyager]);
     }
-    // console.log('voyagers:', voyagers);
-    // console.log('departureDate:', departureDate);
-    // console.log('cartItem:', cartItem);
+
     try {
       const response = await axios.post('http://localhost:3000/api/cart', cartItem, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
         },
       });
-      console.log(response.data);
+      setShowMedal("green");
+      setTimeout(() => {
+        setShowMedal(false);
+      }, 1000);
     } catch (error) {
       console.error(error);
+      setShowMedal("red");
+      setTimeout(() => {
+        setShowMedal(false);
+      }, 1000);
     }
   };
 
@@ -146,24 +177,18 @@ function UserCheckout() {
         <div className="md:flex md:pb-6">
           <div className="hidden md:block px-16 md:w-1/2 border-r border-gray-200">
             <img
-              src="/destination/aquarium.jpg"
+              src={trip.images[0]}
               alt="Okinawa Aquarium"
               className="rounded-3xl shadow-lg transform hover:scale-105 transition duration-300"
             />
             <p className="text-lg font-normal py-4 text-gray-700">
-              Okinawa 4 Days 3 Nights Package including flights, accommodation,
-              restaurants, and Churaumi Aquarium tickets. 24/7 personal
-              assistant service from start to finish. Package for 1 person.{' '}
-              <strong className="text-indigo-600 cursor-pointer hover:underline">
-                Click to read more terms and conditions
-              </strong>
+              {trip.description}
             </p>
           </div>
           <div className="md:w-1/2 md:px-10">
             <div className="rounded-3xl shadow-lg px-8 py-6 mb-6 bg-gradient-to-r from-indigo-50 to-blue-50">
               <h2 className="text-2xl font-extrabold py-4 text-indigo-800">
-                Japan Trip: Okinawa, Shuri Castle, Churaumi Aquarium, Okinawa
-                World
+                {trip.name}
               </h2>
               <div className="mb-4 relative">
                 <label
@@ -191,7 +216,7 @@ function UserCheckout() {
               <div className="flex justify-between items-center bg-white rounded-xl p-4 shadow-md">
                 <div className="flex-col flex items-center">
                   <p className="font-extrabold text-xl text-indigo-700">
-                    Bangkok
+                    {trip.destination_from}
                   </p>
                   <p className="font-bold bg-indigo-100 text-indigo-800 rounded-full px-3 py-1 mt-2">
                     {format(departureDate, 'EEE d MMM')}
@@ -204,15 +229,15 @@ function UserCheckout() {
                     className="w-10 h-10"
                   />
                   <p className="font-semibold text-red-500 mt-2">
-                    (4 Days 3 Nights)
+                    ({trip.duration_days} days {trip.duration_days - 1} nights) 
                   </p>
                 </div>
                 <div className="flex-col flex items-center">
                   <p className="font-extrabold text-xl text-indigo-700">
-                    Okinawa
+                    {trip.destination_to}
                   </p>
                   <p className="font-bold bg-indigo-100 text-indigo-800 rounded-full px-3 py-1 mt-2">
-                    {format(addDays(departureDate, 3), 'EEE d MMM')}
+                    {format(addDays(departureDate, trip.duration_days - 1), 'EEE d MMM')}
                   </p>
                 </div>
               </div>
@@ -261,19 +286,19 @@ function UserCheckout() {
                 Payment Information
               </h2>
               <div className="flex justify-between items-center font-semibold text-gray-700">
-                <p className="text-lg py-2">Package Okinawa A x 2</p>
-                <p>฿ 59,900</p>
+                <p className="text-lg py-2">Package {trip.name} x {Object.keys(voyagers).length}</p>
+                <p>${(trip.price * Object.keys(voyagers).length).toLocaleString()}</p>
               </div>
-              <div className="flex justify-between items-center text-red-600 font-semibold">
+              {/* <div className="flex justify-between items-center text-red-600 font-semibold">
                 <p className="text-lg py-2">Room Discount</p>
                 <p>฿ -7,500</p>
-              </div>
+              </div> */}
             </div>
 
             <div className="flex justify-between px-6 py-4 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl mt-4 text-white">
               <div className="flex flex-col">
                 <p className="text-sm font-bold">Total Payment</p>
-                <p className="text-3xl font-bold">฿ 52,400</p>
+                <p className="text-3xl font-bold">${(trip.price * Object.keys(voyagers).length).toLocaleString()}</p>
               </div>
               <div className="flex space-x-2">
                 <button className="btn bg-white text-indigo-700 hover:bg-indigo-100 rounded-full px-4 transition duration-300 flex items-center"
@@ -291,6 +316,12 @@ function UserCheckout() {
           </div>
         </div>
       </section>
+      
+      {showMedal && (
+        <div className={`fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg`}>
+          {showMedal === "green" ? `Trip successfully added to cart` : `There was an error adding trip to cart`}
+        </div>
+      )}
 
       {/* DaisyUI Modal */}
       <dialog
