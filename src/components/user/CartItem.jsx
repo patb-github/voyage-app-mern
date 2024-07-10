@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 // import { useContext } from 'react';
 // import UserContext from './UserContext';
 function CartItem({
+  cartItemId,
   id,
   title,
   imageSrc,
@@ -19,13 +20,14 @@ function CartItem({
   const [isCheckedLocal, setIsCheckedLocal] = useState(isChecked);
   // const { cartItems, removeFromCart, updateCartItemQuantity } =
   //   useContext(UserContext);
+
   return (
     <div className="card bg-base-100 shadow-xl my-4">
       <div className="card-body">
         <div className="card-title justify-between">
           <h2 className="text-xl md:text-xl font-semibold">{title}</h2>
           <div className="card-actions">
-            <button className="btn btn-sm" onClick={() => onDelete(id)}>
+            <button className="btn btn-sm" onClick={() => onDelete(cartItemId)}>
               x
             </button>
           </div>
@@ -57,7 +59,7 @@ function CartItem({
               </div>
               <div className="flex flex-col items-center">
                 <img src="/planeBlue.svg" alt="Plane" />
-                <p className="text-error mt-2">{duration}</p>
+                <p className="text-error mt-2">{`(${duration} days ${duration - 1} nights)`}</p>
               </div>
               <div className="flex flex-col items-center">
                 <p className="font-bold text-lg">{destination}</p>
@@ -67,14 +69,14 @@ function CartItem({
 
             <div className="flex flex-col md:flex-row items-center justify-between mt-4 md:mt-8 px-4 md:px-8">
               <div className="flex items-center mb-4 md:mb-0">
-                <h2 className="text-2xl text-info p">จำนวน Voyager</h2>
+                <h2 className="text-2xl text-info p">No. of Voyagers</h2>
                 <div className="w-7 h-7 ml-2 mr-2 rounded-full bg-blue-500 text-white font-bold text-xl flex items-center justify-center">
                   {voyagerCount}
                 </div>
               </div>
 
               <div className="flex items-baseline gap-2 md:gap-6 text-2xl md:text-3xl font-bold">
-                <p>ยอดรวม</p>
+                <p>Total</p>
                 <p className="text-gray-800">฿ {total}</p>
               </div>
             </div>
