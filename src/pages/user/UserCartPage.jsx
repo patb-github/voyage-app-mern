@@ -1,16 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import CartItem from '../../components/user/CartItem';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { format, addDays } from 'date-fns';
+import { getCouponByCode, calculateDiscount } from '../../utils/couponUtils';
 
 function UserCartPage() {
   const [cart, setCart] = useState([]);
-  const promoCode = [{ code: 'testcode', discount: 10 }];
   const navigate = useNavigate();
   const [totalAmount, setTotalAmount] = useState(0);
   const [discount, setDiscount] = useState(0);
+  const [coupon, setCoupon] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     register: registerPromo,
@@ -19,46 +21,47 @@ function UserCartPage() {
   } = useForm();
 
   useEffect(() => {
-    //=========== API CALL ==============
     const fetchCart = async () => {
-      const res = await axios.get('http://localhost:3000/api/cart', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-        },
-      });
-      console.log(res.data.cart);
-      setCart(res.data.cart);
-      const newCart = await Promise.all(
-        res.data.cart.map(async (item) => ({
-          ...item,
-          trip: await toCartItem(item.trip_id, item),
-        }))
-      );
-      setCart(newCart.map((item) => ({ ...item, isChecked: false })));
+      try {
+        const res = await axios.get('http://localhost:3000/api/cart', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+        });
+        console.log(res.data.cart);
+        const newCart = await Promise.all(
+          res.data.cart.map(async (item) => ({
+            ...item,
+            trip: await toCartItem(item.trip_id, item),
+            isChecked: false,
+          }))
+        );
+        setCart(newCart);
+        console.log('Updated cart:', newCart);
+      } catch (error) {
+        console.error('Error fetching cart:', error);
+      }
     };
     fetchCart();
-    //==================================
   }, []);
 
   useEffect(() => {
-    // console.log('Cart:', cart);
     const newTotalAmount = cart.reduce((sum, item) => {
-      return item.isChecked ? sum + item.total : sum;
+      return item.isChecked ? sum + (item.trip?.total || 0) : sum;
     }, 0);
     setTotalAmount(newTotalAmount);
-    // console.log('User cart:', cart); // Log the user's cart data
+    console.log('New total amount:', newTotalAmount);
   }, [cart]);
 
-  const handleCheckboxChange = (itemId) => {
+  const handleCheckboxChange = useCallback((itemId) => {
     setCart((prevCart) =>
       prevCart.map((item) =>
         item._id === itemId ? { ...item, isChecked: !item.isChecked } : item
       )
     );
-  };
+  }, []);
 
-  const handleDelete = (itemId) => {
-    //=========== API CALL ==============
+  const handleDelete = useCallback((itemId) => {
     const deleteFromCart = async (itemId) => {
       try {
         const res = await axios.delete(
@@ -70,39 +73,52 @@ function UserCartPage() {
           }
         );
         console.log(res);
-        setCart(cart.filter((item) => item._id !== itemId));
+        setCart((prevCart) => prevCart.filter((item) => item._id !== itemId));
       } catch (error) {
         console.log(error);
       }
     };
 
     deleteFromCart(itemId);
-    //==================================
-  };
+  }, []);
 
-  const handleApplyPromo = (data) => {
+  const handleApplyPromo = async (data) => {
     const enteredCode = data.promoCode;
-    const validPromo = promoCode.find((promo) => promo.code === enteredCode);
-    if (validPromo) {
-      const newDiscount = (totalAmount * validPromo.discount) / 100;
+    setIsLoading(true);
+    try {
+      const fetchedCoupon = await getCouponByCode(enteredCode);
+      setCoupon(fetchedCoupon);
+
+      const selectedItemsTotal = cart.reduce((sum, item) => {
+        return item.isChecked ? sum + (item.trip?.total || 0) : sum;
+      }, 0);
+
+      const newDiscount = calculateDiscount(
+        selectedItemsTotal,
+        fetchedCoupon.type,
+        fetchedCoupon.discount
+      );
       setDiscount(newDiscount);
-    } else {
+    } catch (error) {
       const modalPromo = document.getElementById('invalid_promo_code_modal');
       if (modalPromo) {
         modalPromo.showModal();
       }
+      console.error('Error fetching coupon:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handlePayment = () => {
-    const selectedItems = currentUserCartItems.filter((item) => item.isChecked);
+    const selectedItems = cart.filter((item) => item.isChecked);
     if (selectedItems.length === 0) {
       const modal = document.getElementById('none_item_selection_modal');
       if (modal) {
         modal.showModal();
       }
     } else {
-      const orderId = generateOrderId();
+      const orderId = generateOrderId(); // Implement this function
       const orderStatus = 'Pending';
       const order = {
         orderId,
@@ -113,17 +129,7 @@ function UserCartPage() {
         orderStatus,
         OrderDate: new Date(),
       };
-      setUser((prevUserData) =>
-        prevUserData.map((u) =>
-          u.id === user.id
-            ? {
-                ...u,
-                orders: [...(u.orders || []), order],
-                cart: u.cart.filter((item) => !item.isChecked),
-              }
-            : u
-        )
-      );
+      // Implement setUser or use appropriate state management
       const modal3 = document.getElementById('wait_for_payment_modal');
       modal3.showModal();
       setTimeout(function () {
@@ -135,9 +141,9 @@ function UserCartPage() {
   async function toCartItem(trip_id, item) {
     const res = await axios.get(`http://localhost:3000/api/trips/${trip_id}`);
     const trip = res.data.trip;
-    const departureDate = format(item.departure_date, 'EEE d MMM');
+    const departureDate = format(new Date(item.departure_date), 'EEE d MMM');
     const arrivalDate = format(
-      addDays(item.departure_date, trip.duration_days - 1),
+      addDays(new Date(item.departure_date), trip.duration_days - 1),
       'EEE d MMM'
     );
     console.log(trip);
@@ -169,10 +175,11 @@ function UserCartPage() {
                   key={item._id}
                   cartItemId={item._id}
                   {...item.trip}
-                  voyagerCount={item.travelers.length}
+                  voyagerCount={item.travelers?.length || 0}
                   isChecked={item.isChecked}
                   onDelete={handleDelete}
                   onCheckboxChange={handleCheckboxChange}
+                  total={item.trip?.total || 0}
                 />
               </Link>
             ))}
@@ -209,23 +216,28 @@ function UserCartPage() {
             </form>
             <div className="border-t border-gray-200 pt-2 mb-4">
               <p className="text-gray-700 text-sm">Original price</p>
-              <p className="text-gray-900 font-semibold">$ {totalAmount}</p>
+              <p className="text-gray-900 font-semibold">
+                $ {totalAmount.toFixed(2)}
+              </p>
             </div>
             <div className="border-t border-gray-200 pt-2 mb-4">
-              <p className="text-gray-700 text-sm ">Discount</p>
-              <p className=" font-semibold text-red-500">$ {discount}</p>
+              <p className="text-gray-700 text-sm">Discount</p>
+              <p className="font-semibold text-red-500">
+                $ {discount.toFixed(2)}
+              </p>
             </div>
             <div className="border-t border-gray-200 pt-2 mb-4">
               <p className="text-gray-700 text-sm">Estimated Total</p>
               <p className="text-gray-900 font-semibold">
-                $ {totalAmount - discount}
+                $ {(totalAmount - discount).toFixed(2)}
               </p>
             </div>
             <button
               onClick={handlePayment}
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
+              disabled={isLoading}
             >
-              CHECKOUT
+              {isLoading ? 'Applying...' : 'CHECKOUT'}
             </button>
           </div>
           <dialog id="none_item_selection_modal" className="modal">

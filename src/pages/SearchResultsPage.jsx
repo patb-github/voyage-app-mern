@@ -127,7 +127,7 @@ const SearchResultsPage = () => {
           </p>
         )}
 
-        {!isLoading && searchResults.length > 0 && (
+        {/* {!isLoading && searchResults.length > 0 && (
           <div className="mt-8 text-center">
             <Link
               to="/explore"
@@ -136,7 +136,7 @@ const SearchResultsPage = () => {
               Explore More Destinations
             </Link>
           </div>
-        )}
+        )} */}
       </main>
     </div>
   );

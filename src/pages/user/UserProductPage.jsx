@@ -77,7 +77,7 @@ const ProductDetails = ({ trip }) => {
               {expense.expense_name}
             </p>
             <p className="text-base md:text-lg font-normal">
-              ฿{expense.expense_amount.toLocaleString()}
+              ${expense.expense_amount.toLocaleString()}
             </p>
           </li>
         ))}
@@ -175,7 +175,7 @@ const UserProductPage = () => {
               <div className="flex flex-col">
                 <p className="text-sm font-bold">Total Payment</p>
                 <p className="text-2xl md:text-3xl font-bold">
-                  ฿{trip.price.toLocaleString()}
+                  ${trip.price.toLocaleString()}
                 </p>
               </div>
               <div className="flex space-x-2">

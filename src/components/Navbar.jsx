@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import UserContext from '../context/UserContext';
+import axios from 'axios';
 
 const Navbar = () => {
   const { user, setUser } = useContext(UserContext);
@@ -53,7 +54,7 @@ const Navbar = () => {
           <div className="flex items-center">
             {isLogin ? (
               <div className="flex items-center space-x-4">
-                {!user?.isAdmin && (
+                {/* {!user?.isAdmin && (
                   <Link
                     to="/cart"
                     className="relative p-1 rounded-full text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -76,7 +77,7 @@ const Navbar = () => {
                       3
                     </span>
                   </Link>
-                )}
+                )} */}
 
                 {!user?.isAdmin ? (
                   <div className="relative" ref={dropdownRef}>
@@ -128,6 +129,13 @@ const Navbar = () => {
                           role="menuitem"
                         >
                           My Profile
+                        </Link>
+                        <Link
+                          to="/cart"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          role="menuitem"
+                        >
+                          Cart
                         </Link>
                         <Link
                           to="/booking"
