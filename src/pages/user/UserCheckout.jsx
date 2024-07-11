@@ -7,11 +7,15 @@ import {
   faCalendar,
   faShoppingCart,
   faCreditCard,
+  faCheckCircle,
+  faExclamationCircle,
 } from '@fortawesome/free-solid-svg-icons';
 import { format, addDays } from 'date-fns';
 import UserContext from '../../context/UserContext';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import { useForm } from 'react-hook-form';
+import { getCouponByCode } from '../../utils/couponApi';
 
 function UserCheckout() {
   const { user } = useContext(UserContext);
@@ -19,43 +23,62 @@ function UserCheckout() {
   const [isLogin, setIsLogin] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentVoyager, setCurrentVoyager] = useState('');
-  const [voyagers, setVoyagers] = useState({"1":{firstName: user.firstname, lastName: user.lastname}});
+  const [voyagers, setVoyagers] = useState({
+    1: { firstName: user?.firstname, lastName: user?.lastname },
+  });
   const [departureDate, setDepartureDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
   const [showMedal, setShowMedal] = useState(false);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [discount, setDiscount] = useState(0);
   const navigate = useNavigate();
   const { id } = useParams();
-  
+
+  const {
+    register: registerPromo,
+    handleSubmit: handleSubmitPromo,
+    formState: { errors: promoErrors },
+  } = useForm();
+
   useEffect(() => {
     setIsLogin(user !== null);
   }, [user]);
-  
+
   useEffect(() => {
-    console.log(user);
     const fetchTrip = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get(`http://localhost:3000/api/trips/${id}`);
-        // console.log(response.data.trip);
+        const response = await axios.get(
+          `http://localhost:3000/api/trips/${id}`
+        );
         setTrip(response.data.trip);
+        setTotalAmount(response.data.trip.price);
       } catch (error) {
         console.error(error);
       }
       setIsLoading(false);
     };
     fetchTrip();
-    
-    // Set initial departure date to tomorrow
-    setDepartureDate(addDays(new Date(), 1));
-  }, []);
-  
-  if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  }
 
+    setDepartureDate(addDays(new Date(), 1));
+  }, [id]);
+
+  useEffect(() => {
+    if (trip) {
+      setTotalAmount(trip.price * Object.keys(voyagers).length);
+    }
+  }, [trip, voyagers]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
   if (!trip) {
     navigate('/error');
-    return;
+    return null;
   }
 
   const openModal = (voyager) => {
@@ -94,7 +117,6 @@ function UserCheckout() {
       voyagers[currentVoyager]?.lastName
     ) {
       closeModal();
-      console.log(voyagers);
     } else {
       alert('Please fill in both first name and last name');
     }
@@ -136,36 +158,43 @@ function UserCheckout() {
     if (!isLogin) {
       navigate('/login');
       return;
-    } 
+    }
 
     const cartItem = {
       trip_id: id,
       departure_date: departureDate,
-      travelers: []
-    }
-    for (let voyager in voyagers) {
-      cartItem.travelers.push(voyagers[voyager]);
-    }
+      travelers: Object.values(voyagers),
+    };
 
     try {
-      const response = await axios.post('http://localhost:3000/api/cart', cartItem, {
+      await axios.post('http://localhost:3000/api/cart', cartItem, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
         },
       });
-      setShowMedal("green");
+      setShowMedal('green');
       setTimeout(() => {
         setShowMedal(false);
       }, 1000);
     } catch (error) {
       console.error(error);
-      setShowMedal("red");
+      setShowMedal('red');
       setTimeout(() => {
         setShowMedal(false);
       }, 1000);
     }
   };
 
+  const handleApplyPromo = (data) => {
+    if (!discount) {
+      // Check if code has been applied before adding to cart
+      setDiscount(500);
+    }
+  };
+
+  const handlePayment = () => {
+    console.log('Proceeding to payment...');
+  };
   return (
     <div className="min-h-screen bg-[url('/bg-desktop.webp')] py-8 px-4 md:py-16 md:px-48">
       <section className="bg-white rounded-3xl shadow-2xl">
@@ -184,9 +213,7 @@ function UserCheckout() {
             <p className="text-lg font-normal py-4 text-gray-700">
               {trip.description}
             </p>
-          </div>
-          <div className="md:w-1/2 md:px-10">
-            <div className="rounded-3xl shadow-lg px-8 py-6 mb-6 bg-gradient-to-r from-indigo-50 to-blue-50">
+            <div className="rounded-3xl shadow-lg px-8 py-6 mb-6 ">
               <h2 className="text-2xl font-extrabold py-4 text-indigo-800">
                 {trip.name}
               </h2>
@@ -229,7 +256,7 @@ function UserCheckout() {
                     className="w-10 h-10"
                   />
                   <p className="font-semibold text-red-500 mt-2">
-                    ({trip.duration_days} days {trip.duration_days - 1} nights) 
+                    ({trip.duration_days} days {trip.duration_days - 1} nights)
                   </p>
                 </div>
                 <div className="flex-col flex items-center">
@@ -237,19 +264,21 @@ function UserCheckout() {
                     {trip.destination_to}
                   </p>
                   <p className="font-bold bg-indigo-100 text-indigo-800 rounded-full px-3 py-1 mt-2">
-                    {format(addDays(departureDate, trip.duration_days - 1), 'EEE d MMM')}
+                    {format(
+                      addDays(departureDate, trip.duration_days - 1),
+                      'EEE d MMM'
+                    )}
                   </p>
                 </div>
               </div>
-              <button className="flex mt-4 text-lg text-indigo-600 items-center hover:underline">
-                <span>Read full program details</span>
-                <span className="text-2xl ml-2">&#8227;</span>
-              </button>
+
               <button className="flex mt-2 text-lg text-indigo-600 items-center hover:underline">
                 <span>Policy | Things to know before traveling</span>
                 <span className="text-2xl ml-2">&#8227;</span>
               </button>
             </div>
+          </div>
+          <div className="md:w-1/2 md:px-10">
             <div className="rounded-3xl shadow-lg px-8 py-6 mb-6 bg-white">
               <h2 className="text-2xl font-extrabold py-4 text-indigo-800">
                 Voyagers
@@ -275,55 +304,117 @@ function UserCheckout() {
                 ))
               )}
               <button
-                className="btn btn-outline btn-info w-full mt-4 hover:bg-indigo-500 hover:text-white transition duration-300"
+                className="btn btn-outline text-blue-500 w-full mt-4 hover:bg-indigo-500 hover:text-white transition duration-300"
                 onClick={addNewVoyager}
               >
                 + Add Voyager
               </button>
             </div>
-            <div className="rounded-3xl shadow-lg px-8 py-6 mb-6 bg-white">
-              <h2 className="text-2xl font-extrabold py-4 text-indigo-800">
-                Payment Information
-              </h2>
-              <div className="flex justify-between items-center font-semibold text-gray-700">
-                <p className="text-lg py-2">Package {trip.name} x {Object.keys(voyagers).length}</p>
-                <p>${(trip.price * Object.keys(voyagers).length).toLocaleString()}</p>
-              </div>
-              {/* <div className="flex justify-between items-center text-red-600 font-semibold">
-                <p className="text-lg py-2">Room Discount</p>
-                <p>฿ -7,500</p>
-              </div> */}
-            </div>
+            <div className="bg-white shadow-xl p-6 md:w-full card rounded-2xl  my-4 h-fit">
+              <form onSubmit={handleSubmitPromo(handleApplyPromo)}>
+                <h3 className="text-lg font-semibold mb-2">Promotions</h3>
+                <div className="mb-4">
+                  <label
+                    htmlFor="promo-code"
+                    className="block text-gray-700 text-sm font-bold mb-2"
+                  >
+                    Enter Promo Code
+                  </label>
+                  <div className="flex mb-2">
+                    <input
+                      type="text"
+                      id="promo-code"
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      placeholder="Promo Code"
+                      {...registerPromo('promoCode', { required: true })}
+                    />
+                    <button
+                      type="submit"
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                  {promoErrors.promoCode && (
+                    <span className="text-red-500">
+                      Please enter a promo code
+                    </span>
+                  )}
+                </div>
 
-            <div className="flex justify-between px-6 py-4 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl mt-4 text-white">
-              <div className="flex flex-col">
-                <p className="text-sm font-bold">Total Payment</p>
-                <p className="text-3xl font-bold">${(trip.price * Object.keys(voyagers).length).toLocaleString()}</p>
-              </div>
-              <div className="flex space-x-2">
-                <button className="btn bg-white text-indigo-700 hover:bg-indigo-100 rounded-full px-4 transition duration-300 flex items-center"
-                        onClick={addToCart}
-                >
-                  <FontAwesomeIcon icon={faShoppingCart} className="mr-2" />
-                  Add to Cart
-                </button>
-                <button className="btn bg-white text-indigo-700 hover:bg-indigo-100 rounded-full px-4 transition duration-300 flex items-center">
-                  <FontAwesomeIcon icon={faCreditCard} className="mr-2" />
-                  Pay Now
-                </button>
+                <div className="rounded-3xl shadow-lg px-8 py-6 mb-6 bg-white">
+                  <h2 className="text-2xl font-extrabold py-4 text-indigo-800">
+                    Payment Information
+                  </h2>
+                  <div className="flex justify-between items-center font-semibold text-gray-700">
+                    <p className="text-lg py-2">
+                      Package {trip.name} x {Object.keys(voyagers).length}
+                    </p>
+                    <p>
+                      $
+                      {(
+                        trip.price * Object.keys(voyagers).length
+                      ).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="flex justify-between items-center font-semibold text-gray-700">
+                    <p className="text-lg py-2">Discount</p>
+                    <p>${discount}</p>
+                  </div>
+                </div>
+                <p className="text-red-500 text-sm">
+                  To prevent duplicate use, the discount code will be removed
+                  once you add a trip to your cart. Please re-enter the code at
+                  checkout to apply the discount to your purchase.
+                </p>
+              </form>
+              <div className="flex justify-between px-6 py-4 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl mt-4 text-white">
+                <div className="flex flex-col">
+                  <p className="text-sm font-bold">Total Payment</p>
+                  <p className="text-3xl font-bold">
+                    $ {totalAmount - discount}
+                  </p>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    className="btn bg-white text-indigo-700 hover:bg-indigo-100 rounded-full px-4 transition duration-300 flex items-center"
+                    onClick={addToCart}
+                  >
+                    <FontAwesomeIcon icon={faShoppingCart} className="mr-2" />
+                    Add to Cart
+                  </button>
+                  <button className="btn bg-white text-indigo-700 hover:bg-indigo-100 rounded-full px-4 transition duration-300 flex items-center">
+                    <FontAwesomeIcon icon={faCreditCard} className="mr-2" />
+                    Pay Now
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
-      
       {showMedal && (
-        <div className={`fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg`}>
-          {showMedal === "green" ? `Trip successfully added to cart` : `There was an error adding trip to cart`}
+        <div
+          className={`fixed bottom-20 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-xl 
+    ${
+      showMedal === 'green'
+        ? 'bg-gradient-to-r from-blue-400 to-blue-600'
+        : 'bg-gradient-to-r from-red-400 to-red-600'
+    } text-white font-semibold transition-all duration-300 ease-in-out`}
+        >
+          <div className="flex items-center space-x-3">
+            <FontAwesomeIcon
+              icon={showMedal === 'green' ? faCheckCircle : faExclamationCircle}
+              className="h-6 w-6"
+            />
+            <span>
+              {showMedal === 'green'
+                ? 'Trip successfully added to cart'
+                : 'Error adding trip to cart'}
+            </span>
+          </div>
         </div>
       )}
-
-      {/* DaisyUI Modal */}
       <dialog
         id="passenger_modal"
         className={`modal ${isModalOpen ? 'modal-open' : ''}`}

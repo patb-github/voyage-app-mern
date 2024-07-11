@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faLocationDot,
   faStar,
-  faCalendarCheck
+  faCalendarCheck,
 } from '@fortawesome/free-solid-svg-icons';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import UserContext from '../../context/UserContext';
@@ -11,17 +11,29 @@ import UserContext from '../../context/UserContext';
 const ContentHead = ({ trip }) => {
   return (
     <div className="rounded-3xl shadow-lg px-6 py-6 mb-6 bg-gradient-to-r from-indigo-50 to-blue-50">
-      <h2 className="text-xl md:text-2xl font-extrabold py-4 text-indigo-800">{trip.name}</h2>
+      <h2 className="text-xl md:text-2xl font-extrabold py-4 text-indigo-800">
+        {trip.name}
+      </h2>
       <div className="flex justify-between items-center bg-white rounded-xl p-4 shadow-md">
         <div className="flex-col flex items-center">
-          <p className="font-extrabold text-lg md:text-xl text-indigo-700">{trip.destination_from}</p>
+          <p className="font-extrabold text-lg md:text-xl text-indigo-700">
+            {trip.destination_from}
+          </p>
         </div>
         <div className="flex-col flex items-center">
-          <img src="/planeBlue.svg" alt="Plane icon" className="w-8 h-8 md:w-10 md:h-10" />
-          <p className="font-semibold text-sm md:text-base text-red-500 mt-2">({trip.duration_days} Days)</p>
+          <img
+            src="/planeBlue.svg"
+            alt="Plane icon"
+            className="w-8 h-8 md:w-10 md:h-10"
+          />
+          <p className="font-semibold text-sm md:text-base text-red-500 mt-2">
+            ({trip.duration_days} Days)
+          </p>
         </div>
         <div className="flex-col flex items-center">
-          <p className="font-extrabold text-lg md:text-xl text-indigo-700">{trip.destination_to}</p>
+          <p className="font-extrabold text-lg md:text-xl text-indigo-700">
+            {trip.destination_to}
+          </p>
         </div>
       </div>
       <div className="flex justify-between mt-4">
@@ -49,15 +61,24 @@ const ContentHead = ({ trip }) => {
 const ProductDetails = ({ trip }) => {
   return (
     <div className="rounded-3xl shadow-lg px-6 py-6 mb-6 bg-white">
-      <h2 className="text-xl md:text-2xl font-extrabold py-4 text-indigo-800">Package Details</h2>
+      <h2 className="text-xl md:text-2xl font-extrabold py-4 text-indigo-800">
+        Package Details
+      </h2>
       <p className="text-base md:text-lg font-normal py-4 text-gray-700">
         {trip.description}
       </p>
       <ul>
         {trip.sub_expenses.map((expense, index) => (
-          <li key={index} className="flex justify-between py-2 border-b border-gray-200">
-            <p className="text-base md:text-lg font-normal">{expense.expense_name}</p>
-            <p className="text-base md:text-lg font-normal">฿{expense.expense_amount.toLocaleString()}</p>
+          <li
+            key={index}
+            className="flex justify-between py-2 border-b border-gray-200"
+          >
+            <p className="text-base md:text-lg font-normal">
+              {expense.expense_name}
+            </p>
+            <p className="text-base md:text-lg font-normal">
+              ฿{expense.expense_amount.toLocaleString()}
+            </p>
           </li>
         ))}
       </ul>
@@ -104,7 +125,11 @@ const UserProductPage = () => {
   };
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   if (!trip) {
@@ -129,7 +154,7 @@ const UserProductPage = () => {
               className="w-full h-[50vh] object-cover rounded-b-3xl"
             />
           </div>
-          
+
           {/* Desktop layout */}
           <div className="hidden md:block md:w-1/2 px-6 lg:px-8 xl:px-16 border-r border-gray-200">
             <div className="relative pb-[56.25%] mb-4">
@@ -149,10 +174,12 @@ const UserProductPage = () => {
             <div className="flex justify-between px-4 py-4 mb-4 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl mt-4 text-white">
               <div className="flex flex-col">
                 <p className="text-sm font-bold">Total Payment</p>
-                <p className="text-2xl md:text-3xl font-bold">฿{trip.price.toLocaleString()}</p>
+                <p className="text-2xl md:text-3xl font-bold">
+                  ฿{trip.price.toLocaleString()}
+                </p>
               </div>
               <div className="flex space-x-2">
-                <button 
+                <button
                   className="btn bg-white text-indigo-700 hover:bg-indigo-100 rounded-full px-4 py-2 transition duration-300 flex items-center text-sm md:text-base"
                   onClick={handleBooking}
                 >
@@ -165,8 +192,29 @@ const UserProductPage = () => {
         </div>
       </section>
       {showMedal && (
-        <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg">
-          Booking initiated
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
+          <div className="flex items-center justify-center">
+            <svg
+              className="animate-spin h-8 w-8 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+          </div>
         </div>
       )}
     </div>
