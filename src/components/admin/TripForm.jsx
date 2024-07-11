@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 
 function TripForm({ onSubmit, initialData = {}, isEditing = false }) {
@@ -8,17 +8,17 @@ function TripForm({ onSubmit, initialData = {}, isEditing = false }) {
     handleSubmit,
     watch,
     formState: { errors, isSubmitting },
+    getValues,
   } = useForm({
     defaultValues: {
-      name: '',
-      duration_days: '',
-      destination_from: '',
-      destination_to: '',
-      rating: 0,
-      price: '',
-      description: '',
-      sub_expenses: [],
-      ...initialData,
+      name: initialData.name || '',
+      duration_days: initialData.duration_days || '',
+      destination_from: initialData.destination_from || '',
+      destination_to: initialData.destination_to || '',
+      rating: initialData.rating || 0,
+      description: initialData.description || '',
+      sub_expenses: initialData.sub_expenses || [],
+      image: initialData.images ? initialData.images[0] : null, // ใช้รูปภาพแรกจาก array
     },
   });
 
@@ -27,11 +27,23 @@ function TripForm({ onSubmit, initialData = {}, isEditing = false }) {
     name: 'sub_expenses',
   });
 
-  const [image, setImage] = useState(null);
+  const [image, setImage] = useState(
+    initialData.images ? initialData.images[0] : null
+  );
   const [imageError, setImageError] = useState('');
 
   const watchRating = watch('rating');
   const currentRating = parseFloat(watchRating || 0).toFixed(1);
+
+  const [totalPrice, setTotalPrice] = useState(0);
+
+  useEffect(() => {
+    const subExpenses = getValues('sub_expenses');
+    const newTotalPrice = subExpenses.reduce((sum, expense) => {
+      return sum + (parseFloat(expense.expense_amount) || 0);
+    }, 0);
+    setTotalPrice(newTotalPrice);
+  }, [fields, getValues]); // Trigger the effect when fields change
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -54,7 +66,7 @@ function TripForm({ onSubmit, initialData = {}, isEditing = false }) {
       setImageError('Please upload an image');
       return;
     }
-    await onSubmit({ ...data, image });
+    await onSubmit({ ...data, price: totalPrice, image }); // ส่ง image เดี่ยว
   };
 
   return (
@@ -155,34 +167,9 @@ function TripForm({ onSubmit, initialData = {}, isEditing = false }) {
             </span>
           )}
         </div>
-
-        <div className="form-control">
-          <label htmlFor="price" className="label text-gray-700 font-semibold">
-            Total Price
-          </label>
-          <input
-            id="price"
-            type="text"
-            className={`input input-bordered w-full ${
-              errors.price ? 'input-error' : ''
-            }`}
-            {...register('price', {
-              required: 'Price is required',
-              pattern: {
-                value: /^\d+(\.\d{1,2})?$/,
-                message: 'Please enter a valid price',
-              },
-            })}
-            placeholder="Enter price"
-          />
-          {errors.price && (
-            <span className="text-red-500 text-sm mt-1">
-              {errors.price.message}
-            </span>
-          )}
-        </div>
       </div>
 
+      {/* Description Text Area */}
       <div className="form-control">
         <label
           htmlFor="description"
@@ -198,6 +185,7 @@ function TripForm({ onSubmit, initialData = {}, isEditing = false }) {
         ></textarea>
       </div>
 
+      {/* Rating Input with Scale */}
       <div className="form-control">
         <label htmlFor="rating" className="label text-gray-700 font-semibold">
           Rating: <span className="text-blue-600 ml-2">{currentRating}</span>
@@ -221,6 +209,7 @@ function TripForm({ onSubmit, initialData = {}, isEditing = false }) {
         </div>
       </div>
 
+      {/* Sub Expenses Section */}
       <div className="card bg-base-200 shadow-sm">
         <div className="card-body">
           <h3 className="card-title text-lg text-gray-700">Sub Expenses</h3>
@@ -231,16 +220,16 @@ function TripForm({ onSubmit, initialData = {}, isEditing = false }) {
                 className="input input-bordered input-sm flex-grow"
                 placeholder="Expense Name"
                 {...register(`sub_expenses.${index}.expense_name`, {
-                  required: true,
+                  required: 'Expense name is required',
                 })}
               />
               <input
-                type="text"
+                type="number"
                 className="input input-bordered input-sm w-24"
                 placeholder="Amount"
                 {...register(`sub_expenses.${index}.expense_amount`, {
-                  required: true,
-                  pattern: /^\d+(\.\d{1,2})?$/,
+                  required: 'Expense amount is required',
+                  pattern: /^\d+(\.\d{1,2})?$/, // Corrected pattern
                 })}
               />
               <button
@@ -259,13 +248,27 @@ function TripForm({ onSubmit, initialData = {}, isEditing = false }) {
           >
             Add Expense
           </button>
+
+          {/* Display total price under Sub Expenses */}
+          <div className="mt-4 text-lg font-semibold">
+            Total Price:{' '}
+            <span className="text-blue-600 ml-2">{totalPrice}</span>
+          </div>
         </div>
       </div>
 
+      {/* Image Upload Section */}
       <div className="form-control">
         <label htmlFor="image" className="label text-gray-700 font-semibold">
           Upload Image
         </label>
+        {image && (
+          <img
+            src={typeof image === 'string' ? image : URL.createObjectURL(image)}
+            alt="Trip Image"
+            className="w-full h-auto mb-2"
+          />
+        )}
         <input
           id="image"
           type="file"
@@ -278,6 +281,7 @@ function TripForm({ onSubmit, initialData = {}, isEditing = false }) {
         )}
       </div>
 
+      {/* Submit Button */}
       <button
         type="submit"
         className="btn btn-primary w-full text-lg"
