@@ -27,7 +27,8 @@ function CartItem({
         <div className="card-title justify-between">
           <h2 className="text-xl md:text-xl font-semibold">{title}</h2>
           <div className="card-actions">
-            <button className="btn btn-sm" onClick={() => onDelete(cartItemId)}>
+            <button className="btn btn-sm" 
+              onClick={(e) => {e.preventDefault(); e.stopPropagation(); onDelete(cartItemId)}}>
               x
             </button>
           </div>
@@ -39,7 +40,8 @@ function CartItem({
               type="checkbox"
               className="checkbox checkbox-primary mr-6 ;"
               checked={isCheckedLocal}
-              onChange={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setIsCheckedLocal(!isCheckedLocal);
                 onCheckboxChange(id);
               }}

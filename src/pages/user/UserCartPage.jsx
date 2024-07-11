@@ -164,8 +164,9 @@ function UserCartPage() {
         <div className=" mx-4 lg:mx-6  bg md:flex">
           <div>
             {cart.map((item) => (
-              <div key={item._id}>
+              <Link to={`/cart/edit/${item._id}`} key={item._id}>
                 <CartItem
+                  key={item._id}
                   cartItemId={item._id}
                   {...item.trip}
                   voyagerCount={item.travelers.length}
@@ -173,10 +174,7 @@ function UserCartPage() {
                   onDelete={handleDelete}
                   onCheckboxChange={handleCheckboxChange}
                 />
-                <Link to={`/cart/edit/${item._id}`}>
-                  <span style={{ display: 'none' }}>{item._id}</span>
-                </Link>
-              </div>
+              </Link>
             ))}
           </div>
           <div className="bg-white shadow-xl p-6 md:w-80 card rounded-2xl md:mx-2 my-4 h-fit">
