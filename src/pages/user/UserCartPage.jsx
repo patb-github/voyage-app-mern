@@ -133,26 +133,44 @@ function UserCartPage() {
   };
 
   async function toCartItem(trip_id, item) {
-    const res = await axios.get(`http://localhost:3000/api/trips/${trip_id}`);
-    const trip = res.data.trip;
-    const departureDate = format(item.departure_date, 'EEE d MMM');
-    const arrivalDate = format(
-      addDays(item.departure_date, trip.duration_days - 1),
-      'EEE d MMM'
-    );
-    console.log(trip);
-    return {
-      id: trip._id,
-      title: trip.name,
-      imageSrc: trip.images[0],
-      departure: trip.destination_from,
-      destination: trip.destination_to,
-      duration: trip.duration_days,
-      price: trip.price,
-      departureDate: departureDate,
-      arrivalDate: arrivalDate,
-      total: trip.price * item.travelers.length,
-    };
+    try {
+      const res = await axios.get(`http://localhost:3000/api/trips/${trip_id}`);
+      const trip = res.data.trip;
+      const departureDate = format(item.departure_date, 'EEE d MMM');
+      const arrivalDate = format(
+        addDays(item.departure_date, trip.duration_days - 1),
+        'EEE d MMM'
+      );
+      return {
+        id: trip._id,
+        title: trip.name || 'N/A',
+        imageSrc: trip.images[0] || 'N/A',
+        departure: trip.destination_from || 'N/A',
+        destination: trip.destination_to || 'N/A',
+        duration: trip.duration_days || 'N/A',
+        price: trip.price || 'N/A',
+        departureDate: departureDate || 'N/A',
+        arrivalDate: arrivalDate || 'N/A',
+        total: trip.price * item.travelers.length || 'N/A',
+      };
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        return {
+          id: trip_id,
+          title: 'N/A',
+          imageSrc: 'N/A',
+          departure: 'N/A',
+          destination: 'N/A',
+          duration: 'N/A',
+          price: 'N/A',
+          departureDate: 'N/A',
+          arrivalDate: 'N/A',
+          total: 'N/A',
+        };
+      } else {
+        console.log(error); 
+      }
+    }
   }
 
   return (
