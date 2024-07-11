@@ -24,13 +24,18 @@ function UserCartPage() {
       const res = await axios.get('http://localhost:3000/api/cart', {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-        }
+        },
       });
       console.log(res.data.cart);
       setCart(res.data.cart);
-      const newCart = await Promise.all(res.data.cart.map(async (item) => ({ ...item, trip: await toCartItem(item.trip_id, item) })));
+      const newCart = await Promise.all(
+        res.data.cart.map(async (item) => ({
+          ...item,
+          trip: await toCartItem(item.trip_id, item),
+        }))
+      );
       setCart(newCart.map((item) => ({ ...item, isChecked: false })));
-    }
+    };
     fetchCart();
     //==================================
   }, []);
@@ -56,17 +61,20 @@ function UserCartPage() {
     //=========== API CALL ==============
     const deleteFromCart = async (itemId) => {
       try {
-        const res = await axios.delete(`http://localhost:3000/api/cart/${itemId}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+        const res = await axios.delete(
+          `http://localhost:3000/api/cart/${itemId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            },
           }
-        });
-        console.log(res); 
+        );
+        console.log(res);
         setCart(cart.filter((item) => item._id !== itemId));
       } catch (error) {
         console.log(error);
       }
-    }
+    };
 
     deleteFromCart(itemId);
     //==================================
@@ -128,7 +136,10 @@ function UserCartPage() {
     const res = await axios.get(`http://localhost:3000/api/trips/${trip_id}`);
     const trip = res.data.trip;
     const departureDate = format(item.departure_date, 'EEE d MMM');
-    const arrivalDate = format(addDays(item.departure_date, trip.duration_days - 1), 'EEE d MMM');
+    const arrivalDate = format(
+      addDays(item.departure_date, trip.duration_days - 1),
+      'EEE d MMM'
+    );
     console.log(trip);
     return {
       id: trip._id,
@@ -140,8 +151,8 @@ function UserCartPage() {
       price: trip.price,
       departureDate: departureDate,
       arrivalDate: arrivalDate,
-      total: trip.price * item.travelers.length
-    }
+      total: trip.price * item.travelers.length,
+    };
   }
 
   return (
@@ -263,4 +274,3 @@ function UserCartPage() {
 }
 
 export default UserCartPage;
-
