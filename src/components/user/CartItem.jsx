@@ -77,7 +77,7 @@ function CartItem({
 
               <div className="flex items-baseline gap-2 md:gap-6 text-2xl md:text-3xl font-bold">
                 <p>Total</p>
-                <p className="text-gray-800">฿ {total}</p>
+                <p className="text-gray-800">${total}</p>
               </div>
             </div>
           </div>

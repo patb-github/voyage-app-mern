@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import CartItem from '../../components/user/CartItem';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { format, addDays } from 'date-fns';
 
@@ -143,7 +143,7 @@ function UserCartPage() {
       total: trip.price * item.travelers.length
     }
   }
-  
+
   return (
     <div className="bg-cover bg-center bg-no-repeat bg-[#FAFAFC] md:bg-[url('/bg-desktop.png')] min-h-screen flex justify-center ">
       <section className="bg-[#FAFAFC] md:rounded-2xl my-6 ">
@@ -153,15 +153,17 @@ function UserCartPage() {
         <div className=" mx-4 lg:mx-6  bg md:flex">
           <div>
             {cart.map((item) => (
-              <CartItem
-                key={item._id}
-                cartItemId={item._id}
-                {...item.trip}
-                voyagerCount={item.travelers.length}
-                isChecked={item.isChecked}
-                onDelete={handleDelete}
-                onCheckboxChange={handleCheckboxChange}
-              />
+              <Link to={`/cart/edit/${item._id}`} key={item._id}>
+                <CartItem
+                  key={item._id}
+                  cartItemId={item._id}
+                  {...item.trip}
+                  voyagerCount={item.travelers.length}
+                  isChecked={item.isChecked}
+                  onDelete={handleDelete}
+                  onCheckboxChange={handleCheckboxChange}
+                />
+              </Link>
             ))}
           </div>
           <div className="bg-white shadow-xl p-6 md:w-80 card rounded-2xl md:mx-2 my-4 h-fit">
@@ -196,16 +198,16 @@ function UserCartPage() {
             </form>
             <div className="border-t border-gray-200 pt-2 mb-4">
               <p className="text-gray-700 text-sm">Original price</p>
-              <p className="text-gray-900 font-semibold">฿ {totalAmount}</p>
+              <p className="text-gray-900 font-semibold">$ {totalAmount}</p>
             </div>
             <div className="border-t border-gray-200 pt-2 mb-4">
               <p className="text-gray-700 text-sm ">Discount</p>
-              <p className=" font-semibold text-red-500">฿ {discount}</p>
+              <p className=" font-semibold text-red-500">$ {discount}</p>
             </div>
             <div className="border-t border-gray-200 pt-2 mb-4">
               <p className="text-gray-700 text-sm">Estimated Total</p>
               <p className="text-gray-900 font-semibold">
-                ฿ {totalAmount - discount}
+                $ {totalAmount - discount}
               </p>
             </div>
             <button
