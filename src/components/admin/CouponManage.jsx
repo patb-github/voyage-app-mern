@@ -9,6 +9,8 @@ const CouponManage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [coupons, setCoupons] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCoupon, setSelectedCoupon] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchCoupons = async () => {
@@ -24,6 +26,8 @@ const CouponManage = () => {
           name: coupon.name,
           type: coupon.type,
           discount: coupon.discount,
+          code: coupon.code,
+          minimumPurchaseAmount: coupon.minimumPurchaseAmount,
         }));
         setCoupons(couponsData);
       } catch (error) {
@@ -36,33 +40,53 @@ const CouponManage = () => {
     fetchCoupons();
   }, []);
 
+  const handleDeleteClick = (coupon) => {
+    setSelectedCoupon(coupon);
+    setIsModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await axios.delete(
+        `http://localhost:3000/api/coupons/${selectedCoupon._id}`
+      );
+      setCoupons(coupons.filter((c) => c._id !== selectedCoupon._id));
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error deleting coupon:', error);
+    }
+  };
+
   const CouponItem = ({ coupon }) => (
     <motion.div
       whileHover={{ scale: 1.02 }}
-      className="bg-white rounded-lg shadow-md p-4 mb-4 flex justify-between items-center"
+      className="bg-white rounded-lg shadow-md p-4 mb-4 flex flex-col md:flex-row md:justify-between md:items-center"
     >
-      <div>
+      <div className="mb-2 md:mb-0">
         <h3 className="font-semibold text-lg">{coupon.name}</h3>
-        <p className="text-sm text-gray-600">{"ID: " + coupon._id}</p>
-        <p className="text-sm text-gray-600">{"Type: " + coupon.type}</p>
-        <p className="text-sm text-blue-600 font-bold">
+        <p className="text-xl text-gray-500 mt-1">{'Code: ' + coupon.code}</p>
+        <p className="text-sm text-gray-600">{'Type: ' + coupon.type}</p>
+        <p className="text-blue-600 font-bold text-lg">
           {`${coupon.discount} ${coupon.type === 'fixed' ? 'USD' : '%'}`}
+        </p>
+        <p className="text-xs text-gray-500">
+          {'Min. Purchase: ' +
+            coupon.minimumPurchaseAmount.toLocaleString('en-US', {
+              style: 'currency',
+              currency: 'USD',
+            })}
         </p>
       </div>
       <div>
-        <Link to={`/admin/edit-coupon/${coupon._id}`} className="btn btn-sm btn-outline btn-primary mr-2">
+        <Link
+          to={`/admin/edit-coupon/${coupon._id}`}
+          className="btn btn-sm btn-outline btn-primary mr-2"
+        >
           <FontAwesomeIcon icon={faEdit} />
         </Link>
         <button
           className="btn btn-sm btn-outline btn-error"
-          onClick={async () => {
-            try {
-              await axios.delete(`http://localhost:3000/api/coupons/${coupon._id}`);
-              setCoupons(coupons.filter((c) => c._id !== coupon._id));
-            } catch (error) {
-              console.error('Error deleting coupon:', error);
-            }
-          }}
+          onClick={() => handleDeleteClick(coupon)}
         >
           <FontAwesomeIcon icon={faTrash} />
         </button>
@@ -74,7 +98,7 @@ const CouponManage = () => {
     <div className="bg-gray-100 min-h-screen p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Manage Coupons</h1>
-        
+
         <div className="mb-6 relative">
           <input
             type="text"
@@ -83,24 +107,53 @@ const CouponManage = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <FontAwesomeIcon icon={faSearch} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <FontAwesomeIcon
+            icon={faSearch}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          />
         </div>
 
-        <Link to="/admin/create-coupon" className="btn btn-primary mb-6">
+        <Link
+          to="/admin/create-coupon"
+          className="btn bg-blue-500 text-white mb-6"
+        >
           Create New Coupon
         </Link>
 
         {isLoading ? (
           <p>Loading coupons...</p>
         ) : coupons.length > 0 ? (
-          coupons.map((coupon) => <CouponItem key={coupon._id} coupon={coupon} />)
+          coupons
+            .filter((coupon) =>
+              coupon.name.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+            .map((coupon) => <CouponItem key={coupon._id} coupon={coupon} />)
         ) : (
           <p>No coupons available.</p>
         )}
       </div>
+
+      {isModalOpen && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg">Confirm Delete</h3>
+            <p className="py-4">
+              Are you sure you want to delete the coupon "{selectedCoupon?.name}
+              "?
+            </p>
+            <div className="modal-action">
+              <button className="btn btn-error" onClick={confirmDelete}>
+                Delete
+              </button>
+              <button className="btn" onClick={() => setIsModalOpen(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default CouponManage;
-
