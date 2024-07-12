@@ -1,83 +1,8 @@
-import { useState } from 'react';
-
-// ปรับปรุง Mock data ให้มีการจองหลายทริปในครั้งเดียว
-const mockBookings = [
-  {
-    bookingId: 'B001',
-    status: 'Pending',
-    bookingDate: new Date('2024-07-01T10:00:00'),
-    totalAmount: 5200, // ปรับราคาเป็น USD ที่สมเหตุสมผล
-    trips: [
-      {
-        id: '1234',
-        imageSrc: '/trip-image-1.jpg',
-        title: 'Exotic Bali Getaway',
-        departure: 'Bangkok (BKK)',
-        departureDate: '2024-08-15',
-        destination: 'Bali (DPS)',
-        arrivalDate: '2024-08-20',
-        duration: '5 days',
-        voyagerCount: 2,
-        amount: 2000,
-      },
-      {
-        id: '5678',
-        imageSrc: '/trip-image-2.jpg',
-        title: 'Enchanting Kyoto Exploration',
-        departure: 'Bangkok (BKK)',
-        departureDate: '2024-07-01',
-        destination: 'Kyoto (KIX)',
-        arrivalDate: '2024-07-03',
-        duration: '2 days',
-        voyagerCount: 1,
-        amount: 1200,
-      },
-      {
-        id: '9012',
-        imageSrc: '/trip-image-3.jpg',
-        title: 'Romantic Paris Escape',
-        departure: 'Bangkok (BKK)',
-        departureDate: '2024-09-10',
-        destination: 'Paris (CDG)',
-        arrivalDate: '2024-09-15',
-        duration: '5 days',
-        voyagerCount: 2,
-        amount: 2000,
-      },
-    ],
-  },
-];
-
-const tabs = [
-  { name: 'Pending', label: 'Pending' },
-  { name: 'Completed', label: 'Completed' },
-  { name: 'Cancelled', label: 'Cancelled' },
-];
-
-function BookingStatus({ status }) {
-  let statusText = '';
-  let statusStyle = '';
-
-  switch (status) {
-    case 'Pending':
-      statusText = 'Awaiting for payment';
-      statusStyle = 'badge badge-warning';
-      break;
-    case 'Completed':
-      statusText = 'Payment completed';
-      statusStyle = 'badge badge-info';
-      break;
-    case 'Cancelled':
-      statusText = 'Canceled';
-      statusStyle = 'badge badge-error';
-      break;
-    default:
-      statusText = 'Unknown';
-      break;
-  }
-
-  return <p className={`py-1 px-2 rounded ${statusStyle}`}>{statusText}</p>;
-}
+// UserBookingPage.jsx
+import { useState, useEffect } from 'react';
+import { useAtom } from 'jotai';
+import { bookingsAtom, activeTabAtom } from '../../atoms/bookingAtoms';
+import { fetchBookings } from '../../utils/bookingUtils';
 
 function TripCard({ trip, isExpanded, onToggle }) {
   return (
@@ -98,24 +23,12 @@ function TripCard({ trip, isExpanded, onToggle }) {
               className="w-full md:w-1/3 rounded-lg mb-4 md:mb-0 md:mr-4"
             />
             <div className="flex-1">
-              <div className="flex justify-between items-center mb-2">
-                <p>
-                  <span className="font-semibold">From:</span> {trip.departure}
-                </p>
-                <p>
-                  <span className="font-semibold">To:</span> {trip.destination}
-                </p>
-              </div>
-              <div className="flex justify-between items-center mb-2">
-                <p>
-                  <span className="font-semibold">Departure:</span>{' '}
-                  {trip.departureDate}
-                </p>
-                <p>
-                  <span className="font-semibold">Arrival:</span>{' '}
-                  {trip.arrivalDate}
-                </p>
-              </div>
+              <p>
+                <span className="font-semibold">From:</span> {trip.departure}
+              </p>
+              <p>
+                <span className="font-semibold">To:</span> {trip.destination}
+              </p>
               <p>
                 <span className="font-semibold">Duration:</span> {trip.duration}
               </p>
@@ -134,13 +47,54 @@ function TripCard({ trip, isExpanded, onToggle }) {
   );
 }
 
-function UserBookingPage() {
-  const [activeTab, setActiveTab] = useState('Pending');
-  const [expandedTrips, setExpandedTrips] = useState({});
+function BookingStatus({ status }) {
+  let statusText = '';
+  let statusStyle = '';
 
-  const filteredBookings = mockBookings.filter(
-    (booking) => booking.status.toLowerCase() === activeTab.toLowerCase()
-  );
+  switch (status) {
+    case 'pending':
+      statusText = 'Awaiting for payment';
+      statusStyle = 'badge badge-warning';
+      break;
+    case 'completed':
+      statusText = 'Payment completed';
+      statusStyle = 'badge badge-info';
+      break;
+    case 'cancelled':
+      statusText = 'Canceled';
+      statusStyle = 'badge badge-error';
+      break;
+    default:
+      statusText = 'Unknown';
+      break;
+  }
+
+  return <p className={`py-1 px-2 rounded ${statusStyle}`}>{statusText}</p>;
+}
+
+function UserBookingPage() {
+  const [bookings, setBookings] = useAtom(bookingsAtom);
+  const [activeTab, setActiveTab] = useAtom(activeTabAtom);
+  const [expandedTrips, setExpandedTrips] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const getBookings = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const fetchedBookings = await fetchBookings(activeTab);
+        setBookings(fetchedBookings);
+      } catch (err) {
+        setError('Failed to fetch bookings. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getBookings();
+  }, [activeTab, setBookings]);
 
   const toggleTripExpansion = (bookingId, tripId) => {
     setExpandedTrips((prev) => ({
@@ -148,6 +102,12 @@ function UserBookingPage() {
       [`${bookingId}-${tripId}`]: !prev[`${bookingId}-${tripId}`],
     }));
   };
+
+  const tabs = [
+    { name: 'pending', label: 'Pending' },
+    { name: 'completed', label: 'Completed' },
+    { name: 'cancelled', label: 'Cancelled' },
+  ];
 
   return (
     <section className="md:bg-gray-100 md:pb-80">
@@ -169,25 +129,29 @@ function UserBookingPage() {
       </ul>
 
       <div className="mx-4 md:mx-48 md:mt-11 md:border-t md:border-gray-300">
-        {filteredBookings.length > 0 ? (
-          filteredBookings.map((booking) => (
+        {isLoading ? (
+          <p>Loading bookings...</p>
+        ) : error ? (
+          <p className="text-red-500">{error}</p>
+        ) : bookings.length > 0 ? (
+          bookings.map((booking) => (
             <div
-              key={booking.bookingId}
+              key={booking._id}
               className="bg-white mt-2 rounded-2xl shadow-md p-6 md:p-6 my-4"
             >
-              <BookingStatus status={booking.status} />
+              <BookingStatus status={booking.booking_status} />
               <div className="flex justify-between items-center mb-4">
                 <p className="text-gray-600 font-bold">
-                  Booking ID: {booking.bookingId}
+                  Booking ID: {booking._id}
                 </p>
                 <p className="text-gray-500 text-sm">
                   จองเมื่อ{' '}
-                  {booking.bookingDate.toLocaleDateString('th-TH', {
+                  {new Date(booking.booked_at).toLocaleDateString('th-TH', {
                     day: 'numeric',
                     month: 'long',
                     year: 'numeric',
                   })}{' '}
-                  {booking.bookingDate.toLocaleTimeString('th-TH', {
+                  {new Date(booking.booked_at).toLocaleTimeString('th-TH', {
                     hour: '2-digit',
                     minute: '2-digit',
                   })}{' '}
@@ -196,22 +160,38 @@ function UserBookingPage() {
               </div>
               <div className="mb-4">
                 <p className="text-xl font-semibold">
-                  Total Amount: ${booking.totalAmount.toLocaleString()}
+                  Total Amount: $
+                  {booking.booked_trips
+                    .reduce((total, trip) => total + trip.trip.price, 0)
+                    .toLocaleString()}
                 </p>
                 <p className="text-gray-600">
-                  Number of Trips: {booking.trips.length}
+                  Number of Trips: {booking.booked_trips.length}
                 </p>
               </div>
-              {booking.trips.map((trip) => (
+              {booking.booked_trips.map((trip) => (
                 <TripCard
-                  key={trip.id}
-                  trip={trip}
-                  isExpanded={expandedTrips[`${booking.bookingId}-${trip.id}`]}
-                  onToggle={() =>
-                    toggleTripExpansion(booking.bookingId, trip.id)
-                  }
+                  key={trip._id}
+                  trip={{
+                    id: trip._id,
+                    imageSrc: trip.trip.image,
+                    title: trip.trip.name,
+                    departure: trip.trip.destination_from,
+                    destination: trip.trip.destination_to,
+                    duration: `${trip.trip.duration_days} days`,
+                    voyagerCount: trip.travelers.length,
+                    amount: trip.trip.price,
+                  }}
+                  isExpanded={expandedTrips[`${booking._id}-${trip._id}`]}
+                  onToggle={() => toggleTripExpansion(booking._id, trip._id)}
                 />
               ))}
+              {booking.coupon && (
+                <p className="text-green-600 mt-2">
+                  Coupon applied: {booking.coupon.code} ($
+                  {booking.coupon.discount_amount} discount)
+                </p>
+              )}
               <p className="text-gray-500 text-sm mt-4">
                 We recommend you arrive at the airport at least 2 hours before
                 departure to allow ample time for check-in.
