@@ -6,7 +6,7 @@ import { faSearch, faTicket } from '@fortawesome/free-solid-svg-icons';
 import { fetchCoupons } from '../utils/couponUtils';
 import DestinationCard from '../components/DestinationCard';
 
-import axios from 'axios';
+import axiosVisitor from '../utils/axiosVisitor';
 
 const recommended = [
   {
@@ -82,7 +82,7 @@ const LandingPage = () => {
     const fetchRecommendedItems = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get('http://localhost:3000/api/trips/');
+        const response = await axiosVisitor.get('/trips');
         const allTrips = response.data.trips || [];
         const shuffledTrips = allTrips.sort(() => 0.5 - Math.random());
         const selectedTrips = shuffledTrips.slice(0, 8);

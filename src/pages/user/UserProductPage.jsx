@@ -7,6 +7,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import UserContext from '../../context/UserContext';
+import axiosVisitor from '../../utils/axiosVisitor';
 
 const ContentHead = ({ trip }) => {
   return (
@@ -98,18 +99,17 @@ const UserProductPage = () => {
     const fetchTrip = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`http://localhost:3000/api/trips/${id}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch trip details');
-        }
-        const data = await response.json();
-        setTrip(data.trip);
+          const response = await axiosVisitor.get(`/trips/${id}`);
+          // Axios automatically throws an error for non-2xx responses
+          const data = response.data;
+          setTrip(data.trip);
       } catch (error) {
-        console.error('Error fetching trip details:', error);
+          console.error('Error fetching trip details:', error);
+          // Handle error or throw it further if needed
       } finally {
-        setIsLoading(false);
+          setIsLoading(false);
       }
-    };
+  };
 
     fetchTrip();
   }, [id]);
