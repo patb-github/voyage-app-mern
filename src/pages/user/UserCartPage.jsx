@@ -1,16 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import CartItem from '../../components/user/CartItem';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { format, addDays } from 'date-fns';
+import { getCouponByCode, calculateDiscount } from '../../utils/couponUtils';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faExclamationCircle,
+  faCheckCircle,
+} from '@fortawesome/free-solid-svg-icons';
 
 function UserCartPage() {
   const [cart, setCart] = useState([]);
-  const promoCode = [{ code: 'testcode', discount: 10 }];
   const navigate = useNavigate();
   const [totalAmount, setTotalAmount] = useState(0);
   const [discount, setDiscount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [showPromoAlert, setShowPromoAlert] = useState(false);
+  const [promoAlertMessage, setPromoAlertMessage] = useState('');
+  const [showMedal, setShowMedal] = useState(false);
 
   const {
     register: registerPromo,
@@ -19,90 +29,115 @@ function UserCartPage() {
   } = useForm();
 
   useEffect(() => {
-    //=========== API CALL ==============
     const fetchCart = async () => {
-      const res = await axios.get('http://localhost:3000/api/cart', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-        },
-      });
-      console.log(res.data.cart);
-      setCart(res.data.cart);
-      const newCart = await Promise.all(
-        res.data.cart.map(async (item) => ({
-          ...item,
-          trip: await toCartItem(item.trip_id, item),
-        }))
-      );
-      setCart(newCart.map((item) => ({ ...item, isChecked: false })));
+      try {
+        const res = await axios.get('http://localhost:3000/api/cart', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+        });
+        console.log(res.data.cart);
+        const newCart = await Promise.all(
+          res.data.cart.map(async (item) => ({
+            ...item,
+            trip: await toCartItem(item.trip_id, item),
+            isChecked: false,
+          }))
+        );
+        setCart(newCart);
+        console.log('Updated cart:', newCart);
+      } catch (error) {
+        console.error('Error fetching cart:', error);
+      }
     };
     fetchCart();
-    //==================================
   }, []);
 
   useEffect(() => {
-    // console.log('Cart:', cart);
     const newTotalAmount = cart.reduce((sum, item) => {
-      return item.isChecked ? sum + item.total : sum;
+      return item.isChecked ? sum + (item.trip?.total || 0) : sum;
     }, 0);
     setTotalAmount(newTotalAmount);
-    // console.log('User cart:', cart); // Log the user's cart data
+    console.log('New total amount:', newTotalAmount);
   }, [cart]);
 
-  const handleCheckboxChange = (itemId) => {
+  const handleCheckboxChange = useCallback((itemId) => {
     setCart((prevCart) =>
       prevCart.map((item) =>
         item._id === itemId ? { ...item, isChecked: !item.isChecked } : item
       )
     );
-  };
+  }, []);
 
-  const handleDelete = (itemId) => {
-    //=========== API CALL ==============
-    const deleteFromCart = async (itemId) => {
-      try {
-        const res = await axios.delete(
-          `http://localhost:3000/api/cart/${itemId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-            },
-          }
+  const handleDelete = useCallback(async (itemId) => {
+    try {
+      const res = await axios.delete(
+        `http://localhost:3000/api/cart/${itemId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+        }
+      );
+
+      if (res.status === 200) {
+        setCart((prevCart) => prevCart.filter((item) => item._id !== itemId));
+        setPromoAlertMessage('Item removed from cart successfully');
+      } else {
+        throw new Error('Failed to delete item from cart');
+      }
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      setPromoAlertMessage('An error occurred while removing the item');
+    } finally {
+      setShowPromoAlert(true);
+      setTimeout(() => setShowPromoAlert(false), 3000);
+    }
+  }, []);
+
+  const handleApplyPromo = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const couponData = await getCouponByCode(promoCode);
+
+      if (totalAmount < couponData.coupon.minimumPurchaseAmount) {
+        setPromoAlertMessage('Minimum purchase amount not reached');
+        setShowPromoAlert(true);
+        setDiscount(0);
+      } else {
+        const newDiscount = calculateDiscount(
+          totalAmount,
+          couponData.coupon.type,
+          couponData.coupon.discount
         );
-        console.log(res);
-        setCart(cart.filter((item) => item._id !== itemId));
-      } catch (error) {
-        console.log(error);
+        setDiscount(newDiscount);
+        setPromoAlertMessage('Promo code applied successfully!');
+        setShowPromoAlert(true);
       }
-    };
-
-    deleteFromCart(itemId);
-    //==================================
-  };
-
-  const handleApplyPromo = (data) => {
-    const enteredCode = data.promoCode;
-    const validPromo = promoCode.find((promo) => promo.code === enteredCode);
-    if (validPromo) {
-      const newDiscount = (totalAmount * validPromo.discount) / 100;
-      setDiscount(newDiscount);
-    } else {
-      const modalPromo = document.getElementById('invalid_promo_code_modal');
-      if (modalPromo) {
-        modalPromo.showModal();
-      }
+    } catch (error) {
+      setPromoAlertMessage('Invalid promo code');
+      setShowPromoAlert(true);
+      setDiscount(0);
+      console.error('Error fetching coupon:', error);
+    } finally {
+      setIsLoading(false);
+      // ตั้งเวลาให้ปิด alert หลังจาก 3 วินาที
+      setTimeout(() => {
+        setShowPromoAlert(false);
+      }, 3000);
     }
   };
 
   const handlePayment = () => {
-    const selectedItems = currentUserCartItems.filter((item) => item.isChecked);
+    const selectedItems = cart.filter((item) => item.isChecked);
     if (selectedItems.length === 0) {
       const modal = document.getElementById('none_item_selection_modal');
       if (modal) {
         modal.showModal();
       }
     } else {
-      const orderId = generateOrderId();
+      const orderId = generateOrderId(); // Implement this function
       const orderStatus = 'Pending';
       const order = {
         orderId,
@@ -113,17 +148,7 @@ function UserCartPage() {
         orderStatus,
         OrderDate: new Date(),
       };
-      setUser((prevUserData) =>
-        prevUserData.map((u) =>
-          u.id === user.id
-            ? {
-                ...u,
-                orders: [...(u.orders || []), order],
-                cart: u.cart.filter((item) => !item.isChecked),
-              }
-            : u
-        )
-      );
+      // Implement setUser or use appropriate state management
       const modal3 = document.getElementById('wait_for_payment_modal');
       modal3.showModal();
       setTimeout(function () {
@@ -168,7 +193,7 @@ function UserCartPage() {
           total: 'N/A',
         };
       } else {
-        console.log(error); 
+        console.log(error);
       }
     }
   }
@@ -187,16 +212,17 @@ function UserCartPage() {
                   key={item._id}
                   cartItemId={item._id}
                   {...item.trip}
-                  voyagerCount={item.travelers.length}
+                  voyagerCount={item.travelers?.length || 0}
                   isChecked={item.isChecked}
                   onDelete={handleDelete}
                   onCheckboxChange={handleCheckboxChange}
+                  total={item.trip?.total || 0}
                 />
               </Link>
             ))}
           </div>
           <div className="bg-white shadow-xl p-6 md:w-80 card rounded-2xl md:mx-2 my-4 h-fit">
-            <form onSubmit={handleSubmitPromo(handleApplyPromo)}>
+            <form onSubmit={handleApplyPromo}>
               <h3 className="text-lg font-semibold mb-2">Promotions</h3>
               <div className="mb-4">
                 <label
@@ -211,59 +237,50 @@ function UserCartPage() {
                     id="promo-code"
                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                     placeholder="Promo Code"
-                    {...registerPromo('promoCode', { required: true })}
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
                   />
                   <button
                     type="submit"
                     className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2"
+                    disabled={isLoading}
                   >
-                    Apply
+                    {isLoading ? 'Applying...' : 'Apply'}
                   </button>
                 </div>
-                {promoErrors.promoCode && (
-                  <span className="text-red-500">กรุณากรอกโปรโมโค้ด</span>
-                )}
               </div>
             </form>
             <div className="border-t border-gray-200 pt-2 mb-4">
               <p className="text-gray-700 text-sm">Original price</p>
-              <p className="text-gray-900 font-semibold">$ {totalAmount}</p>
+              <p className="text-gray-900 font-semibold">
+                $ {totalAmount.toFixed(2)}
+              </p>
             </div>
             <div className="border-t border-gray-200 pt-2 mb-4">
-              <p className="text-gray-700 text-sm ">Discount</p>
-              <p className=" font-semibold text-red-500">$ {discount}</p>
+              <p className="text-gray-700 text-sm">Discount</p>
+              <p className="font-semibold text-red-500">
+                $ {discount.toFixed(2)}
+              </p>
             </div>
             <div className="border-t border-gray-200 pt-2 mb-4">
               <p className="text-gray-700 text-sm">Estimated Total</p>
               <p className="text-gray-900 font-semibold">
-                $ {totalAmount - discount}
+                $ {(totalAmount - discount).toFixed(2)}
               </p>
             </div>
             <button
               onClick={handlePayment}
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
+              disabled={isLoading}
             >
               CHECKOUT
             </button>
           </div>
           <dialog id="none_item_selection_modal" className="modal">
             <div className="modal-box">
-              <h3 className="font-bold text-lg">Vovage</h3>
+              <h3 className="font-bold text-lg">Voyage</h3>
               <p className="py-4">
                 Please select at least one item to proceed to checkout.
-              </p>
-              <div className="modal-action">
-                <form method="dialog">
-                  <button className="btn">Close</button>
-                </form>
-              </div>
-            </div>
-          </dialog>
-          <dialog id="invalid_promo_code_modal" className="modal">
-            <div className="modal-box">
-              <h3 className="font-bold text-lg">Vovage</h3>
-              <p className="py-4">
-                ไม่พบรหัสโปรโมชั่นที่คุณกรอก กรุณากรอกรหัสโปรโมชั่นให้ถูกต้อง
               </p>
               <div className="modal-action">
                 <form method="dialog">
@@ -287,6 +304,43 @@ function UserCartPage() {
           </dialog>
         </div>
       </section>
+
+      {showPromoAlert && (
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50">
+          <div
+            className={`alert ${
+              discount > 0 ? 'alert-success' : 'alert-error'
+            } shadow-lg w-auto max-w-sm`}
+          >
+            <div>
+              <span>{promoAlertMessage}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showMedal && (
+        <div
+          className={`fixed bottom-20 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-xl 
+    ${
+      showMedal === 'green'
+        ? 'bg-gradient-to-r from-blue-400 to-blue-600'
+        : 'bg-gradient-to-r from-red-400 to-red-600'
+    } text-white font-semibold transition-all duration-300 ease-in-out`}
+        >
+          <div className="flex items-center space-x-3">
+            <FontAwesomeIcon
+              icon={showMedal === 'green' ? faCheckCircle : faExclamationCircle}
+              className="h-6 w-6"
+            />
+            <span>
+              {showMedal === 'green'
+                ? 'Promo code applied successfully'
+                : 'Error applying promo code'}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

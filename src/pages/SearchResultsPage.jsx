@@ -72,13 +72,13 @@ const SearchResultsPage = () => {
           <h1 className="text-3xl font-bold text-gray-800">
             Search Results for "{initialSearchTerm}"
           </h1>
-          <button
+          {/* <button
             onClick={() => setShowFilters(!showFilters)}
             className="bg-gray-200 text-gray-800 py-2 px-4 rounded-full hover:bg-gray-300 transition duration-300"
           >
             <FontAwesomeIcon icon={faFilter} className="mr-2" />
             Filters
-          </button>
+          </button> */}
         </div>
 
         {showFilters && (
@@ -127,7 +127,7 @@ const SearchResultsPage = () => {
           </p>
         )}
 
-        {!isLoading && searchResults.length > 0 && (
+        {/* {!isLoading && searchResults.length > 0 && (
           <div className="mt-8 text-center">
             <Link
               to="/explore"
@@ -136,7 +136,7 @@ const SearchResultsPage = () => {
               Explore More Destinations
             </Link>
           </div>
-        )}
+        )} */}
       </main>
     </div>
   );

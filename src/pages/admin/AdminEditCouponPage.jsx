@@ -128,8 +128,18 @@ function AdminEditCouponPage() {
                   className={`input input-bordered w-full ${
                     errors.code ? 'input-error' : ''
                   }`}
-                  {...register('code', { required: 'Coupon code is required' })}
-                  placeholder="Enter coupon code"
+                  {...register('code', {
+                    required: 'Coupon code is required',
+                    minLength: {
+                      value: 6,
+                      message: 'Coupon code must be at least 6 characters long',
+                    },
+                    maxLength: {
+                      value: 6,
+                      message: 'Coupon code must be at most 6 characters long',
+                    },
+                  })}
+                  placeholder="Enter coupon code (6 characters)"
                 />
                 {errors.code && (
                   <span className="text-red-500 text-sm mt-1">

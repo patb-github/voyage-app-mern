@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
+import { getCouponByCode, calculateDiscount } from '../../utils/couponUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faSave,
@@ -15,9 +16,12 @@ import UserContext from '../../context/UserContext';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useForm } from 'react-hook-form';
-import { getCouponByCode } from '../../utils/couponApi';
+import { useAtom } from 'jotai';
+import { cartLengthAtom } from '../../atoms/cartAtom';
+import { fetchCart } from '../../utils/cartUtils';
 
 function UserCheckout() {
+  const [, setCartLength] = useAtom(cartLengthAtom);
   const { user } = useContext(UserContext);
   const [trip, setTrip] = useState(null);
   const [isLogin, setIsLogin] = useState(false);
@@ -31,6 +35,9 @@ function UserCheckout() {
   const [showMedal, setShowMedal] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0);
   const [discount, setDiscount] = useState(0);
+  const [promoCode, setPromoCode] = useState('');
+  const [showPromoAlert, setShowPromoAlert] = useState(false);
+  const [promoAlertMessage, setPromoAlertMessage] = useState('');
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -172,6 +179,8 @@ function UserCheckout() {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
         },
       });
+      const { cartLength } = await fetchCart();
+      setCartLength(cartLength);
       setShowMedal('green');
       setTimeout(() => {
         setShowMedal(false);
@@ -185,16 +194,72 @@ function UserCheckout() {
     }
   };
 
-  const handleApplyPromo = (data) => {
-    if (!discount) {
-      // Check if code has been applied before adding to cart
-      setDiscount(500);
+  const handleApplyPromo = async () => {
+    try {
+      const couponData = await getCouponByCode(promoCode);
+
+      if (trip.price < couponData.coupon.minimumPurchaseAmount) {
+        setPromoAlertMessage('Minimum purchase amount not reached');
+        setShowPromoAlert(true);
+        return;
+      }
+
+      const calculatedDiscount = calculateDiscount(
+        trip.price,
+        couponData.coupon.type,
+        couponData.coupon.discount
+      );
+
+      setDiscount(calculatedDiscount);
+      setShowPromoAlert(true);
+      setPromoAlertMessage('Promo code applied successfully!');
+    } catch (error) {
+      setPromoAlertMessage('Invalid promo code');
+      setShowPromoAlert(true);
+      console.error(error);
     }
   };
 
-  const handlePayment = () => {
-    console.log('Proceeding to payment...');
+  const handlePayment = async () => {
+    if (!isLogin) {
+      navigate('/login');
+      return;
+    }
+
+    // ดึง user_id จาก localStorage
+    const userId = localStorage.getItem('userId'); // สมมติว่าคุณเก็บ user_id ใน localStorage
+
+    // สร้าง bookingRequest object
+    const bookingRequest = {
+      user_id: userId,
+      booked_trips: [
+        {
+          trip_id: trip._id,
+          travelers: Object.values(voyagers).map((traveler) => ({
+            firstName: traveler.firstName,
+            lastName: traveler.lastName,
+          })),
+        },
+      ],
+      coupon: promoCode
+        ? {
+            code: promoCode,
+            type: 'discount', // หรือ type อื่น ๆ ตามที่คุณกำหนด
+            discount: discount,
+          }
+        : null,
+    };
+
+    console.log('Booking Request:', bookingRequest);
+
+    // (ไม่ต้องเรียก axios.post ในตอนนี้)
+
+    setShowMedal('green');
+    setTimeout(() => {
+      setShowMedal(false);
+    }, 3000);
   };
+
   return (
     <div className="min-h-screen bg-[url('/bg-desktop.webp')] py-8 px-4 md:py-16 md:px-48">
       <section className="bg-white rounded-3xl shadow-2xl">
@@ -321,16 +386,18 @@ function UserCheckout() {
                     Enter Promo Code
                   </label>
                   <div className="flex mb-2">
-                    <input
+                    <input // input เต็มความกว้าง
                       type="text"
                       id="promo-code"
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                      placeholder="Promo Code"
-                      {...registerPromo('promoCode', { required: true })}
+                      value={promoCode}
+                      placeholder="promo code"
+                      onChange={(e) => setPromoCode(e.target.value)}
+                      className="flex-grow  focus:outline-none focus:ring focus:ring-blue-500 rounded-l border border-gray-300 py-2 px-4" // เพิ่ม style ให้ input
                     />
                     <button
+                      onClick={handleApplyPromo}
                       type="submit"
-                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2"
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-r focus:outline-none focus:shadow-outline"
                     >
                       Apply
                     </button>
@@ -383,7 +450,10 @@ function UserCheckout() {
                     <FontAwesomeIcon icon={faShoppingCart} className="mr-2" />
                     Add to Cart
                   </button>
-                  <button className="btn bg-white text-indigo-700 hover:bg-indigo-100 rounded-full px-4 transition duration-300 flex items-center">
+                  <button
+                    onClick={handlePayment}
+                    className="btn bg-white text-indigo-700 hover:bg-indigo-100 rounded-full px-4 transition duration-300 flex items-center"
+                  >
                     <FontAwesomeIcon icon={faCreditCard} className="mr-2" />
                     Pay Now
                   </button>
@@ -393,6 +463,17 @@ function UserCheckout() {
           </div>
         </div>
       </section>
+      {showPromoAlert && (
+        <div
+          className={`alert alert-${
+            discount > 0 ? 'success' : 'error'
+          } shadow-lg`}
+        >
+          <div>
+            <span>{promoAlertMessage}</span>
+          </div>
+        </div>
+      )}
       {showMedal && (
         <div
           className={`fixed bottom-20 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-xl 

@@ -1,68 +1,91 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faTicket } from '@fortawesome/free-solid-svg-icons';
+import { fetchCoupons } from '../utils/couponUtils';
 import DestinationCard from '../components/DestinationCard';
-import axios from 'axios';
 
-const Offer = ({ imageSrc, altText, title }) => (
-  <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.3 }}>
-    <Link
-      to={`/offer/${title}`}
-      className="block relative overflow-hidden rounded-lg shadow-lg"
-    >
-      <img src={imageSrc} alt={altText} className="w-full h-48 object-cover" />
-      <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-        <h3 className="text-white text-lg sm:text-xl font-bold">{title}</h3>
-      </div>
-    </Link>
-  </motion.div>
-);
+import axios from 'axios';
 
 const recommended = [
   {
     id: 1,
     imageSrc: '/destination/discount.jpg',
-    altText: 'Discount Offer',
     title: 'Special Discounts',
+    type: 'code',
   },
   {
     id: 2,
     imageSrc: '/destination/fuji.jpg',
-    altText: 'Fuji Offer',
-    title: 'Mount Fuji Tour',
+    title: 'Japan',
+    type: 'search',
   },
   {
     id: 3,
     imageSrc: '/destination/thai.jpg',
-    altText: 'Thai Offer',
-    title: 'Thai Paradise',
+    title: 'Thailand',
+    type: 'search',
   },
   {
     id: 4,
     imageSrc: '/destination/europe.jpg',
-    altText: 'Europe Offer',
     title: 'European Adventure',
+    type: 'search',
   },
 ];
 
 const LandingPage = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [recommendedItems, setRecommendedItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoadingCoupons, setIsLoadingCoupons] = useState(true);
+  const [coupons, setCoupons] = useState([]);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const handleOfferClick = (offer) => {
+    if (offer.type === 'search') {
+      navigate(`/search-results?name=${encodeURIComponent(offer.title)}`);
+    } else if (offer.type === 'code') {
+      setIsModalOpen(true);
+    }
+  };
 
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const Offer = ({ imageSrc, altText, title, type }) => {
+    return (
+      <motion.div
+        whileHover={{ scale: 1.05 }}
+        transition={{ duration: 0.3 }}
+        onClick={() => handleOfferClick({ type, title })}
+        className="cursor-pointer"
+      >
+        <div className="block relative overflow-hidden rounded-lg shadow-lg">
+          <img
+            src={imageSrc}
+            alt={altText}
+            className="w-full h-48 object-cover"
+          />
+        </div>
+      </motion.div>
+    );
+  };
+
+  useEffect(() => {
+    setImageLoaded(true);
+  }, []);
   useEffect(() => {
     const fetchRecommendedItems = async () => {
       setIsLoading(true);
       try {
         const response = await axios.get('http://localhost:3000/api/trips/');
         const allTrips = response.data.trips || [];
-
         const shuffledTrips = allTrips.sort(() => 0.5 - Math.random());
         const selectedTrips = shuffledTrips.slice(0, 8);
-
         setRecommendedItems(selectedTrips);
       } catch (error) {
         console.error('Error fetching recommended items:', error);
@@ -71,7 +94,20 @@ const LandingPage = () => {
       }
     };
 
+    const fetchCouponsData = async () => {
+      setIsLoadingCoupons(true);
+      try {
+        const response = await fetchCoupons();
+        setCoupons(response.coupons);
+      } catch (error) {
+        console.error('Error fetching coupons:', error);
+      } finally {
+        setIsLoadingCoupons(false);
+      }
+    };
+
     fetchRecommendedItems();
+    fetchCouponsData();
   }, []);
 
   const handleSearch = (e) => {
@@ -81,7 +117,15 @@ const LandingPage = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen">
-      <header className="bg-[url('./slide/santorini.webp')] bg-cover bg-center text-white py-12 relative z-10">
+      <header
+        className={`bg-cover bg-center text-white py-12 relative z-10 ${
+          imageLoaded ? '' : 'opacity-0'
+        }`}
+        style={{
+          backgroundImage: `url('https://res.cloudinary.com/dfti5yyyn/image/upload/v1720750124/santorini_nnqkww.webp')`,
+        }}
+      >
+        {' '}
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl font-bold mb-4">
             Your World of Adventures Awaits
@@ -136,6 +180,79 @@ const LandingPage = () => {
           ) : (
             <p>No recommended items available.</p>
           )}
+          <dialog id="my_modal_1" className="modal" open={isModalOpen}>
+            <div className="modal-box bg-white rounded-3xl shadow-2xl overflow-hidden w-full ">
+              <div className="text-center p-8 md:p-12">
+                <div className="mb-8">
+                  <div className="inline-block bg-gradient-to-r from-indigo-500 to-blue-500 text-white rounded-full w-24 h-24 flex items-center justify-center text-4xl font-bold">
+                    <FontAwesomeIcon icon={faTicket} />
+                  </div>
+                </div>
+
+                <h3 className="text-3xl md:text-4xl font-extrabold text-indigo-800 mb-4">
+                  Available Coupons
+                </h3>
+
+                {isLoadingCoupons ? (
+                  <div className="flex justify-center items-center h-24">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+                  </div>
+                ) : coupons.length > 0 ? (
+                  <div className="space-y-4 mt-6">
+                    {coupons.map((coupon) => (
+                      <div
+                        key={coupon._id}
+                        className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-2xl"
+                      >
+                        <h4 className="font-semibold text-xl text-indigo-700">
+                          {coupon.name}
+                        </h4>
+                        <p className="text-gray-700 mt-2">
+                          Code:{' '}
+                          <span className="font-mono bg-white px-2 py-1 rounded-full text-indigo-600">
+                            {coupon.code}
+                          </span>
+                        </p>
+                        <p className="text-indigo-600 font-semibold mt-1">
+                          {coupon.type === 'percent'
+                            ? `${coupon.discount}% off`
+                            : `$${coupon.discount} off`}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Minimum purchase: ${coupon.minimumPurchaseAmount}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-600 text-lg">
+                    No coupons available at the moment.
+                  </p>
+                )}
+
+                <div className="mt-8">
+                  <button
+                    onClick={closeModal}
+                    className="btn bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:from-indigo-600 hover:to-blue-600 rounded-full px-6 py-3 transition duration-300"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-6 md:p-8">
+                <p className="text-center text-indigo-800 font-semibold">
+                  Have questions about our coupons? Contact us at{' '}
+                  <a
+                    href="mailto:support@voyage.com"
+                    className="text-blue-600 hover:underline"
+                  >
+                    support@voyage.com
+                  </a>
+                </p>
+              </div>
+            </div>
+          </dialog>
         </section>
 
         <div className="flex justify-center mt-12">
