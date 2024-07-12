@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import classnames from 'classnames';
 
 // ปรับปรุง Mock data ให้มีการจองหลายทริปในครั้งเดียว
 const mockBookings = [
@@ -125,7 +124,7 @@ function TripCard({ trip, isExpanded, onToggle }) {
                 {trip.voyagerCount}
               </p>
               <p className="text-right mt-2 font-semibold">
-                Amount: S{trip.amount.toLocaleString()}
+                Amount: ${trip.amount.toLocaleString()}
               </p>
             </div>
           </div>
@@ -159,10 +158,9 @@ function UserBookingPage() {
         {tabs.map((tab) => (
           <li
             key={tab.name}
-            className={classnames(
-              'hover:text-[#5F97FB] flex-grow flex items-center',
-              { 'text-[#5F97FB]': activeTab === tab.name }
-            )}
+            className={`hover:text-[#5F97FB] flex-grow flex items-center ${
+              activeTab === tab.name ? 'text-[#5F97FB]' : ''
+            }`}
             onClick={() => setActiveTab(tab.name)}
           >
             <a>{tab.label}</a>
@@ -198,7 +196,7 @@ function UserBookingPage() {
               </div>
               <div className="mb-4">
                 <p className="text-xl font-semibold">
-                  Total Amount: S{booking.totalAmount.toLocaleString()}
+                  Total Amount: ${booking.totalAmount.toLocaleString()}
                 </p>
                 <p className="text-gray-600">
                   Number of Trips: {booking.trips.length}
