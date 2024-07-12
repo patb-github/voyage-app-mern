@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
-import CartItem from '../../components/user/CartItem';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { format, addDays } from 'date-fns';
 import { getCouponByCode, calculateDiscount } from '../../utils/couponUtils';
@@ -10,6 +9,9 @@ import {
   faExclamationCircle,
   faCheckCircle,
 } from '@fortawesome/free-solid-svg-icons';
+import CartItem from '../../components/user/CartItem';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; // Import the CSS
 
 function UserCartPage() {
   const [cart, setCart] = useState([]);
@@ -82,28 +84,24 @@ function UserCartPage() {
 
       if (res.status === 200) {
         setCart((prevCart) => prevCart.filter((item) => item._id !== itemId));
-        setPromoAlertMessage('Item removed from cart successfully');
+        toast.success('Item removed from cart successfully');
       } else {
         throw new Error('Failed to delete item from cart');
       }
     } catch (error) {
       console.error('Error deleting item:', error);
-      setPromoAlertMessage('An error occurred while removing the item');
-    } finally {
-      setShowPromoAlert(true);
-      setTimeout(() => setShowPromoAlert(false), 3000);
+      toast.error('An error occurred while removing the item');
     }
   }, []);
-
   const handleApplyPromo = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+
     try {
       const couponData = await getCouponByCode(promoCode);
 
       if (totalAmount < couponData.coupon.minimumPurchaseAmount) {
-        setPromoAlertMessage('Minimum purchase amount not reached');
-        setShowPromoAlert(true);
+        toast.error('Minimum purchase amount not reached');
         setDiscount(0);
       } else {
         const newDiscount = calculateDiscount(
@@ -112,20 +110,14 @@ function UserCartPage() {
           couponData.coupon.discount
         );
         setDiscount(newDiscount);
-        setPromoAlertMessage('Promo code applied successfully!');
-        setShowPromoAlert(true);
+        toast.success('Promo code applied successfully!');
       }
     } catch (error) {
-      setPromoAlertMessage('Invalid promo code');
-      setShowPromoAlert(true);
+      toast.error('Invalid promo code');
       setDiscount(0);
       console.error('Error fetching coupon:', error);
     } finally {
       setIsLoading(false);
-      // ตั้งเวลาให้ปิด alert หลังจาก 3 วินาที
-      setTimeout(() => {
-        setShowPromoAlert(false);
-      }, 3000);
     }
   };
 
@@ -207,18 +199,17 @@ function UserCartPage() {
         <div className=" mx-4 lg:mx-6  bg md:flex">
           <div>
             {cart.map((item) => (
-              <Link to={`/cart/edit/${item._id}`} key={item._id}>
-                <CartItem
-                  key={item._id}
-                  cartItemId={item._id}
-                  {...item.trip}
-                  voyagerCount={item.travelers?.length || 0}
-                  isChecked={item.isChecked}
-                  onDelete={handleDelete}
-                  onCheckboxChange={handleCheckboxChange}
-                  total={item.trip?.total || 0}
-                />
-              </Link>
+              <CartItem
+                key={item._id}
+                cartItemId={item._id}
+                {...item.trip}
+                voyagerCount={item.travelers?.length || 0}
+                isChecked={item.isChecked}
+                onDelete={handleDelete}
+                onCheckboxChange={handleCheckboxChange}
+                onEdit={() => navigate(`/cart/edit/${item._id}`)}
+                total={item.trip?.total || 0}
+              />
             ))}
           </div>
           <div className="bg-white shadow-xl p-6 md:w-80 card rounded-2xl md:mx-2 my-4 h-fit">
@@ -305,42 +296,7 @@ function UserCartPage() {
         </div>
       </section>
 
-      {showPromoAlert && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50">
-          <div
-            className={`alert ${
-              discount > 0 ? 'alert-success' : 'alert-error'
-            } shadow-lg w-auto max-w-sm`}
-          >
-            <div>
-              <span>{promoAlertMessage}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showMedal && (
-        <div
-          className={`fixed bottom-20 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-xl 
-    ${
-      showMedal === 'green'
-        ? 'bg-gradient-to-r from-blue-400 to-blue-600'
-        : 'bg-gradient-to-r from-red-400 to-red-600'
-    } text-white font-semibold transition-all duration-300 ease-in-out`}
-        >
-          <div className="flex items-center space-x-3">
-            <FontAwesomeIcon
-              icon={showMedal === 'green' ? faCheckCircle : faExclamationCircle}
-              className="h-6 w-6"
-            />
-            <span>
-              {showMedal === 'green'
-                ? 'Promo code applied successfully'
-                : 'Error applying promo code'}
-            </span>
-          </div>
-        </div>
-      )}
+      <ToastContainer position="bottom-center" />
     </div>
   );
 }

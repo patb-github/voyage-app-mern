@@ -1,9 +1,9 @@
-import axiosUser from "./axiosUser";
+import axiosUser from './axiosUser';
 
 export const fetchCart = async () => {
   try {
     const res = await axiosUser.get('/cart');
-
+    console.log(res);
     const cart = res.data.cart;
     const cartLength = cart.length;
     console.log(cart.length);
