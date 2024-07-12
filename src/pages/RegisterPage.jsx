@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import axios from 'axios';
+import axiosVisitor from '../utils/axiosVisitor';
 import UserContext from '../context/UserContext';
 
 const RegisterPage = () => {
@@ -33,8 +33,8 @@ const RegisterPage = () => {
       };
 
       // Register the user
-      const registerResponse = await axios.post(
-        'http://localhost:3000/api/users/register',
+      const registerResponse = await axiosVisitor.post(
+        '/users/register',
         userData
       );
 

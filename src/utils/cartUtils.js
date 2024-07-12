@@ -1,12 +1,8 @@
-import axios from 'axios';
+import axiosUser from "./axiosUser";
 
 export const fetchCart = async () => {
   try {
-    const res = await axios.get('http://localhost:3000/api/cart', {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-      },
-    });
+    const res = await axiosUser.get('/cart');
 
     const cart = res.data.cart;
     const cartLength = cart.length;

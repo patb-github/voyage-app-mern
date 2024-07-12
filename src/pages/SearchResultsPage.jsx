@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faFilter } from '@fortawesome/free-solid-svg-icons';
 import DestinationCard from '../components/DestinationCard';
-import axios from 'axios';
+import axiosVisitor from '../utils/axiosVisitor';
 
 const SearchResultsPage = () => {
   const location = useLocation();
@@ -24,8 +24,8 @@ const SearchResultsPage = () => {
   const fetchSearchResults = async (name) => {
     setIsLoading(true);
     try {
-      const response = await axios.get(
-        `http://localhost:3000/api/trips/search`,
+      const response = await axiosVisitor.get(
+        `/trips/search`,
         {
           params: { name },
         }
