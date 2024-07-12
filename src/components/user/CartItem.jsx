@@ -1,5 +1,4 @@
 import React, { memo } from 'react';
-import PropTypes from 'prop-types';
 
 const CartItem = memo(
   ({
@@ -94,22 +93,5 @@ const CartItem = memo(
     );
   }
 );
-
-CartItem.propTypes = {
-  cartItemId: PropTypes.string.isRequired,
-  id: PropTypes.string,
-  title: PropTypes.string,
-  imageSrc: PropTypes.string,
-  departure: PropTypes.string,
-  departureDate: PropTypes.string,
-  destination: PropTypes.string,
-  arrivalDate: PropTypes.string,
-  duration: PropTypes.number,
-  voyagerCount: PropTypes.number,
-  total: PropTypes.number,
-  onDelete: PropTypes.func.isRequired,
-  onCheckboxChange: PropTypes.func.isRequired,
-  isChecked: PropTypes.bool,
-};
 
 export default CartItem;
