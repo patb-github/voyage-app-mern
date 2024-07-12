@@ -14,7 +14,7 @@ import {
 import { format, addDays } from 'date-fns';
 import UserContext from '../../context/UserContext';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
+import axiosUser from '../../utils/axiosUser';
 import { useForm } from 'react-hook-form';
 import { useAtom } from 'jotai';
 import { cartLengthAtom } from '../../atoms/cartAtom';
@@ -32,12 +32,9 @@ function UserCheckout() {
   });
   const [departureDate, setDepartureDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
-  const [showMedal, setShowMedal] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [promoCode, setPromoCode] = useState('');
-  const [showPromoAlert, setShowPromoAlert] = useState(false);
-  const [promoAlertMessage, setPromoAlertMessage] = useState('');
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -47,6 +44,11 @@ function UserCheckout() {
     formState: { errors: promoErrors },
   } = useForm();
 
+  const [notification, setNotification] = useState({
+    type: null,
+    message: '',
+  });
+
   useEffect(() => {
     setIsLogin(user !== null);
   }, [user]);
@@ -55,15 +57,14 @@ function UserCheckout() {
     const fetchTrip = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get(
-          `http://localhost:3000/api/trips/${id}`
-        );
+        const response = await axiosUser.get(`/trips/${id}`);
         setTrip(response.data.trip);
         setTotalAmount(response.data.trip.price);
       } catch (error) {
-        console.error(error);
+        console.error('Error fetching trip:', error);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
     fetchTrip();
 
@@ -174,23 +175,22 @@ function UserCheckout() {
     };
 
     try {
-      await axios.post('http://localhost:3000/api/cart', cartItem, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-        },
-      });
+      const response = await axiosUser.post('/cart', cartItem);
       const { cartLength } = await fetchCart();
       setCartLength(cartLength);
-      setShowMedal('green');
+      setNotification({
+        type: 'success',
+        message: 'Trip successfully added to cart',
+      });
       setTimeout(() => {
-        setShowMedal(false);
-      }, 1000);
+        setNotification({ type: null, message: '' }); // Clear notification after timeout
+      }, 3000); // 3 seconds
     } catch (error) {
-      console.error(error);
-      setShowMedal('red');
+      console.error('Error adding to cart:', error);
+      setNotification({ type: 'error', message: 'Error adding trip to cart' });
       setTimeout(() => {
-        setShowMedal(false);
-      }, 1000);
+        setNotification({ type: null, message: '' }); // Clear notification after timeout
+      }, 3000); // 3 seconds
     }
   };
 
@@ -199,8 +199,10 @@ function UserCheckout() {
       const couponData = await getCouponByCode(promoCode);
 
       if (trip.price < couponData.coupon.minimumPurchaseAmount) {
-        setPromoAlertMessage('Minimum purchase amount not reached');
-        setShowPromoAlert(true);
+        setNotification({
+          type: 'error',
+          message: 'Minimum purchase amount not reached',
+        });
         return;
       }
 
@@ -211,11 +213,12 @@ function UserCheckout() {
       );
 
       setDiscount(calculatedDiscount);
-      setShowPromoAlert(true);
-      setPromoAlertMessage('Promo code applied successfully!');
+      setNotification({
+        type: 'success',
+        message: 'Promo code applied successfully!',
+      });
     } catch (error) {
-      setPromoAlertMessage('Invalid promo code');
-      setShowPromoAlert(true);
+      setNotification({ type: 'error', message: 'Invalid promo code' });
       console.error(error);
     }
   };
@@ -226,10 +229,8 @@ function UserCheckout() {
       return;
     }
 
-    // ดึง user_id จาก localStorage
-    const userId = localStorage.getItem('userId'); // สมมติว่าคุณเก็บ user_id ใน localStorage
+    const userId = localStorage.getItem('userId');
 
-    // สร้าง bookingRequest object
     const bookingRequest = {
       user_id: userId,
       booked_trips: [
@@ -244,7 +245,7 @@ function UserCheckout() {
       coupon: promoCode
         ? {
             code: promoCode,
-            type: 'discount', // หรือ type อื่น ๆ ตามที่คุณกำหนด
+            type: 'discount',
             discount: discount,
           }
         : null,
@@ -252,14 +253,11 @@ function UserCheckout() {
 
     console.log('Booking Request:', bookingRequest);
 
-    // (ไม่ต้องเรียก axios.post ในตอนนี้)
-
-    setShowMedal('green');
+    setNotification({ type: 'success', message: 'Payment successful!' }); // Assuming payment is successful
     setTimeout(() => {
-      setShowMedal(false);
-    }, 3000);
+      setNotification({ type: null, message: '' }); // Clear notification after timeout
+    }, 3000); // 3 seconds
   };
-
   return (
     <div className="min-h-screen bg-[url('/bg-desktop.webp')] py-8 px-4 md:py-16 md:px-48">
       <section className="bg-white rounded-3xl shadow-2xl">
@@ -386,13 +384,13 @@ function UserCheckout() {
                     Enter Promo Code
                   </label>
                   <div className="flex mb-2">
-                    <input // input เต็มความกว้าง
+                    <input
                       type="text"
                       id="promo-code"
                       value={promoCode}
                       placeholder="promo code"
                       onChange={(e) => setPromoCode(e.target.value)}
-                      className="flex-grow  focus:outline-none focus:ring focus:ring-blue-500 rounded-l border border-gray-300 py-2 px-4" // เพิ่ม style ให้ input
+                      className="flex-grow  focus:outline-none focus:ring focus:ring-blue-500 rounded-l border border-gray-300 py-2 px-4"
                     />
                     <button
                       onClick={handleApplyPromo}
@@ -463,39 +461,32 @@ function UserCheckout() {
           </div>
         </div>
       </section>
-      {showPromoAlert && (
+
+      {/* Notification Banner */}
+      {notification.type && (
         <div
-          className={`alert alert-${
-            discount > 0 ? 'success' : 'error'
-          } shadow-lg`}
-        >
-          <div>
-            <span>{promoAlertMessage}</span>
-          </div>
-        </div>
-      )}
-      {showMedal && (
-        <div
-          className={`fixed bottom-20 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-xl 
-    ${
-      showMedal === 'green'
-        ? 'bg-gradient-to-r from-blue-400 to-blue-600'
-        : 'bg-gradient-to-r from-red-400 to-red-600'
-    } text-white font-semibold transition-all duration-300 ease-in-out`}
+          className={`fixed bottom-20 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-xl
+      bg-gradient-to-r from-${
+        notification.type === 'success' ? 'blue-400' : 'red-400'
+      } to-${
+            notification.type === 'success' ? 'blue-600' : 'red-600'
+          } text-white font-semibold transition-all duration-300 ease-in-out`}
         >
           <div className="flex items-center space-x-3">
             <FontAwesomeIcon
-              icon={showMedal === 'green' ? faCheckCircle : faExclamationCircle}
+              icon={
+                notification.type === 'success'
+                  ? faCheckCircle
+                  : faExclamationCircle
+              }
               className="h-6 w-6"
             />
-            <span>
-              {showMedal === 'green'
-                ? 'Trip successfully added to cart'
-                : 'Error adding trip to cart'}
-            </span>
+            <span>{notification.message}</span>
           </div>
         </div>
       )}
+
+      {/* Passenger Modal */}
       <dialog
         id="passenger_modal"
         className={`modal ${isModalOpen ? 'modal-open' : ''}`}
@@ -567,5 +558,4 @@ function UserCheckout() {
     </div>
   );
 }
-
 export default UserCheckout;
