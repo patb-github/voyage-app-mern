@@ -5,14 +5,22 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { format, addDays } from 'date-fns';
 import { getCouponByCode, calculateDiscount } from '../../utils/couponUtils';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faExclamationCircle,
+  faCheckCircle,
+} from '@fortawesome/free-solid-svg-icons';
 
 function UserCartPage() {
   const [cart, setCart] = useState([]);
   const navigate = useNavigate();
   const [totalAmount, setTotalAmount] = useState(0);
   const [discount, setDiscount] = useState(0);
-  const [coupon, setCoupon] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [showPromoAlert, setShowPromoAlert] = useState(false);
+  const [promoAlertMessage, setPromoAlertMessage] = useState('');
+  const [showMedal, setShowMedal] = useState(false);
 
   const {
     register: registerPromo,
@@ -61,52 +69,63 @@ function UserCartPage() {
     );
   }, []);
 
-  const handleDelete = useCallback((itemId) => {
-    const deleteFromCart = async (itemId) => {
-      try {
-        const res = await axios.delete(
-          `http://localhost:3000/api/cart/${itemId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-            },
-          }
-        );
-        console.log(res);
-        setCart((prevCart) => prevCart.filter((item) => item._id !== itemId));
-      } catch (error) {
-        console.log(error);
-      }
-    };
+  const handleDelete = useCallback(async (itemId) => {
+    try {
+      const res = await axios.delete(
+        `http://localhost:3000/api/cart/${itemId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+        }
+      );
 
-    deleteFromCart(itemId);
+      if (res.status === 200) {
+        setCart((prevCart) => prevCart.filter((item) => item._id !== itemId));
+        setPromoAlertMessage('Item removed from cart successfully');
+      } else {
+        throw new Error('Failed to delete item from cart');
+      }
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      setPromoAlertMessage('An error occurred while removing the item');
+    } finally {
+      setShowPromoAlert(true);
+      setTimeout(() => setShowPromoAlert(false), 3000);
+    }
   }, []);
 
-  const handleApplyPromo = async (data) => {
-    const enteredCode = data.promoCode;
+  const handleApplyPromo = async (e) => {
+    e.preventDefault();
     setIsLoading(true);
     try {
-      const fetchedCoupon = await getCouponByCode(enteredCode);
-      setCoupon(fetchedCoupon);
+      const couponData = await getCouponByCode(promoCode);
 
-      const selectedItemsTotal = cart.reduce((sum, item) => {
-        return item.isChecked ? sum + (item.trip?.total || 0) : sum;
-      }, 0);
-
-      const newDiscount = calculateDiscount(
-        selectedItemsTotal,
-        fetchedCoupon.type,
-        fetchedCoupon.discount
-      );
-      setDiscount(newDiscount);
-    } catch (error) {
-      const modalPromo = document.getElementById('invalid_promo_code_modal');
-      if (modalPromo) {
-        modalPromo.showModal();
+      if (totalAmount < couponData.coupon.minimumPurchaseAmount) {
+        setPromoAlertMessage('Minimum purchase amount not reached');
+        setShowPromoAlert(true);
+        setDiscount(0);
+      } else {
+        const newDiscount = calculateDiscount(
+          totalAmount,
+          couponData.coupon.type,
+          couponData.coupon.discount
+        );
+        setDiscount(newDiscount);
+        setPromoAlertMessage('Promo code applied successfully!');
+        setShowPromoAlert(true);
       }
+    } catch (error) {
+      setPromoAlertMessage('Invalid promo code');
+      setShowPromoAlert(true);
+      setDiscount(0);
       console.error('Error fetching coupon:', error);
     } finally {
       setIsLoading(false);
+      // ตั้งเวลาให้ปิด alert หลังจาก 3 วินาที
+      setTimeout(() => {
+        setShowPromoAlert(false);
+      }, 3000);
     }
   };
 
@@ -139,26 +158,44 @@ function UserCartPage() {
   };
 
   async function toCartItem(trip_id, item) {
-    const res = await axios.get(`http://localhost:3000/api/trips/${trip_id}`);
-    const trip = res.data.trip;
-    const departureDate = format(new Date(item.departure_date), 'EEE d MMM');
-    const arrivalDate = format(
-      addDays(new Date(item.departure_date), trip.duration_days - 1),
-      'EEE d MMM'
-    );
-    console.log(trip);
-    return {
-      id: trip._id,
-      title: trip.name,
-      imageSrc: trip.images[0],
-      departure: trip.destination_from,
-      destination: trip.destination_to,
-      duration: trip.duration_days,
-      price: trip.price,
-      departureDate: departureDate,
-      arrivalDate: arrivalDate,
-      total: trip.price * item.travelers.length,
-    };
+    try {
+      const res = await axios.get(`http://localhost:3000/api/trips/${trip_id}`);
+      const trip = res.data.trip;
+      const departureDate = format(item.departure_date, 'EEE d MMM');
+      const arrivalDate = format(
+        addDays(item.departure_date, trip.duration_days - 1),
+        'EEE d MMM'
+      );
+      return {
+        id: trip._id,
+        title: trip.name || 'N/A',
+        imageSrc: trip.images[0] || 'N/A',
+        departure: trip.destination_from || 'N/A',
+        destination: trip.destination_to || 'N/A',
+        duration: trip.duration_days || 'N/A',
+        price: trip.price || 'N/A',
+        departureDate: departureDate || 'N/A',
+        arrivalDate: arrivalDate || 'N/A',
+        total: trip.price * item.travelers.length || 'N/A',
+      };
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        return {
+          id: trip_id,
+          title: 'N/A',
+          imageSrc: 'N/A',
+          departure: 'N/A',
+          destination: 'N/A',
+          duration: 'N/A',
+          price: 'N/A',
+          departureDate: 'N/A',
+          arrivalDate: 'N/A',
+          total: 'N/A',
+        };
+      } else {
+        console.log(error);
+      }
+    }
   }
 
   return (
@@ -185,7 +222,7 @@ function UserCartPage() {
             ))}
           </div>
           <div className="bg-white shadow-xl p-6 md:w-80 card rounded-2xl md:mx-2 my-4 h-fit">
-            <form onSubmit={handleSubmitPromo(handleApplyPromo)}>
+            <form onSubmit={handleApplyPromo}>
               <h3 className="text-lg font-semibold mb-2">Promotions</h3>
               <div className="mb-4">
                 <label
@@ -200,18 +237,17 @@ function UserCartPage() {
                     id="promo-code"
                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                     placeholder="Promo Code"
-                    {...registerPromo('promoCode', { required: true })}
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
                   />
                   <button
                     type="submit"
                     className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2"
+                    disabled={isLoading}
                   >
-                    Apply
+                    {isLoading ? 'Applying...' : 'Apply'}
                   </button>
                 </div>
-                {promoErrors.promoCode && (
-                  <span className="text-red-500">กรุณากรอกโปรโมโค้ด</span>
-                )}
               </div>
             </form>
             <div className="border-t border-gray-200 pt-2 mb-4">
@@ -237,27 +273,14 @@ function UserCartPage() {
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
               disabled={isLoading}
             >
-              {isLoading ? 'Applying...' : 'CHECKOUT'}
+              CHECKOUT
             </button>
           </div>
           <dialog id="none_item_selection_modal" className="modal">
             <div className="modal-box">
-              <h3 className="font-bold text-lg">Vovage</h3>
+              <h3 className="font-bold text-lg">Voyage</h3>
               <p className="py-4">
                 Please select at least one item to proceed to checkout.
-              </p>
-              <div className="modal-action">
-                <form method="dialog">
-                  <button className="btn">Close</button>
-                </form>
-              </div>
-            </div>
-          </dialog>
-          <dialog id="invalid_promo_code_modal" className="modal">
-            <div className="modal-box">
-              <h3 className="font-bold text-lg">Vovage</h3>
-              <p className="py-4">
-                ไม่พบรหัสโปรโมชั่นที่คุณกรอก กรุณากรอกรหัสโปรโมชั่นให้ถูกต้อง
               </p>
               <div className="modal-action">
                 <form method="dialog">
@@ -281,6 +304,43 @@ function UserCartPage() {
           </dialog>
         </div>
       </section>
+
+      {showPromoAlert && (
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50">
+          <div
+            className={`alert ${
+              discount > 0 ? 'alert-success' : 'alert-error'
+            } shadow-lg w-auto max-w-sm`}
+          >
+            <div>
+              <span>{promoAlertMessage}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showMedal && (
+        <div
+          className={`fixed bottom-20 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-xl 
+    ${
+      showMedal === 'green'
+        ? 'bg-gradient-to-r from-blue-400 to-blue-600'
+        : 'bg-gradient-to-r from-red-400 to-red-600'
+    } text-white font-semibold transition-all duration-300 ease-in-out`}
+        >
+          <div className="flex items-center space-x-3">
+            <FontAwesomeIcon
+              icon={showMedal === 'green' ? faCheckCircle : faExclamationCircle}
+              className="h-6 w-6"
+            />
+            <span>
+              {showMedal === 'green'
+                ? 'Promo code applied successfully'
+                : 'Error applying promo code'}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

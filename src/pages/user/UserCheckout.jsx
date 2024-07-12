@@ -16,8 +16,12 @@ import UserContext from '../../context/UserContext';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useForm } from 'react-hook-form';
+import { useAtom } from 'jotai';
+import { cartLengthAtom } from '../../atoms/cartAtom';
+import { fetchCart } from '../../utils/cartUtils';
 
 function UserCheckout() {
+  const [, setCartLength] = useAtom(cartLengthAtom);
   const { user } = useContext(UserContext);
   const [trip, setTrip] = useState(null);
   const [isLogin, setIsLogin] = useState(false);
@@ -175,6 +179,8 @@ function UserCheckout() {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
         },
       });
+      const { cartLength } = await fetchCart();
+      setCartLength(cartLength);
       setShowMedal('green');
       setTimeout(() => {
         setShowMedal(false);
@@ -380,16 +386,18 @@ function UserCheckout() {
                     Enter Promo Code
                   </label>
                   <div className="flex mb-2">
-                    <input
+                    <input // input เต็มความกว้าง
                       type="text"
                       id="promo-code"
                       value={promoCode}
+                      placeholder="promo code"
                       onChange={(e) => setPromoCode(e.target.value)}
+                      className="flex-grow  focus:outline-none focus:ring focus:ring-blue-500 rounded-l border border-gray-300 py-2 px-4" // เพิ่ม style ให้ input
                     />
                     <button
                       onClick={handleApplyPromo}
                       type="submit"
-                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2"
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-r focus:outline-none focus:shadow-outline"
                     >
                       Apply
                     </button>

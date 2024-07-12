@@ -15,13 +15,10 @@ import { useNavigate } from 'react-router-dom';
 const API_BASE_URL = 'http://localhost:3000/api';
 const DEFAULT_AVATAR = '/user/profile.jpg';
 
-// Function to get current date in YYYY-MM-DD format
+// Helper function to get current date in YYYY-MM-DD format
 const getCurrentDate = () => {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return now.toISOString().split('T')[0];
 };
 
 const UserDashboardPage = () => {
@@ -113,10 +110,14 @@ const UserDashboardPage = () => {
 
         console.log('Response:', res);
 
+        // Update user state with new data
+        setUser({ ...user, ...updatedData });
+
         setShowPasswordConfirm(false);
         setPassword('');
-        reset(loginResult.user);
+        reset(updatedData);
         setUpdatedData(null);
+        setSelectedImage(null);
       } else {
         throw new Error('Login failed');
       }

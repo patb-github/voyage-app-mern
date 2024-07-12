@@ -1,37 +1,49 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useState, useContext, useEffect } from 'react';
+import { useAtom } from 'jotai';
+import { fetchCart } from '../utils/cartUtils';
+import { cartLengthAtom } from '../atoms/cartAtom';
 import UserContext from '../context/UserContext';
 
 const LoginPage = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { user, login, loginError } = useContext(UserContext);
+  const [cartLength, setCartLength] = useAtom(cartLengthAtom);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
-  const { user, login, loginError } = useContext(UserContext);
 
   useEffect(() => {
     if (user) {
       navigate(user.isAdmin ? '/admin' : '/');
+      fetchCartLength(); // Fetch cart length on login success
     }
   }, [user, navigate]);
+
+  const fetchCartLength = async () => {
+    try {
+      const { cartLength } = await fetchCart();
+      setCartLength(cartLength);
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+    }
+  };
 
   const onSubmit = async (data) => {
     setIsLoading(true);
     const result = await login(data);
     setIsLoading(false);
-    
+
     if (result.success) {
+      fetchCartLength(); // Fetch cart length on login success
       navigate(result.isAdmin ? '/admin' : '/');
     }
   };
 
-  if (user) {
-    return null; // หรือแสดงข้อความ loading ในขณะที่ redirect
-  }
   return (
     <div className="min-h-screen bg-center bg-cover bg-no-repeat bg-[url('/bg-desktop.webp')] flex items-center justify-center px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl shadow-2xl">

@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faTicket } from '@fortawesome/free-solid-svg-icons';
 import { fetchCoupons } from '../utils/couponUtils';
-import { faTicket } from '@fortawesome/free-solid-svg-icons';
 import DestinationCard from '../components/DestinationCard';
+
 import axios from 'axios';
 
 const recommended = [
@@ -43,7 +43,7 @@ const LandingPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoadingCoupons, setIsLoadingCoupons] = useState(true);
   const [coupons, setCoupons] = useState([]);
-
+  const [imageLoaded, setImageLoaded] = useState(false);
   const handleOfferClick = (offer) => {
     if (offer.type === 'search') {
       navigate(`/search-results?name=${encodeURIComponent(offer.title)}`);
@@ -75,6 +75,9 @@ const LandingPage = () => {
     );
   };
 
+  useEffect(() => {
+    setImageLoaded(true);
+  }, []);
   useEffect(() => {
     const fetchRecommendedItems = async () => {
       setIsLoading(true);
@@ -114,7 +117,15 @@ const LandingPage = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen">
-      <header className="bg-[url('./slide/santorini.webp')] bg-cover bg-center text-white py-12 relative z-10">
+      <header
+        className={`bg-cover bg-center text-white py-12 relative z-10 ${
+          imageLoaded ? '' : 'opacity-0'
+        }`}
+        style={{
+          backgroundImage: `url('https://res.cloudinary.com/dfti5yyyn/image/upload/v1720750124/santorini_nnqkww.webp')`,
+        }}
+      >
+        {' '}
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl font-bold mb-4">
             Your World of Adventures Awaits

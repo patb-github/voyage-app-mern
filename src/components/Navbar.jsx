@@ -1,7 +1,9 @@
 import { useContext, useEffect, useState, useRef } from 'react';
+import { cartLengthAtom } from '../atoms/cartAtom';
 import { Link, useNavigate } from 'react-router-dom';
 import UserContext from '../context/UserContext';
-import axios from 'axios';
+import { fetchCart } from '../utils/cartUtils';
+import { useAtom } from 'jotai';
 
 const Navbar = () => {
   const { user, setUser } = useContext(UserContext);
@@ -9,6 +11,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const [cartLength, setCartLength] = useAtom(cartLengthAtom);
 
   useEffect(() => {
     setIsLogin(user !== null);
@@ -38,6 +41,21 @@ const Navbar = () => {
     setIsOpen(!isOpen);
   };
 
+  useEffect(() => {
+    const getCartData = async () => {
+      try {
+        const { cartLength } = await fetchCart();
+        setCartLength(cartLength);
+      } catch (error) {
+        console.error('Error fetching cart:', error);
+      }
+    };
+
+    if (user && !user.isAdmin) {
+      getCartData();
+    }
+  }, [user, setCartLength]);
+
   return (
     <nav className="bg-white shadow-md relative z-50">
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
@@ -54,7 +72,7 @@ const Navbar = () => {
           <div className="flex items-center">
             {isLogin ? (
               <div className="flex items-center space-x-4">
-                {/* {!user?.isAdmin && (
+                {!user?.isAdmin && (
                   <Link
                     to="/cart"
                     className="relative p-1 rounded-full text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -74,10 +92,10 @@ const Navbar = () => {
                       />
                     </svg>
                     <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
-                      3
+                      {cartLength}
                     </span>
                   </Link>
-                )} */}
+                )}
 
                 {!user?.isAdmin ? (
                   <div className="relative" ref={dropdownRef}>

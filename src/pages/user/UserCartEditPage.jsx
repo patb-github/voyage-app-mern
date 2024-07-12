@@ -18,50 +18,81 @@ function UserCartEditPage() {
   const [trip, setTrip] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentVoyager, setCurrentVoyager] = useState('');
-  const [voyagers, setVoyagers] = useState({"1":{firstName: user.firstname, lastName: user.lastname}});
+  const [voyagers, setVoyagers] = useState({
+    1: { firstName: user.firstname, lastName: user.lastname },
+  });
   const [departureDate, setDepartureDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
   const [showMedal, setShowMedal] = useState(false);
   const navigate = useNavigate();
   const { cartItemId } = useParams();
   const [cartItem, setCartItem] = useState(null);
-  
+
   useEffect(() => {
     const fetchCartItem = async () => {
-      setIsLoading(true);
+      setIsLoading(true); // แสดง loading ในระหว่างรอข้อมูล
       try {
-        let cartResponse = await axios.get(`http://localhost:3000/api/cart/${cartItemId}`,
+        // 1. Fetch cart item จาก backend
+        const cartResponse = await axios.get(
+          `http://localhost:3000/api/cart/${cartItemId}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-            }
+            },
           }
         );
-        cartResponse = cartResponse.data.cartItem;
-        console.log(cartResponse);
-        setCartItem(cartResponse);
 
-        // set voyagers from cart
-        const cartVoyagers = {};
-        cartResponse.travelers.forEach((traveler, index) => {
-          cartVoyagers[index + 1] = {firstName: traveler.firstName, lastName: traveler.lastName}
-        });
-        setVoyagers(cartVoyagers);
+        // 2. ตรวจสอบ response
+        if (cartResponse.status !== 200) {
+          throw new Error('Failed to fetch cart item');
+        }
 
-        // set date from cart
-        setDepartureDate(new Date(cartResponse.departure_date));
+        const cartItemData = cartResponse.data.cartItem;
 
-        const tripResponse = await axios.get(`http://localhost:3000/api/trips/${cartResponse.trip_id}`);
-        console.log(tripResponse.data.trip);
+        // 3. อัพเดต state ด้วยข้อมูล cart item
+        setCartItem(cartItemData);
+        setVoyagers(
+          cartItemData.travelers.reduce((acc, traveler, index) => {
+            acc[index + 1] = {
+              firstName: traveler.firstName,
+              lastName: traveler.lastName,
+            };
+            return acc;
+          }, {})
+        );
+        setDepartureDate(new Date(cartItemData.departure_date));
+
+        // 4. Fetch ข้อมูล trip ที่เกี่ยวข้อง
+        const tripResponse = await axios.get(
+          `http://localhost:3000/api/trips/${cartItemData.trip_id}`
+        );
+        if (tripResponse.status !== 200) {
+          throw new Error('Failed to fetch trip details');
+        }
         setTrip(tripResponse.data.trip);
       } catch (error) {
         console.error(error);
+        // 5. Error handling (เช่น แสดง alert หรือ redirect)
+        if (error.response && error.response.status === 404) {
+          navigate('/cart'); // ถ้าไม่พบ cart item ให้กลับไปหน้า cart
+        } else {
+          // กรณี error อื่น ๆ
+          setPromoAlertMessage(
+            'An error occurred while fetching cart details.'
+          );
+          setShowPromoAlert(true);
+          setTimeout(() => setShowPromoAlert(false), 3000);
+        }
+      } finally {
+        setIsLoading(false); // ปิด loading
       }
-      setIsLoading(false);
     };
-    fetchCartItem();
-  }, []);
-  
+
+    if (cartItemId) {
+      fetchCartItem();
+    }
+  }, [cartItemId, navigate]); //
+
   // useEffect(() => {
   //   const fetchTrip = async () => {
   //     console.log("CARTITEM", cartItem);
@@ -76,18 +107,22 @@ function UserCartEditPage() {
   //     setIsLoading(false);
   //   };
   //   fetchTrip();
-    
+
   //   // Set initial departure date to tomorrow
   //   setDepartureDate(addDays(new Date(), 1));
   // }, []);
-  
+
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   if (!trip) {
-    console.log("ERROR 1");
-    navigate('/error');
+    console.log('ERROR 1');
+    navigate('/cart');
     return;
   }
 
@@ -135,7 +170,7 @@ function UserCartEditPage() {
 
   const deleteVoyager = () => {
     if (Object.keys(voyagers).length === 1) {
-      alert("At least one voyager must be specified");
+      alert('At least one voyager must be specified');
       return;
     }
     setVoyagers((prev) => {
@@ -170,28 +205,31 @@ function UserCartEditPage() {
   };
 
   const updateCart = async () => {
-
     const cartItem = {
       departure_date: departureDate,
-      travelers: []
-    }
+      travelers: [],
+    };
     for (let voyager in voyagers) {
       cartItem.travelers.push(voyagers[voyager]);
     }
 
     try {
-      const response = await axios.put(`http://localhost:3000/api/cart/${cartItemId}`, cartItem, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-        },
-      });
-      setShowMedal("green");
+      const response = await axios.put(
+        `http://localhost:3000/api/cart/${cartItemId}`,
+        cartItem,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+        }
+      );
+      setShowMedal('green');
       setTimeout(() => {
         setShowMedal(false);
       }, 1000);
     } catch (error) {
       console.error(error);
-      setShowMedal("red");
+      setShowMedal('red');
       setTimeout(() => {
         setShowMedal(false);
       }, 1000);
@@ -261,7 +299,7 @@ function UserCartEditPage() {
                     className="w-10 h-10"
                   />
                   <p className="font-semibold text-red-500 mt-2">
-                    ({trip.duration_days} days {trip.duration_days - 1} nights) 
+                    ({trip.duration_days} days {trip.duration_days - 1} nights)
                   </p>
                 </div>
                 <div className="flex-col flex items-center">
@@ -269,7 +307,10 @@ function UserCartEditPage() {
                     {trip.destination_to}
                   </p>
                   <p className="font-bold bg-indigo-100 text-indigo-800 rounded-full px-3 py-1 mt-2">
-                    {format(addDays(departureDate, trip.duration_days - 1), 'EEE d MMM')}
+                    {format(
+                      addDays(departureDate, trip.duration_days - 1),
+                      'EEE d MMM'
+                    )}
                   </p>
                 </div>
               </div>
@@ -318,8 +359,13 @@ function UserCartEditPage() {
                 Payment Information
               </h2>
               <div className="flex justify-between items-center font-semibold text-gray-700">
-                <p className="text-lg py-2">Package {trip.name} x {Object.keys(voyagers).length}</p>
-                <p>${(trip.price * Object.keys(voyagers).length).toLocaleString()}</p>
+                <p className="text-lg py-2">
+                  Package {trip.name} x {Object.keys(voyagers).length}
+                </p>
+                <p>
+                  $
+                  {(trip.price * Object.keys(voyagers).length).toLocaleString()}
+                </p>
               </div>
               {/* <div className="flex justify-between items-center text-red-600 font-semibold">
                 <p className="text-lg py-2">Room Discount</p>
@@ -330,11 +376,15 @@ function UserCartEditPage() {
             <div className="flex justify-between px-6 py-4 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl mt-4 text-white">
               <div className="flex flex-col">
                 <p className="text-sm font-bold">Total Payment</p>
-                <p className="text-3xl font-bold">${(trip.price * Object.keys(voyagers).length).toLocaleString()}</p>
+                <p className="text-3xl font-bold">
+                  $
+                  {(trip.price * Object.keys(voyagers).length).toLocaleString()}
+                </p>
               </div>
               <div className="flex space-x-2">
-                <button className="btn bg-white text-indigo-700 hover:bg-indigo-100 rounded-full px-4 transition duration-300 flex items-center"
-                        onClick={updateCart}
+                <button
+                  className="btn bg-white text-indigo-700 hover:bg-indigo-100 rounded-full px-4 transition duration-300 flex items-center"
+                  onClick={updateCart}
                 >
                   <FontAwesomeIcon icon={faSave} className="mr-2" />
                   Save
@@ -348,10 +398,14 @@ function UserCartEditPage() {
           </div>
         </div>
       </section>
-      
+
       {showMedal && (
-        <div className={`fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg`}>
-          {showMedal === "green" ? `Changes have been saved` : `There was an error saving your changes. Please try again.`}
+        <div
+          className={`fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg`}
+        >
+          {showMedal === 'green'
+            ? `Changes have been saved`
+            : `There was an error saving your changes. Please try again.`}
         </div>
       )}
 
