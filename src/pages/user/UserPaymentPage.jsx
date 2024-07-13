@@ -1,12 +1,15 @@
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import axiosUser from '../../utils/axiosUser';
+import { toast } from 'react-toastify';
 
 function UserPaymentPage() {
-  const [user, setUser] = useState(null);
-  const [orderFromCart, setOrderFromCart] = useState(null);
+  const [booking, setBooking] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const { bookingId } = useParams();
 
   const {
     register,
@@ -14,50 +17,77 @@ function UserPaymentPage() {
     formState: { errors },
   } = useForm();
 
-  const handlePayment = (creditCardDetail) => {
-    const modal = document.getElementById('payment_process');
-    if (creditCardDetail && modal) {
-      modal.showModal();
-      setTimeout(() => {
-        setUser((prevUser) => ({
-          ...prevUser,
-          orders: prevUser.orders.map((order) =>
-            order.orderId === orderFromCart.orderId
-              ? { ...order, orderStatus: 'Completed' }
-              : order
-          ),
-        }));
-        navigate('/payment-success');
-      }, 3000);
-    }
-  };
-
   useEffect(() => {
-    if (user && user.orders && orderFromCart) {
-      console.log('Order from Cart:', orderFromCart);
-    }
-  }, [user, orderFromCart]);
+    const fetchBooking = async () => {
+      if (!bookingId) {
+        setIsLoading(false);
+        toast.error('Booking ID not found');
+        return;
+      }
 
-  const handleExpirationChange = (event) => {
-    let value = event.target.value.replace(/\D/g, '');
-    value = value.slice(0, 4);
-    if (value.length > 2) {
-      value = `${value.slice(0, 2)}/${value.slice(2)}`;
+      try {
+        setIsLoading(true);
+        const response = await axiosUser.get(`/bookings/details/${bookingId}`);
+        setBooking(response.data.booking);
+      } catch (error) {
+        console.error('Error fetching booking:', error);
+        toast.error('Failed to load booking details');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBooking();
+  }, [bookingId]);
+
+  const handlePayment = async (formData) => {
+    try {
+      const paymentData = {
+        payment_method: {
+          method: formData.paymentMethod,
+          card_no: formData.cardNumber,
+        },
+      };
+
+      const modal = document.getElementById('payment_process');
+      if (modal) modal.showModal();
+
+      const response = await axiosUser.patch(
+        `/bookings/pay/${bookingId}`,
+        paymentData
+      );
+
+      if (response.status === 200) {
+        toast.success('Payment successful!');
+        navigate('/payment-success', {
+          state: { paymentDetails: response.data },
+        });
+      } else {
+        throw new Error('Payment failed');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error('Payment failed. Please try again.');
+    } finally {
+      const modal = document.getElementById('payment_process');
+      if (modal) modal.close();
     }
-    event.target.value = value;
   };
 
-  const handleCvvChange = (event) => {
-    let value = event.target.value.replace(/\D/g, '');
-    event.target.value = value.slice(0, 3);
-  };
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!booking || !booking.booked_trips) {
+    return <div>No booking details available</div>;
+  }
 
   return (
     <div className="min-h-screen bg-[url('/bg-desktop.webp')] py-8 px-4 md:py-16 md:px-48">
       <section className="bg-white rounded-3xl shadow-2xl p-8">
         <div className="text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold pb-10 text-indigo-700">
-            Payment Details
+            Complete Your Payment
           </h1>
         </div>
         <div className="md:flex md:space-x-8">
@@ -65,72 +95,75 @@ function UserPaymentPage() {
             <div className="form-control w-full mb-4">
               <label className="label">
                 <span className="label-text text-lg font-semibold text-indigo-800">
-                  Full name (as displayed on card)*
+                  Cardholder Name*
                 </span>
               </label>
               <input
                 type="text"
                 placeholder="John Doe"
                 className="input input-bordered w-full bg-indigo-50"
-                {...register('fullName', { required: true })}
+                {...register('cardholderName', {
+                  required: 'Cardholder name is required',
+                })}
               />
-              {errors.fullName && (
-                <span className="text-red-500 text-sm pt-1">
-                  กรุณากรอกชื่อและนามสกุลให้ถูกต้อง
+              {errors.cardholderName && (
+                <span className="text-red-500 text-sm mt-1">
+                  {errors.cardholderName.message}
                 </span>
               )}
             </div>
+
             <div className="form-control w-full mb-4">
               <label className="label">
                 <span className="label-text text-lg font-semibold text-indigo-800">
-                  Card number*
+                  Card Number*
                 </span>
               </label>
               <input
                 type="text"
-                placeholder="XXXX-XXXX-XXXX-XXXX"
+                placeholder="1234 5678 9012 3456"
                 className="input input-bordered w-full bg-indigo-50"
                 {...register('cardNumber', {
-                  required: true,
-                  onChange: (e) => {
-                    const { value } = e.target;
-                    const numericValue = value.replace(/\D/g, '');
-                    const formattedValue = numericValue
-                      .replace(/(\d{4})/g, '$1-')
-                      .slice(0, 19);
-                    e.target.value = formattedValue;
+                  required: 'Card number is required',
+                  pattern: {
+                    value: /^(\d{4}\s?){4}$/,
+                    message: 'Invalid card number format',
                   },
                 })}
               />
               {errors.cardNumber && (
-                <span className="text-red-500 text-sm pt-1">
-                  กรุณากรอกหมายเลขบัตรให้ถูกต้อง
+                <span className="text-red-500 text-sm mt-1">
+                  {errors.cardNumber.message}
                 </span>
               )}
             </div>
-            <div className="flex justify-between space-x-4">
-              <div className="form-control w-1/2">
+
+            <div className="flex space-x-4 mb-4">
+              {/* <div className="form-control w-1/2">
                 <label className="label">
                   <span className="label-text text-lg font-semibold text-indigo-800">
-                    Card expiration*
+                    Expiration Date*
                   </span>
                 </label>
                 <input
                   type="text"
                   placeholder="MM/YY"
                   className="input input-bordered w-full bg-indigo-50"
-                  {...register('expiration', {
-                    required: true,
-                    onChange: handleExpirationChange,
-                    pattern: /^\d{2}\/\d{2}$/,
+                  {...register('expirationDate', {
+                    required: 'Expiration date is required',
+                    pattern: {
+                      value: /^(0[1-9]|1[0-2])\/\d{2}$/,
+                      message: 'Invalid expiration date format (MM/YY)',
+                    },
                   })}
                 />
-                {errors.expiration && (
-                  <span className="text-red-500 text-sm pt-1">
-                    กรุณากรอกวันหมดอายุให้ถูกต้อง (MM/YY)
+                {errors.expirationDate && (
+                  <span className="text-red-500 text-sm mt-1">
+                    {errors.expirationDate.message}
                   </span>
                 )}
-              </div>
+              </div> */}
+
               <div className="form-control w-1/2">
                 <label className="label">
                   <span className="label-text text-lg font-semibold text-indigo-800">
@@ -142,19 +175,45 @@ function UserPaymentPage() {
                   placeholder="123"
                   className="input input-bordered w-full bg-indigo-50"
                   {...register('cvv', {
-                    required: true,
-                    maxLength: 3,
-                    pattern: /^\d{3}$/,
-                    onChange: handleCvvChange,
+                    required: 'CVV is required',
+                    pattern: {
+                      value: /^\d{3,4}$/,
+                      message: 'Invalid CVV',
+                    },
                   })}
                 />
                 {errors.cvv && (
-                  <span className="text-red-500 text-sm pt-1">
-                    กรุณากรอก CVV ให้ถูกต้อง (3 หลัก)
+                  <span className="text-red-500 text-sm mt-1">
+                    {errors.cvv.message}
                   </span>
                 )}
               </div>
             </div>
+
+            <div className="form-control w-full mb-4">
+              {/* <label className="label">
+                <span className="label-text text-lg font-semibold text-indigo-800">
+                  Payment Method*
+                </span>
+              </label> */}
+              <select
+                className="select select-bordered w-full bg-indigo-50"
+                {...register('paymentMethod', {
+                  required: 'Payment method is required',
+                })}
+              >
+                <option value="">Select payment method</option>
+                <option value="credit">Credit Card</option>
+                <option value="debit">Debit Card</option>
+                <option value="paypal">PayPal</option>
+              </select>
+              {errors.paymentMethod && (
+                <span className="text-red-500 text-sm mt-1">
+                  {errors.paymentMethod.message}
+                </span>
+              )}
+            </div>
+
             <button
               type="submit"
               className="btn btn-primary w-full mt-8 text-lg font-semibold"
@@ -163,41 +222,46 @@ function UserPaymentPage() {
             </button>
           </form>
 
-          {user && user.orders && orderFromCart && (
-            <div className="md:w-1/2 mt-8 md:mt-0">
-              <div className="bg-indigo-50 rounded-xl p-6 shadow-lg">
-                <h2 className="text-2xl font-extrabold mb-4 text-indigo-800">
-                  Order Summary
-                </h2>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-lg">Original price:</span>
-                  <span className="text-lg font-semibold">
-                    ฿{orderFromCart.OrderOriginalPrice.toLocaleString()}
-                  </span>
+          <div className="md:w-1/2 mt-8 md:mt-0">
+            <div className="bg-indigo-50 rounded-xl p-6 shadow-lg">
+              <h2 className="text-2xl font-extrabold mb-4 text-indigo-800">
+                Booking Summary
+              </h2>
+              {booking.booked_trips.map((trip, index) => (
+                <div key={index} className="mb-4">
+                  <h3 className="text-xl font-semibold">{trip.trip.name}</h3>
+                  <p>
+                    Departure:{' '}
+                    {new Date(trip.departure_date).toLocaleDateString()}
+                  </p>
+                  <p>Travelers: {trip.travelers.length}</p>
                 </div>
+              ))}
+              <div className="border-t border-indigo-200 my-4"></div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-lg">Total Amount:</span>
+                <span className="text-lg font-semibold">
+                  ฿{booking.total_amount.toLocaleString()}
+                </span>
+              </div>
+              {booking.coupon.discount_amount > 0 && (
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-lg">Discount:</span>
                   <span className="text-lg font-semibold text-red-500">
-                    -฿{orderFromCart.OrderDiscount.toLocaleString()}
+                    -฿{booking.coupon.discount_amount.toLocaleString()}
                   </span>
                 </div>
-                <div className="border-t border-indigo-200 my-4"></div>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-xl font-bold text-indigo-800">
-                    Total:
-                  </span>
-                  <span className="text-xl font-bold text-indigo-800">
-                    ฿{orderFromCart.OrderTotal.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex gap-4 justify-center mt-6">
-                  <img src="/paypal.svg" alt="PayPal" className="h-8" />
-                  <img src="/visa.svg" alt="Visa" className="h-8" />
-                  <img src="/mastercard.svg" alt="Mastercard" className="h-8" />
-                </div>
+              )}
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-xl font-bold text-indigo-800">
+                  Final Amount:
+                </span>
+                <span className="text-xl font-bold text-indigo-800">
+                  ฿{booking.final_amount.toLocaleString()}
+                </span>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </section>
 

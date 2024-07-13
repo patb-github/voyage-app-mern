@@ -48,7 +48,7 @@ const App = () => {
                 path="/cart/edit/:cartItemId"
                 element={<UserCartEditPage />}
               />
-              <Route path="/payment" element={<UserPaymentPage />} />
+              <Route path="/payment/:bookingId" element={<UserPaymentPage />} />
               <Route path="/booking" element={<UserBookingPage />} />
               <Route path="/password-change" element={<UserPasswordChange />} />
               <Route path="/booking-edit" element={<UserEditBookingPage />} />
