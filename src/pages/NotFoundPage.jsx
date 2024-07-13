@@ -31,13 +31,13 @@ function NotFound() {
               <FontAwesomeIcon icon={faHome} className="mr-2" />
               Return Home
             </Link>
-            <Link
+            {/* <Link
               to="/search"
               className="btn bg-white text-indigo-700 border-2 border-indigo-500 hover:bg-indigo-50 rounded-full px-6 py-3 transition duration-300 flex items-center justify-center"
             >
               <FontAwesomeIcon icon={faSearch} className="mr-2" />
               Search Trips
-            </Link>
+            </Link> */}
           </div>
         </div>
 

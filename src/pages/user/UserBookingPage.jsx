@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { bookingsAtom, activeTabAtom } from '../../atoms/bookingAtoms';
 import { fetchBookings } from '../../utils/bookingUtils';
+import { useNavigate } from 'react-router-dom';
 
 function TripCard({ trip, isExpanded, onToggle }) {
   return (
@@ -54,22 +55,29 @@ function BookingStatus({ status }) {
   switch (status) {
     case 'pending':
       statusText = 'Awaiting for payment';
-      statusStyle = 'badge badge-warning';
+      statusStyle = 'bg-yellow-400 text-yellow-800';
       break;
     case 'completed':
       statusText = 'Payment completed';
-      statusStyle = 'badge badge-info';
+      statusStyle = 'bg-green-400 text-white';
       break;
     case 'cancelled':
       statusText = 'Canceled';
-      statusStyle = 'badge badge-error';
+      statusStyle = 'bg-red-400 text-white';
       break;
     default:
       statusText = 'Unknown';
+      statusStyle = 'bg-gray-200 text-gray-800';
       break;
   }
 
-  return <p className={`py-1 px-2 rounded ${statusStyle}`}>{statusText}</p>;
+  return (
+    <span
+      className={`py-1 px-2 rounded-full text-sm font-semibold ${statusStyle}`}
+    >
+      {statusText}
+    </span>
+  );
 }
 
 function UserBookingPage() {
@@ -78,6 +86,7 @@ function UserBookingPage() {
   const [expandedTrips, setExpandedTrips] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const getBookings = async () => {
@@ -103,6 +112,15 @@ function UserBookingPage() {
     }));
   };
 
+  const calculateTotalAmount = (booking) => {
+    const tripTotal = booking.booked_trips.reduce(
+      (total, trip) => total + trip.trip.price,
+      0
+    );
+    const discountAmount = booking.coupon ? booking.coupon.discount_amount : 0;
+    return tripTotal - discountAmount;
+  };
+
   const tabs = [
     { name: 'pending', label: 'Pending' },
     { name: 'completed', label: 'Completed' },
@@ -110,103 +128,133 @@ function UserBookingPage() {
   ];
 
   return (
-    <section className="md:bg-gray-100 md:pb-80">
-      <div className="hidden md:flex md:justify-start">
-        <p className="text-4xl font-bold py-4 pl-[10%]">My Bookings</p>
-      </div>
-      <ul className="menu menu-horizontal bg-white font-bold shadow-lg text-xl md:w-[80%] md:rounded-xl p-0 flex m-auto">
-        {tabs.map((tab) => (
-          <li
-            key={tab.name}
-            className={`hover:text-[#5F97FB] flex-grow flex items-center ${
-              activeTab === tab.name ? 'text-[#5F97FB]' : ''
-            }`}
-            onClick={() => setActiveTab(tab.name)}
-          >
-            <a>{tab.label}</a>
-          </li>
-        ))}
-      </ul>
+    <section className="bg-gray-100 min-h-screen pb-20">
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-4xl font-bold mb-8 text-gray-800">My Bookings</h1>
+        <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+          <ul className="flex">
+            {tabs.map((tab) => (
+              <li
+                key={tab.name}
+                className={`flex-1 text-center ${
+                  activeTab === tab.name
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white text-gray-600'
+                }`}
+              >
+                <button
+                  className="w-full py-4 px-6 text-lg font-semibold focus:outline-none transition duration-300 ease-in-out"
+                  onClick={() => setActiveTab(tab.name)}
+                >
+                  {tab.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-      <div className="mx-4 md:mx-48 md:mt-11 md:border-t md:border-gray-300">
-        {isLoading ? (
-          <p>Loading bookings...</p>
-        ) : error ? (
-          <p className="text-red-500">{error}</p>
-        ) : bookings.length > 0 ? (
-          bookings.map((booking) => (
-            <div
-              key={booking._id}
-              className="bg-white mt-2 rounded-2xl shadow-md p-6 md:p-6 my-4"
-            >
-              <BookingStatus status={booking.booking_status} />
-              <div className="flex justify-between items-center mb-4">
-                <p className="text-gray-600 font-bold">
+        <div className="space-y-6">
+          {isLoading ? (
+            <div className="text-center py-12">
+              <p className="text-xl text-gray-600">Loading bookings...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-xl text-red-500">{error}</p>
+            </div>
+          ) : bookings.length > 0 ? (
+            bookings.map((booking) => (
+              <div
+                key={booking._id}
+                className="bg-white rounded-xl shadow-md p-6"
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <BookingStatus status={booking.booking_status} />
+                  <p className="text-sm text-gray-500">
+                    Booking time{' '}
+                    {new Date(booking.booked_at).toLocaleDateString('en-EN', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}{' '}
+                    {new Date(booking.booked_at).toLocaleTimeString('en-EN', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}{' '}
+                  </p>
+                </div>
+                <p className="text-gray-600 font-semibold mb-4">
                   Booking ID: {booking._id}
                 </p>
-                <p className="text-gray-500 text-sm">
-                  จองเมื่อ{' '}
-                  {new Date(booking.booked_at).toLocaleDateString('th-TH', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  })}{' '}
-                  {new Date(booking.booked_at).toLocaleTimeString('th-TH', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}{' '}
-                  น.
+                <div className="mb-6">
+                  <p className="text-2xl font-bold text-gray-800">
+                    Total Amount: $
+                    {calculateTotalAmount(booking).toLocaleString()}
+                  </p>
+                  <p className="text-gray-600">
+                    Number of Trips: {booking.booked_trips.length}
+                  </p>
+                </div>
+                {booking.booked_trips.map((trip) => (
+                  <TripCard
+                    key={trip._id}
+                    trip={{
+                      id: trip._id,
+                      imageSrc: trip.trip.image,
+                      title: trip.trip.name,
+                      departure: trip.trip.destination_from,
+                      destination: trip.trip.destination_to,
+                      duration: `${trip.trip.duration_days} days`,
+                      voyagerCount: trip.travelers.length,
+                      amount: trip.trip.price,
+                    }}
+                    isExpanded={expandedTrips[`${booking._id}-${trip._id}`]}
+                    onToggle={() => toggleTripExpansion(booking._id, trip._id)}
+                  />
+                ))}
+                {booking.coupon && (
+                  <p className="text-green-600 mt-2">
+                    Coupon applied: {booking.coupon.code} ($
+                    {booking.coupon.discount_amount.toLocaleString()} discount)
+                  </p>
+                )}
+                <p className="text-gray-500 text-sm mt-4 mb-6">
+                  We recommend you arrive at the airport at least 2 hours before
+                  departure to allow ample time for check-in.
                 </p>
+                <div className="flex justify-end space-x-4">
+                  <button
+                    className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300 ease-in-out"
+                    onClick={() => navigate(`/booking-edit/${booking._id}`)}
+                  >
+                    Booking Detail
+                  </button>
+                  {booking.booking_status !== 'completed' &&
+                    booking.booking_status !== 'cancelled' && (
+                      <button
+                        className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-300 ease-in-out"
+                        onClick={() => navigate(`/payment/${booking._id}`)}
+                      >
+                        Pay Now
+                      </button>
+                    )}
+                </div>
               </div>
-              <div className="mb-4">
-                <p className="text-xl font-semibold">
-                  Total Amount: $
-                  {booking.booked_trips
-                    .reduce((total, trip) => total + trip.trip.price, 0)
-                    .toLocaleString()}
-                </p>
-                <p className="text-gray-600">
-                  Number of Trips: {booking.booked_trips.length}
-                </p>
-              </div>
-              {booking.booked_trips.map((trip) => (
-                <TripCard
-                  key={trip._id}
-                  trip={{
-                    id: trip._id,
-                    imageSrc: trip.trip.image,
-                    title: trip.trip.name,
-                    departure: trip.trip.destination_from,
-                    destination: trip.trip.destination_to,
-                    duration: `${trip.trip.duration_days} days`,
-                    voyagerCount: trip.travelers.length,
-                    amount: trip.trip.price,
-                  }}
-                  isExpanded={expandedTrips[`${booking._id}-${trip._id}`]}
-                  onToggle={() => toggleTripExpansion(booking._id, trip._id)}
-                />
-              ))}
-              {booking.coupon && (
-                <p className="text-green-600 mt-2">
-                  Coupon applied: {booking.coupon.code} ($
-                  {booking.coupon.discount_amount} discount)
-                </p>
-              )}
-              <p className="text-gray-500 text-sm mt-4">
-                We recommend you arrive at the airport at least 2 hours before
-                departure to allow ample time for check-in.
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <img
+                src="/female-guide.webp"
+                alt=""
+                className="w-1/2 mx-auto mb-6"
+              />
+              <p className="text-xl font-semibold text-gray-600">
+                No adventures in this status yet! Let's find you a new one to
+                get excited about.
               </p>
             </div>
-          ))
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full">
-            <img src="/female-guide.webp" alt="" className="w-1/2" />
-            <p className="items-center text-center just text-xl font-semibold ">
-              No adventures in this status yet! Let's find you a new one to get
-              excited about.
-            </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </section>
   );
