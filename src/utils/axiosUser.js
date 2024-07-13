@@ -5,7 +5,7 @@ const PROD_URL = import.meta.env.VITE_PROD_URL;
 
 // create an axios instance
 const axiosUser = axios.create({
-  baseURL: BASE_URL || PROD_URL || 'http://localhost:3000/api',
+  baseURL: BASE_URL || PROD_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

@@ -1,18 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosUser from '../../utils/axiosUser';
 import { format, addDays } from 'date-fns';
 import { getCouponByCode, calculateDiscount } from '../../utils/couponUtils';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faExclamationCircle,
-  faCheckCircle,
-} from '@fortawesome/free-solid-svg-icons';
 import CartItem from '../../components/user/CartItem';
 import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Import the CSS
-
+import 'react-toastify/dist/ReactToastify.css';
+import { cartLengthAtom } from '../../atoms/cartAtom';
+import { fetchCart } from '../../utils/cartUtils';
+import { useAtom } from 'jotai';
 function UserCartPage() {
   const [cart, setCart] = useState([]);
   const navigate = useNavigate();
@@ -20,10 +17,8 @@ function UserCartPage() {
   const [discount, setDiscount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [promoCode, setPromoCode] = useState('');
-  const [showPromoAlert, setShowPromoAlert] = useState(false);
-  const [promoAlertMessage, setPromoAlertMessage] = useState('');
-  const [showMedal, setShowMedal] = useState(false);
-
+  const [, setCartLength] = useAtom(cartLengthAtom);
+  const [isPromoApplied, setIsPromoApplied] = useState(false);
   const {
     register: registerPromo,
     handleSubmit: handleSubmitPromo,
@@ -31,14 +26,9 @@ function UserCartPage() {
   } = useForm();
 
   useEffect(() => {
-    const fetchCart = async () => {
+    const fetchCartData = async () => {
       try {
-        const res = await axios.get('http://localhost:3000/api/cart', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-          },
-        });
-        console.log(res.data.cart);
+        const res = await axiosUser.get('/cart');
         const newCart = await Promise.all(
           res.data.cart.map(async (item) => ({
             ...item,
@@ -47,21 +37,20 @@ function UserCartPage() {
           }))
         );
         setCart(newCart);
-        console.log('Updated cart:', newCart);
       } catch (error) {
         console.error('Error fetching cart:', error);
       }
     };
-    fetchCart();
-  }, []);
+
+    fetchCartData(); // เรียกใช้ฟังก์ชัน fetchCartData
+  }, []); // ทำงานเมื่อ component เริ่มต้น
 
   useEffect(() => {
     const newTotalAmount = cart.reduce((sum, item) => {
       return item.isChecked ? sum + (item.trip?.total || 0) : sum;
     }, 0);
     setTotalAmount(newTotalAmount);
-    console.log('New total amount:', newTotalAmount);
-  }, [cart]);
+  }, [cart]); // ทำงานเมื่อ cart เปลี่ยนแปลง
 
   const handleCheckboxChange = useCallback((itemId) => {
     setCart((prevCart) =>
@@ -73,18 +62,13 @@ function UserCartPage() {
 
   const handleDelete = useCallback(async (itemId) => {
     try {
-      const res = await axios.delete(
-        `http://localhost:3000/api/cart/${itemId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-          },
-        }
-      );
+      const res = await axiosUser.delete(`/cart/${itemId}`);
 
       if (res.status === 200) {
         setCart((prevCart) => prevCart.filter((item) => item._id !== itemId));
         toast.success('Item removed from cart successfully');
+        const { cartLength } = await fetchCart();
+        setCartLength(cartLength);
       } else {
         throw new Error('Failed to delete item from cart');
       }
@@ -111,6 +95,7 @@ function UserCartPage() {
         );
         setDiscount(newDiscount);
         toast.success('Promo code applied successfully!');
+        setIsPromoApplied(true); // Set the promo as applied
       }
     } catch (error) {
       toast.error('Invalid promo code');
@@ -119,6 +104,13 @@ function UserCartPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleRemovePromo = () => {
+    setDiscount(0);
+    setPromoCode('');
+    setIsPromoApplied(false);
+    toast.success('Promo code removed');
   };
 
   const handlePayment = () => {
@@ -151,7 +143,7 @@ function UserCartPage() {
 
   async function toCartItem(trip_id, item) {
     try {
-      const res = await axios.get(`http://localhost:3000/api/trips/${trip_id}`);
+      const res = await axiosUser.get(`/trips/${trip_id}`); // ใช้ axiosUser แทน axios
       const trip = res.data.trip;
       const departureDate = format(item.departure_date, 'EEE d MMM');
       const arrivalDate = format(
@@ -162,13 +154,13 @@ function UserCartPage() {
         id: trip._id,
         title: trip.name || 'N/A',
         imageSrc: trip.images[0] || 'N/A',
-        departure: trip.destination_from || 'N/A',
+        departure: trip.destination_from || null,
         destination: trip.destination_to || 'N/A',
         duration: trip.duration_days || 'N/A',
-        price: trip.price || 'N/A',
-        departureDate: departureDate || 'N/A',
-        arrivalDate: arrivalDate || 'N/A',
-        total: trip.price * item.travelers.length || 'N/A',
+        price: trip.price || 0,
+        departureDate: departureDate || null,
+        arrivalDate: arrivalDate || null,
+        total: trip.price * item.travelers.length || 0,
       };
     } catch (error) {
       if (error.response && error.response.status === 404) {
@@ -176,13 +168,13 @@ function UserCartPage() {
           id: trip_id,
           title: 'N/A',
           imageSrc: 'N/A',
-          departure: 'N/A',
+          departure: null,
           destination: 'N/A',
           duration: 'N/A',
-          price: 'N/A',
-          departureDate: 'N/A',
-          arrivalDate: 'N/A',
-          total: 'N/A',
+          price: 0,
+          departureDate: null,
+          arrivalDate: null,
+          total: 0,
         };
       } else {
         console.log(error);
@@ -213,7 +205,9 @@ function UserCartPage() {
             ))}
           </div>
           <div className="bg-white shadow-xl p-6 md:w-80 card rounded-2xl md:mx-2 my-4 h-fit">
-            <form onSubmit={handleApplyPromo}>
+            <form
+              onSubmit={isPromoApplied ? handleRemovePromo : handleApplyPromo}
+            >
               <h3 className="text-lg font-semibold mb-2">Promotions</h3>
               <div className="mb-4">
                 <label
@@ -232,11 +226,22 @@ function UserCartPage() {
                     onChange={(e) => setPromoCode(e.target.value)}
                   />
                   <button
-                    type="submit"
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2"
+                    type="button"
+                    className={`bg-${
+                      isPromoApplied ? 'red' : 'blue'
+                    }-500 hover:bg-${
+                      isPromoApplied ? 'red' : 'blue'
+                    }-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2`}
                     disabled={isLoading}
+                    onClick={
+                      isPromoApplied ? handleRemovePromo : handleApplyPromo
+                    } // <-- เพิ่ม onClick
                   >
-                    {isLoading ? 'Applying...' : 'Apply'}
+                    {isLoading
+                      ? 'Processing...'
+                      : isPromoApplied
+                      ? 'Remove'
+                      : 'Apply'}
                   </button>
                 </div>
               </div>
