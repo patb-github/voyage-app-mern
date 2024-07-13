@@ -98,6 +98,8 @@ const UserEditBookingPage = () => {
   const { bookingId } = useParams();
   const navigate = useNavigate();
   const [isCancelling, setIsCancelling] = useState(false);
+  const isCancelled = booking && booking.booking_status === 'cancelled';
+
   useEffect(() => {
     const fetchBooking = async () => {
       try {
@@ -121,12 +123,19 @@ const UserEditBookingPage = () => {
   };
 
   const handleCancelBooking = async () => {
+    if (isCancelled) {
+      toast.info('This booking has already been cancelled.');
+      return;
+    }
+
     if (window.confirm('Are you sure you want to cancel this booking?')) {
       setIsCancelling(true);
       try {
         await axiosUser.patch(`/bookings/cancel/${bookingId}`);
         toast.success('Booking cancelled successfully');
-        navigate('/bookings'); // Redirect to bookings page after successful cancellation
+        // อัพเดทสถานะการจองในหน้าปัจจุบัน
+        setBooking((prev) => ({ ...prev, booking_status: 'cancelled' }));
+        // ไม่ต้อง navigate ออกจากหน้านี้ เพื่อให้ผู้ใช้เห็นการเปลี่ยนแปลง
       } catch (error) {
         console.error('Error cancelling booking:', error);
         toast.error('Failed to cancel booking. Please try again.');
@@ -181,6 +190,17 @@ const UserEditBookingPage = () => {
             <strong>Booking Date:</strong>{' '}
             {format(new Date(booking.booked_at), 'PPP')}
           </p>
+          <p className="text-lg">
+            <strong>Status:</strong>{' '}
+            <span
+              className={`font-bold ${
+                isCancelled ? 'text-red-500' : 'text-green-500'
+              }`}
+            >
+              {booking.booking_status.charAt(0).toUpperCase() +
+                booking.booking_status.slice(1)}
+            </span>
+          </p>
         </div>
         {booking.booked_trips.map((trip, index) => (
           <TripAccordion
@@ -213,20 +233,25 @@ const UserEditBookingPage = () => {
           <div className="flex flex-col mb-4 sm:mb-0">
             <p className="text-sm font-bold">Total Payment</p>
             <p className="text-3xl font-bold">
-              $ {finalTotal.toLocaleString()}
+              ฿ {finalTotal.toLocaleString()}
             </p>
           </div>
-          <button
-            onClick={handleCancelBooking}
-            disabled={isCancelling}
-            className={`btn ${
-              isCancelling
-                ? 'bg-gray-500 cursor-not-allowed'
-                : 'bg-red-500 hover:bg-red-600'
-            } text-white rounded-full text-xl px-8 py-2 transition duration-300`}
-          >
-            {isCancelling ? 'Cancelling...' : 'Cancel Booking'}
-          </button>
+          {!isCancelled && (
+            <button
+              onClick={handleCancelBooking}
+              disabled={isCancelling}
+              className={`btn ${
+                isCancelling
+                  ? 'bg-gray-500 cursor-not-allowed'
+                  : 'bg-red-500 hover:bg-red-600'
+              } text-white rounded-full text-xl px-8 py-2 transition duration-300`}
+            >
+              {isCancelling ? 'Cancelling...' : 'Cancel Booking'}
+            </button>
+          )}
+          {isCancelled && (
+            <p className="text-lg font-bold text-red-300">Booking Cancelled</p>
+          )}
         </div>
       </section>
     </div>
