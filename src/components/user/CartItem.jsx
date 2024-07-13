@@ -29,6 +29,7 @@ const CartItem = memo(
             <button
               className="btn btn-sm"
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 onDelete(cartItemId);
               }}
