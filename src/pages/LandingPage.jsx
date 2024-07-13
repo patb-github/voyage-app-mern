@@ -259,7 +259,7 @@ const LandingPage = () => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="btn btn-wide rounded-full bg-blue-500 text-white font-bold text-xl px-8 shadow-lg"
+            className="btn btn-wide rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold text-xl px-8 shadow-lg"
           >
             Explore More
           </motion.button>

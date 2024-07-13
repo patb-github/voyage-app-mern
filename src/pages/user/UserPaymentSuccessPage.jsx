@@ -21,13 +21,13 @@ const UserPaymentSuccessPage = () => {
           <div className="space-y-4">
             <Link
               to="/booking"
-              className="btn btn-primary w-full text-lg font-semibold"
+              className="btn bg-gradient-to-r from-indigo-500 to-blue-500 text-white w-full text-lg font-semibold"
             >
               View My Bookings
             </Link>
             <Link
               to="/"
-              className="btn btn-outline btn-primary w-full text-lg font-semibold"
+              className="btn btn-outline btn-primary  w-full text-lg font-semibold"
             >
               Return to Home
             </Link>
