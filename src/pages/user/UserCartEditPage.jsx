@@ -1,19 +1,27 @@
 import { useState, useEffect, useContext } from 'react';
+import { getCouponByCode, calculateDiscount } from '../../utils/couponUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faSave,
   faTrash,
   faTimes,
   faCalendar,
-  faShoppingCart,
   faCreditCard,
 } from '@fortawesome/free-solid-svg-icons';
 import { format, addDays } from 'date-fns';
 import UserContext from '../../context/UserContext';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
+import axiosUser from '../../utils/axiosUser';
+import axiosVisitor from '../../utils/axiosVisitor';
+import { useForm } from 'react-hook-form';
+import { useAtom } from 'jotai';
+import { cartLengthAtom } from '../../atoms/cartAtom';
+import { fetchCart } from '../../utils/cartUtils';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function UserCartEditPage() {
+  const [, setCartLength] = useAtom(cartLengthAtom);
   const { user } = useContext(UserContext);
   const [trip, setTrip] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,24 +31,28 @@ function UserCartEditPage() {
   });
   const [departureDate, setDepartureDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
-  const [showMedal, setShowMedal] = useState(false);
+  const [totalAmount, setTotalAmount] = useState(0);
   const navigate = useNavigate();
   const { cartItemId } = useParams();
-  const [cartItem, setCartItem] = useState(null);
+  // const [cartItem, setCartItem] = useState(null);
+  const [discount, setDiscount] = useState(0);
+  const [promoCode, setPromoCode] = useState('');
+  const [couponId, setCouponId] = useState(null);
+  const {
+    register: registerPromo,
+    handleSubmit: handleSubmitPromo,
+    formState: { errors: promoErrors },
+  } = useForm();
+  const [isPromoApplied, setIsPromoApplied] = useState(false);
+  const [couponType, setCouponType] = useState(null);
+  const [couponValue, setCouponValue] = useState(null);
 
   useEffect(() => {
     const fetchCartItem = async () => {
       setIsLoading(true); // แสดง loading ในระหว่างรอข้อมูล
       try {
         // 1. Fetch cart item จาก backend
-        const cartResponse = await axios.get(
-          `http://localhost:3000/api/cart/${cartItemId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-            },
-          }
-        );
+        const cartResponse = await axiosUser.get(`/cart/${cartItemId}`);
 
         // 2. ตรวจสอบ response
         if (cartResponse.status !== 200) {
@@ -50,7 +62,7 @@ function UserCartEditPage() {
         const cartItemData = cartResponse.data.cartItem;
 
         // 3. อัพเดต state ด้วยข้อมูล cart item
-        setCartItem(cartItemData);
+        // setCartItem(cartItemData);
         setVoyagers(
           cartItemData.travelers.reduce((acc, traveler, index) => {
             acc[index + 1] = {
@@ -63,13 +75,12 @@ function UserCartEditPage() {
         setDepartureDate(new Date(cartItemData.departure_date));
 
         // 4. Fetch ข้อมูล trip ที่เกี่ยวข้อง
-        const tripResponse = await axios.get(
-          `http://localhost:3000/api/trips/${cartItemData.trip_id}`
-        );
+        const tripResponse = await axiosVisitor.get(`/trips/${cartItemData.trip_id}`);
         if (tripResponse.status !== 200) {
           throw new Error('Failed to fetch trip details');
         }
         setTrip(tripResponse.data.trip);
+        setTotalAmount(tripResponse.data.trip.price);
       } catch (error) {
         console.error(error);
         // 5. Error handling (เช่น แสดง alert หรือ redirect)
@@ -91,26 +102,15 @@ function UserCartEditPage() {
     if (cartItemId) {
       fetchCartItem();
     }
-  }, [cartItemId, navigate]); //
+  }, [cartItemId, navigate]); 
 
-  // useEffect(() => {
-  //   const fetchTrip = async () => {
-  //     console.log("CARTITEM", cartItem);
-  //     setIsLoading(true);
-  //     try {
-  //       const response = await axios.get(`http://localhost:3000/api/trips/${cartItem.trip_id}`);
-  //       console.log(response.data.trip);
-  //       setTrip(response.data.trip);
-  //     } catch (error) {
-  //       console.error(error);
-  //     }
-  //     setIsLoading(false);
-  //   };
-  //   fetchTrip();
-
-  //   // Set initial departure date to tomorrow
-  //   setDepartureDate(addDays(new Date(), 1));
-  // }, []);
+  useEffect(() => {
+    if (trip) {
+      const totalAmount = trip.price * Object.keys(voyagers).length; 
+      setTotalAmount(totalAmount);
+      setDiscount(calculateDiscount(totalAmount, couponType, couponValue));
+    }
+  }, [trip, voyagers]);
 
   if (isLoading) {
     return (
@@ -121,7 +121,6 @@ function UserCartEditPage() {
   }
 
   if (!trip) {
-    console.log('ERROR 1');
     navigate('/cart');
     return;
   }
@@ -214,25 +213,80 @@ function UserCartEditPage() {
     }
 
     try {
-      const response = await axios.put(
-        `http://localhost:3000/api/cart/${cartItemId}`,
-        cartItem,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-          },
-        }
-      );
-      setShowMedal('green');
-      setTimeout(() => {
-        setShowMedal(false);
-      }, 1000);
+      const response = await axiosUser.put(`/cart/${cartItemId}`, cartItem);
+      const { cartLength } = await fetchCart();
+      setCartLength(cartLength);
+      toast.success('Trip details successfully saved');
     } catch (error) {
+      console.error('Error saving trip details:', error);
+      toast.error('Error saving trip details');
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setDiscount(0);
+    setPromoCode('');
+    setIsPromoApplied(false);
+    toast.info('Promo code has been removed');
+  };
+
+  const handleApplyPromo = async () => {
+    try {
+      const couponData = await getCouponByCode(promoCode);
+      if (trip.price < couponData.coupon.minimumPurchaseAmount) {
+        toast.error('Minimum purchase amount not reached');
+        return;
+      }
+
+      const calculatedDiscount = calculateDiscount(
+        totalAmount,
+        couponData.coupon.type,
+        couponData.coupon.discount
+      );
+      
+      setDiscount(calculatedDiscount);
+      setCouponId(couponData.coupon._id); // Store the coupon ID
+      setCouponType(couponData.coupon.type);
+      setCouponValue(couponData.coupon.discount);
+      toast.success('Promo code applied successfully!');
+      setIsPromoApplied(true);
+    } catch (error) {
+      toast.error('Invalid promo code');
       console.error(error);
-      setShowMedal('red');
-      setTimeout(() => {
-        setShowMedal(false);
-      }, 1000);
+    }
+  };
+
+  const handlePayment = async () => {
+
+    const bookingData = {
+      booked_trips: [
+        {
+          trip_id: trip._id,
+          departure_date: departureDate.toISOString(),
+          travelers: Object.values(voyagers).map(traveler => traveler),
+        }
+      ],
+      coupon_id: isPromoApplied ? couponId : null,
+      cart_item_ids: [cartItemId],
+      payment_method: null, // or actual payment method data if available
+    };
+
+    try {
+      const response = await axiosUser.post('/bookings', bookingData);
+
+      if (response.status === 200 || response.status === 201) {
+        toast.success('Booking successful!');
+        setCartLength(prev => prev - 1);
+        const bookingId = response.data.bookingId;
+        navigate(`/payment/${bookingId}`, {
+          state: { bookingDetails: response.data, orderSummary: bookingData },
+        });
+      } else {
+        throw new Error('Booking failed');
+      }
+    } catch (error) {
+      console.error('Error during booking:', error);
+      toast.error('Booking failed. Please try again.');
     }
   };
 
@@ -241,7 +295,7 @@ function UserCartEditPage() {
       <section className="bg-white rounded-3xl shadow-2xl">
         <div className="text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold pt-8 pb-10 text-indigo-700">
-            Booking Details
+            Edit Booking Details
           </h1>
         </div>
         <div className="md:flex md:pb-6">
@@ -254,9 +308,7 @@ function UserCartEditPage() {
             <p className="text-lg font-normal py-4 text-gray-700">
               {trip.description}
             </p>
-          </div>
-          <div className="md:w-1/2 md:px-10">
-            <div className="rounded-3xl shadow-lg px-8 py-6 mb-6 bg-gradient-to-r from-indigo-50 to-blue-50">
+            <div className="rounded-3xl shadow-lg px-8 py-6 mb-6 ">
               <h2 className="text-2xl font-extrabold py-4 text-indigo-800">
                 {trip.name}
               </h2>
@@ -314,15 +366,14 @@ function UserCartEditPage() {
                   </p>
                 </div>
               </div>
-              <button className="flex mt-4 text-lg text-indigo-600 items-center hover:underline">
-                <span>Read full program details</span>
-                <span className="text-2xl ml-2">&#8227;</span>
-              </button>
+
               <button className="flex mt-2 text-lg text-indigo-600 items-center hover:underline">
                 <span>Policy | Things to know before traveling</span>
                 <span className="text-2xl ml-2">&#8227;</span>
               </button>
             </div>
+          </div>
+          <div className="md:w-1/2 md:px-10">
             <div className="rounded-3xl shadow-lg px-8 py-6 mb-6 bg-white">
               <h2 className="text-2xl font-extrabold py-4 text-indigo-800">
                 Voyagers
@@ -348,66 +399,109 @@ function UserCartEditPage() {
                 ))
               )}
               <button
-                className="btn btn-outline btn-info w-full mt-4 hover:bg-indigo-500 hover:text-white transition duration-300"
+                className="btn btn-outline text-blue-500 w-full mt-4 hover:bg-indigo-500 hover:text-white transition duration-300"
                 onClick={addNewVoyager}
               >
                 + Add Voyager
               </button>
             </div>
-            <div className="rounded-3xl shadow-lg px-8 py-6 mb-6 bg-white">
-              <h2 className="text-2xl font-extrabold py-4 text-indigo-800">
-                Payment Information
-              </h2>
-              <div className="flex justify-between items-center font-semibold text-gray-700">
-                <p className="text-lg py-2">
-                  Package {trip.name} x {Object.keys(voyagers).length}
-                </p>
-                <p>
-                  $
-                  {(trip.price * Object.keys(voyagers).length).toLocaleString()}
-                </p>
-              </div>
-              {/* <div className="flex justify-between items-center text-red-600 font-semibold">
-                <p className="text-lg py-2">Room Discount</p>
-                <p>฿ -7,500</p>
-              </div> */}
-            </div>
+            <div className="bg-white shadow-xl p-6 md:w-full card rounded-2xl  my-4 h-fit">
+              <form
+                onSubmit={handleSubmitPromo(
+                  isPromoApplied ? handleRemovePromo : handleApplyPromo
+                )}
+              >
+                <h3 className="text-lg font-semibold mb-2">Promotions</h3>
+                <div className="mb-4">
+                  <label
+                    htmlFor="promo-code"
+                    className="block text-gray-700 text-sm font-bold mb-2"
+                  >
+                    Enter Promo Code
+                  </label>
+                  <div className="flex mb-2">
+                    <input
+                      type="text"
+                      id="promo-code"
+                      {...registerPromo('promoCode', { required: true })} // <-- ผูกค่า promoCode กับ React Hook Form
+                      value={promoCode} // <-- เพิ่ม value เพื่อผูกกับ state
+                      onChange={(e) => setPromoCode(e.target.value)} // <-- ผูก onChange กับ state
+                      placeholder="promo code"
+                      className="flex-grow focus:outline-none focus:ring focus:ring-blue-500 rounded-l border border-gray-300 py-2 px-4"
+                    />
+                    <button
+                      type="submit"
+                      className={`bg-${
+                        isPromoApplied ? 'red' : 'blue'
+                      }-500 hover:bg-${
+                        isPromoApplied ? 'red' : 'blue'
+                      }-700 text-white font-bold py-2 px-4 rounded-r focus:outline-none focus:shadow-outline`}
+                    >
+                      {isPromoApplied ? 'Remove' : 'Apply'}
+                    </button>
+                  </div>
+                  {promoErrors.promoCode && (
+                    <span className="text-red-500">
+                      Please enter a promo code
+                    </span>
+                  )}
+                </div>
 
-            <div className="flex justify-between px-6 py-4 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl mt-4 text-white">
-              <div className="flex flex-col">
-                <p className="text-sm font-bold">Total Payment</p>
-                <p className="text-3xl font-bold">
-                  $
-                  {(trip.price * Object.keys(voyagers).length).toLocaleString()}
+                <div className="rounded-3xl shadow-lg px-8 py-6 mb-6 bg-white">
+                  <h2 className="text-2xl font-extrabold py-4 text-indigo-800">
+                    Payment Information
+                  </h2>
+                  <div className="flex justify-between items-center font-semibold text-gray-700">
+                    <p className="text-lg py-2">
+                      Package {trip.name} x {Object.keys(voyagers).length}
+                    </p>
+                    <p>
+                      $
+                      {(
+                        trip.price * Object.keys(voyagers).length
+                      ).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="flex justify-between items-center font-semibold text-gray-700">
+                    <p className="text-lg py-2">Discount</p>
+                    <p>${discount}</p>
+                  </div>
+                </div>
+                <p className="text-red-500 text-sm">
+                  To prevent duplicate use, the discount code will be removed
+                  once you add a trip to your cart. Please re-enter the code at
+                  checkout to apply the discount to your purchase.
                 </p>
-              </div>
-              <div className="flex space-x-2">
-                <button
-                  className="btn bg-white text-indigo-700 hover:bg-indigo-100 rounded-full px-4 transition duration-300 flex items-center"
-                  onClick={updateCart}
-                >
-                  <FontAwesomeIcon icon={faSave} className="mr-2" />
-                  Save
-                </button>
-                <button className="btn bg-white text-indigo-700 hover:bg-indigo-100 rounded-full px-4 transition duration-300 flex items-center">
-                  <FontAwesomeIcon icon={faCreditCard} className="mr-2" />
-                  Pay Now
-                </button>
+              </form>
+              <div className="flex justify-between px-6 py-4 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl mt-4 text-white">
+                <div className="flex flex-col">
+                  <p className="text-sm font-bold">Total Payment</p>
+                  <p className="text-3xl font-bold">
+                    $ {totalAmount - discount}
+                  </p>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    className="btn bg-white text-indigo-700 hover:bg-indigo-100 rounded-full px-4 transition duration-300 flex items-center"
+                    onClick={updateCart}
+                  >
+                    <FontAwesomeIcon icon={faSave} className="mr-2" />
+                    Save
+                  </button>
+                  <button
+                    onClick={handlePayment}
+                    className="btn bg-white text-indigo-700 hover:bg-indigo-100 rounded-full px-4 transition duration-300 flex items-center"
+                  >
+                    <FontAwesomeIcon icon={faCreditCard} className="mr-2" />
+                    Pay Now
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
-
-      {showMedal && (
-        <div
-          className={`fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg`}
-        >
-          {showMedal === 'green'
-            ? `Changes have been saved`
-            : `There was an error saving your changes. Please try again.`}
-        </div>
-      )}
+      <ToastContainer position="bottom-center" />
 
       {/* DaisyUI Modal */}
       <dialog
@@ -483,3 +577,5 @@ function UserCartEditPage() {
 }
 
 export default UserCartEditPage;
+
+

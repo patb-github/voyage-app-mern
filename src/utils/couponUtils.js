@@ -1,8 +1,8 @@
-import axios from 'axios';
+import axiosVisitor from "./axiosVisitor";
 
 export const fetchCoupons = async () => {
   try {
-    const response = await axios.get('http://localhost:3000/api/coupons/');
+    const response = await axiosVisitor.get('/coupons/');
     return response.data;
   } catch (error) {
     console.error('Error fetching coupons:', error);
@@ -12,9 +12,7 @@ export const fetchCoupons = async () => {
 
 export const getCouponByCode = async (code) => {
   try {
-    const response = await axios.get(
-      `http://localhost:3000/api/coupons/code/${code}`
-    );
+    const response = await axiosVisitor.get(`/coupons/code/${code}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching coupon by code:', error);

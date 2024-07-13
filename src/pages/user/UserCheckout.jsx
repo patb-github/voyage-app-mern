@@ -44,6 +44,8 @@ function UserCheckout() {
     formState: { errors: promoErrors },
   } = useForm();
   const [isPromoApplied, setIsPromoApplied] = useState(false);
+  const [couponType, setCouponType] = useState(null);
+  const [couponValue, setCouponValue] = useState(null);
 
   useEffect(() => {
     setIsLogin(user !== null);
@@ -69,7 +71,9 @@ function UserCheckout() {
 
   useEffect(() => {
     if (trip) {
-      setTotalAmount(trip.price * Object.keys(voyagers).length);
+      const totalAmount = trip.price * Object.keys(voyagers).length; 
+      setTotalAmount(totalAmount);
+      setDiscount(calculateDiscount(totalAmount, couponType, couponValue));
     }
   }, [trip, voyagers]);
 
@@ -80,6 +84,7 @@ function UserCheckout() {
       </div>
     );
   }
+
   if (!trip) {
     navigate('/error');
     return null;
@@ -198,6 +203,8 @@ function UserCheckout() {
 
       setDiscount(calculatedDiscount);
       setCouponId(couponData.coupon._id); // Store the coupon ID
+      setCouponType(couponData.coupon.type);
+      setCouponValue(couponData.coupon.discount);
       toast.success('Promo code applied successfully!');
       setIsPromoApplied(true);
     } catch (error) {
@@ -213,11 +220,13 @@ function UserCheckout() {
     }
 
     const bookingData = {
-      booked_trips: Object.values(voyagers).map((traveler) => ({
-        trip_id: trip._id,
-        departure_date: departureDate.toISOString(),
-        travelers: [traveler],
-      })),
+      booked_trips: [
+        {
+          trip_id: trip._id,
+          departure_date: departureDate.toISOString(),
+          travelers: Object.values(voyagers).map(traveler => traveler),
+        }
+      ],
       coupon_id: isPromoApplied ? couponId : null,
       cart_item_ids: [],
       payment_method: null, // or actual payment method data if available

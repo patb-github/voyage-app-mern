@@ -143,6 +143,8 @@ function UserCartPage() {
       if (response.status === 200 || response.status === 201) {
         toast.success('Booking successful!');
 
+        setCartLength((prevCartLength) => prevCartLength - selectedItems.length);
+        
         const bookingId = response.data.bookingId; // Assuming the API returns a bookingId
 
         // Navigate to the payment page with the bookingId
