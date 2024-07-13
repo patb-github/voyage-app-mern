@@ -10,6 +10,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Import the CSS
 import { cartLengthAtom } from '../../atoms/cartAtom';
 import { useAtom } from 'jotai';
+import { fetchCart } from '../../utils/cartUtils';
 
 function UserCartPage() {
   const [cart, setCart] = useState([]);
@@ -72,8 +73,8 @@ function UserCartPage() {
         setCart((prevCart) => prevCart.filter((item) => item._id !== itemId));
         setCartLength((prevCartLength) => prevCartLength - 1);
         toast.success('Item removed from cart successfully');
-        const { cartLength } = await fetchCart();
         setCartLength(cartLength);
+        const { cartLength } = await fetchCart();
       } else {
         throw new Error('Failed to delete item from cart');
       }
@@ -122,31 +123,49 @@ function UserCartPage() {
   const handlePayment = async () => {
     const selectedItems = cart.filter((item) => item.isChecked);
     if (selectedItems.length === 0) {
-      const modal = document.getElementById('none_item_selection_modal');
-      if (modal) {
-        modal.showModal();
+      toast.error('Please select at least one item to proceed to checkout.');
+      return;
+    }
+
+    try {
+      const body = {
+        booked_trips: selectedItems.map((item) => ({
+          trip_id: item.trip_id,
+          travelers: item.travelers,
+          departure_date: item.departure_date,
+        })),
+        coupon_id: couponId,
+        cart_item_ids: selectedItems.map((item) => item._id),
+      };
+
+      const response = await axiosUser.post('/bookings', body);
+
+      if (response.status === 200 || response.status === 201) {
+        toast.success('Booking successful!');
+
+        const bookingId = response.data.bookingId; // Assuming the API returns a bookingId
+
+        // Navigate to the payment page with the bookingId
+        navigate(`/payment/${bookingId}`, {
+          state: {
+            bookingDetails: response.data,
+            orderSummary: body,
+          },
+        });
+
+        // Optionally, you might want to clear the cart or update its state here
+        // For example:
+        // await fetchCart(); // Refetch the cart to update its state
+        // or
+        // setCart(prevCart => prevCart.filter(item => !item.isChecked));
+      } else {
+        throw new Error('Booking failed');
       }
-    } else {
-      try {
-        const modal3 = document.getElementById('wait_for_payment_modal');
-        modal3.showModal();
-        console.log(selectedItems);
-        const body = {
-          booked_trips: selectedItems.map((item) => ({
-            trip_id: item.trip_id,
-            travelers: item.travelers,
-            departure_date: item.departure_date,
-          })),
-          coupon_id: couponId,
-          cart_item_ids: selectedItems.map((item) => item._id),
-        };
-        const response = await axiosUser.post('/bookings', body);
-        //=======================
-        // navigate(`/payment/${response.data.booking._id}`);
-        //=======================
-      } catch (error) {
-        console.error('Error booking items:', error);
-      }
+    } catch (error) {
+      console.error('Error booking items:', error);
+      toast.error(
+        'An error occurred while processing your booking. Please try again.'
+      );
     }
   };
 
