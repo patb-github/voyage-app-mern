@@ -1,15 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, Link } from 'react-router-dom';
 import axiosUser from '../../utils/axiosUser';
 import axiosVisitor from '../../utils/axiosVisitor';
 import { format, addDays } from 'date-fns';
 import { getCouponByCode, calculateDiscount } from '../../utils/couponUtils';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faExclamationCircle,
-  faCheckCircle,
-} from '@fortawesome/free-solid-svg-icons';
 import CartItem from '../../components/user/CartItem';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Import the CSS
@@ -36,10 +31,10 @@ function UserCartPage() {
   } = useForm();
 
   useEffect(() => {
-    const fetchCart = async () => {
+    const fetchCartData = async () => {
       try {
         const res = await axiosUser.get('/cart');
-        console.log(res.data.cart);
+
         const newCart = await Promise.all(
           res.data.cart.map(async (item) => ({
             ...item,
@@ -48,21 +43,20 @@ function UserCartPage() {
           }))
         );
         setCart(newCart);
-        console.log('Updated cart:', newCart);
       } catch (error) {
         console.error('Error fetching cart:', error);
       }
     };
-    fetchCart();
-  }, []);
+
+    fetchCartData(); // เรียกใช้ฟังก์ชัน fetchCartData
+  }, []); // ทำงานเมื่อ component เริ่มต้น
 
   useEffect(() => {
     const newTotalAmount = cart.reduce((sum, item) => {
       return item.isChecked ? sum + (item.trip?.total || 0) : sum;
     }, 0);
     setTotalAmount(newTotalAmount);
-    console.log('New total amount:', newTotalAmount);
-  }, [cart]);
+  }, [cart]); // ทำงานเมื่อ cart เปลี่ยนแปลง
 
   const handleCheckboxChange = useCallback((itemId) => {
     setCart((prevCart) =>
@@ -80,6 +74,8 @@ function UserCartPage() {
         setCart((prevCart) => prevCart.filter((item) => item._id !== itemId));
         setCartLength((prevCartLength) => prevCartLength - 1);
         toast.success('Item removed from cart successfully');
+        const { cartLength } = await fetchCart();
+        setCartLength(cartLength);
       } else {
         throw new Error('Failed to delete item from cart');
       }
@@ -106,6 +102,7 @@ function UserCartPage() {
         setDiscount(newDiscount);
         setCouponId(couponData.coupon._id);
         toast.success('Promo code applied successfully!');
+        setIsPromoApplied(true); // Set the promo as applied
       }
     } catch (error) {
       toast.error('Invalid promo code');
@@ -117,7 +114,14 @@ function UserCartPage() {
     }
   };
 
-  const handlePayment = async () => {
+  const handleRemovePromo = () => {
+    setDiscount(0);
+    setPromoCode('');
+    setIsPromoApplied(false);
+    toast.success('Promo code removed');
+  };
+
+  const handlePayment = () => {
     const selectedItems = cart.filter((item) => item.isChecked);
     if (selectedItems.length === 0) {
       const modal = document.getElementById('none_item_selection_modal');
@@ -231,7 +235,9 @@ function UserCartPage() {
             ))}
           </div>
           <div className="bg-white shadow-xl p-6 md:w-80 card rounded-2xl md:mx-2 my-4 h-fit">
-            <form onSubmit={handleApplyPromo}>
+            <form
+              onSubmit={isPromoApplied ? handleRemovePromo : handleApplyPromo}
+            >
               <h3 className="text-lg font-semibold mb-2">Promotions</h3>
               <div className="mb-4">
                 <label
@@ -250,11 +256,22 @@ function UserCartPage() {
                     onChange={(e) => setPromoCode(e.target.value)}
                   />
                   <button
-                    type="submit"
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2"
+                    type="button"
+                    className={`bg-${
+                      isPromoApplied ? 'red' : 'blue'
+                    }-500 hover:bg-${
+                      isPromoApplied ? 'red' : 'blue'
+                    }-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2`}
                     disabled={isLoading}
+                    onClick={
+                      isPromoApplied ? handleRemovePromo : handleApplyPromo
+                    } // <-- เพิ่ม onClick
                   >
-                    {isLoading ? 'Applying...' : 'Apply'}
+                    {isLoading
+                      ? 'Processing...'
+                      : isPromoApplied
+                      ? 'Remove'
+                      : 'Apply'}
                   </button>
                 </div>
               </div>
