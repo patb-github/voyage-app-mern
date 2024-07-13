@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useNavigate, Link } from 'react-router-dom';
+import axiosUser from '../../utils/axiosUser';
+import axiosVisitor from '../../utils/axiosVisitor';
 import { format, addDays } from 'date-fns';
 import { getCouponByCode, calculateDiscount } from '../../utils/couponUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -12,6 +13,8 @@ import {
 import CartItem from '../../components/user/CartItem';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Import the CSS
+import { cartLengthAtom } from '../../atoms/cartAtom';
+import { useAtom } from 'jotai';
 
 function UserCartPage() {
   const [cart, setCart] = useState([]);
@@ -20,9 +23,11 @@ function UserCartPage() {
   const [discount, setDiscount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [promoCode, setPromoCode] = useState('');
+  const [couponId, setCouponId] = useState(null);
   const [showPromoAlert, setShowPromoAlert] = useState(false);
   const [promoAlertMessage, setPromoAlertMessage] = useState('');
   const [showMedal, setShowMedal] = useState(false);
+  const [cartLength, setCartLength] = useAtom(cartLengthAtom);
 
   const {
     register: registerPromo,
@@ -33,11 +38,7 @@ function UserCartPage() {
   useEffect(() => {
     const fetchCart = async () => {
       try {
-        const res = await axios.get('http://localhost:3000/api/cart', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-          },
-        });
+        const res = await axiosUser.get('/cart');
         console.log(res.data.cart);
         const newCart = await Promise.all(
           res.data.cart.map(async (item) => ({
@@ -73,17 +74,11 @@ function UserCartPage() {
 
   const handleDelete = useCallback(async (itemId) => {
     try {
-      const res = await axios.delete(
-        `http://localhost:3000/api/cart/${itemId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-          },
-        }
-      );
+      const res = await axiosUser.delete(`/cart/${itemId}`);
 
       if (res.status === 200) {
         setCart((prevCart) => prevCart.filter((item) => item._id !== itemId));
+        setCartLength((prevCartLength) => prevCartLength - 1);
         toast.success('Item removed from cart successfully');
       } else {
         throw new Error('Failed to delete item from cart');
@@ -99,7 +94,6 @@ function UserCartPage() {
 
     try {
       const couponData = await getCouponByCode(promoCode);
-
       if (totalAmount < couponData.coupon.minimumPurchaseAmount) {
         toast.error('Minimum purchase amount not reached');
         setDiscount(0);
@@ -110,18 +104,20 @@ function UserCartPage() {
           couponData.coupon.discount
         );
         setDiscount(newDiscount);
+        setCouponId(couponData.coupon._id);
         toast.success('Promo code applied successfully!');
       }
     } catch (error) {
       toast.error('Invalid promo code');
       setDiscount(0);
+      setCouponId(null);
       console.error('Error fetching coupon:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     const selectedItems = cart.filter((item) => item.isChecked);
     if (selectedItems.length === 0) {
       const modal = document.getElementById('none_item_selection_modal');
@@ -129,29 +125,50 @@ function UserCartPage() {
         modal.showModal();
       }
     } else {
-      const orderId = generateOrderId(); // Implement this function
-      const orderStatus = 'Pending';
-      const order = {
-        orderId,
-        OrderOriginalPrice: totalAmount,
-        OrderDiscount: discount,
-        OrderTotal: totalAmount - discount,
-        OrderItems: selectedItems,
-        orderStatus,
-        OrderDate: new Date(),
-      };
+      // const orderId = generateOrderId(); // Implement this function
+      // const orderStatus = 'Pending';
+      // const order = {
+      //   orderId,
+      //   OrderOriginalPrice: totalAmount,
+      //   OrderDiscount: discount,
+      //   OrderTotal: totalAmount - discount,
+      //   OrderItems: selectedItems,
+      //   orderStatus,
+      //   OrderDate: new Date(),
+      // };
       // Implement setUser or use appropriate state management
-      const modal3 = document.getElementById('wait_for_payment_modal');
-      modal3.showModal();
-      setTimeout(function () {
-        navigate('/Payment', { state: { order } });
-      }, 2000);
+      // const modal3 = document.getElementById('wait_for_payment_modal');
+      // modal3.showModal();
+      // setTimeout(function () {
+      //   navigate('/Payment', { state: { order } });
+      // }, 2000);
+
+      try {
+        const modal3 = document.getElementById('wait_for_payment_modal');
+        modal3.showModal();
+        console.log(selectedItems);
+        const body = {
+          booked_trips: selectedItems.map((item) => ({
+            trip_id: item.trip_id,
+            travelers: item.travelers,
+            departure_date: item.departure_date
+          })),
+          coupon_id: couponId,
+          cart_item_ids: selectedItems.map((item) => item._id),
+        };
+        const response = await axiosUser.post('/bookings', body);
+        //=======================
+        // navigate(`/payment/${response.data.booking._id}`);
+        //=======================
+      } catch (error) {
+        console.error('Error booking items:', error);
+      }
     }
   };
 
   async function toCartItem(trip_id, item) {
     try {
-      const res = await axios.get(`http://localhost:3000/api/trips/${trip_id}`);
+      const res = await axiosVisitor.get(`/trips/${trip_id}`);
       const trip = res.data.trip;
       const departureDate = format(item.departure_date, 'EEE d MMM');
       const arrivalDate = format(
@@ -162,13 +179,13 @@ function UserCartPage() {
         id: trip._id,
         title: trip.name || 'N/A',
         imageSrc: trip.images[0] || 'N/A',
-        departure: trip.destination_from || 'N/A',
+        departure: trip.destination_from || null,
         destination: trip.destination_to || 'N/A',
         duration: trip.duration_days || 'N/A',
-        price: trip.price || 'N/A',
-        departureDate: departureDate || 'N/A',
-        arrivalDate: arrivalDate || 'N/A',
-        total: trip.price * item.travelers.length || 'N/A',
+        price: trip.price || 0,
+        departureDate: departureDate || null,
+        arrivalDate: arrivalDate || null,
+        total: trip.price * item.travelers.length || 0,
       };
     } catch (error) {
       if (error.response && error.response.status === 404) {
@@ -176,13 +193,13 @@ function UserCartPage() {
           id: trip_id,
           title: 'N/A',
           imageSrc: 'N/A',
-          departure: 'N/A',
+          departure: null,
           destination: 'N/A',
           duration: 'N/A',
-          price: 'N/A',
-          departureDate: 'N/A',
-          arrivalDate: 'N/A',
-          total: 'N/A',
+          price: 0,
+          departureDate: null,
+          arrivalDate: null,
+          total: 0,
         };
       } else {
         console.log(error);
@@ -199,17 +216,18 @@ function UserCartPage() {
         <div className=" mx-4 lg:mx-6  bg md:flex">
           <div>
             {cart.map((item) => (
-              <CartItem
-                key={item._id}
-                cartItemId={item._id}
-                {...item.trip}
-                voyagerCount={item.travelers?.length || 0}
-                isChecked={item.isChecked}
-                onDelete={handleDelete}
-                onCheckboxChange={handleCheckboxChange}
-                onEdit={() => navigate(`/cart/edit/${item._id}`)}
-                total={item.trip?.total || 0}
-              />
+              <Link to={`/cart/edit/${item._id}`} >
+                <CartItem
+                  key={item._id}
+                  cartItemId={item._id}
+                  {...item.trip}
+                  voyagerCount={item.travelers?.length || 0}
+                  isChecked={item.isChecked}
+                  onDelete={handleDelete}
+                  onCheckboxChange={handleCheckboxChange}
+                  total={item.trip?.total || 0}
+                />
+              </Link>
             ))}
           </div>
           <div className="bg-white shadow-xl p-6 md:w-80 card rounded-2xl md:mx-2 my-4 h-fit">
