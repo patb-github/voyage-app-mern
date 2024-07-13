@@ -49,9 +49,12 @@ const App = () => {
                 element={<UserCartEditPage />}
               />
               <Route path="/payment/:bookingId" element={<UserPaymentPage />} />
-              <Route path="/booking" element={<UserBookingPage />} />
+              <Route path="/bookings" element={<UserBookingPage />} />
               <Route path="/password-change" element={<UserPasswordChange />} />
-              <Route path="/booking-edit" element={<UserEditBookingPage />} />
+              <Route
+                path="/booking-edit/:bookingId"
+                element={<UserEditBookingPage />}
+              />
               <Route path="/checkout/:id" element={<UserCheckout />} />
               <Route
                 path="/payment-success"

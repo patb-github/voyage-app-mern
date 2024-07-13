@@ -33,7 +33,6 @@ function UserCartPage() {
     const fetchCartData = async () => {
       try {
         const res = await axiosUser.get('/cart');
-
         const newCart = await Promise.all(
           res.data.cart.map(async (item) => ({
             ...item,
@@ -42,20 +41,21 @@ function UserCartPage() {
           }))
         );
         setCart(newCart);
+        setCartLength(newCart.length); // Update cart length on initial load
       } catch (error) {
         console.error('Error fetching cart:', error);
       }
     };
 
-    fetchCartData(); // เรียกใช้ฟังก์ชัน fetchCartData
-  }, []); // ทำงานเมื่อ component เริ่มต้น
+    fetchCartData(); // Call fetchCartData on component mount
+  }, []); // Empty dependency array to run only on component mount
 
   useEffect(() => {
     const newTotalAmount = cart.reduce((sum, item) => {
       return item.isChecked ? sum + (item.trip?.total || 0) : sum;
     }, 0);
     setTotalAmount(newTotalAmount);
-  }, [cart]); // ทำงานเมื่อ cart เปลี่ยนแปลง
+  }, [cart]); // Update totalAmount when cart changes
 
   const handleCheckboxChange = useCallback((itemId) => {
     setCart((prevCart) =>
@@ -68,13 +68,10 @@ function UserCartPage() {
   const handleDelete = useCallback(async (itemId) => {
     try {
       const res = await axiosUser.delete(`/cart/${itemId}`);
-
       if (res.status === 200) {
         setCart((prevCart) => prevCart.filter((item) => item._id !== itemId));
         setCartLength((prevCartLength) => prevCartLength - 1);
         toast.success('Item removed from cart successfully');
-        setCartLength(cartLength);
-        const { cartLength } = await fetchCart();
       } else {
         throw new Error('Failed to delete item from cart');
       }
@@ -83,6 +80,7 @@ function UserCartPage() {
       toast.error('An error occurred while removing the item');
     }
   }, []);
+
   const handleApplyPromo = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -139,25 +137,21 @@ function UserCartPage() {
       };
 
       const response = await axiosUser.post('/bookings', body);
-
       if (response.status === 200 || response.status === 201) {
         toast.success('Booking successful!');
+        const bookingId = response.data.bookingId;
 
-        const bookingId = response.data.bookingId; // Assuming the API returns a bookingId
+        // Fetch the updated cart and cart length
+        const { cart: newCart, cartLength: newCartLength } = await fetchCart();
+        setCart(newCart);
+        setCartLength(newCartLength); // Update cart length after payment
 
-        // Navigate to the payment page with the bookingId
         navigate(`/payment/${bookingId}`, {
           state: {
             bookingDetails: response.data,
             orderSummary: body,
           },
         });
-
-        // Optionally, you might want to clear the cart or update its state here
-        // For example:
-        // await fetchCart(); // Refetch the cart to update its state
-        // or
-        // setCart(prevCart => prevCart.filter(item => !item.isChecked));
       } else {
         throw new Error('Booking failed');
       }
@@ -166,17 +160,6 @@ function UserCartPage() {
       toast.error(
         'An error occurred while processing your booking. Please try again.'
       );
-    }
-  };
-
-  const fetchCart = async () => {
-    try {
-      const res = await axiosUser.get('/cart');
-      const { cart, cartLength } = res.data; // Assuming your backend sends cartLength
-      return { cart, cartLength };
-    } catch (error) {
-      console.error('Error fetching cart:', error);
-      return { cart: [], cartLength: 0 }; // Return empty cart if error
     }
   };
 
