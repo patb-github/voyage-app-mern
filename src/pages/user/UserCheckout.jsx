@@ -213,33 +213,36 @@ function UserCheckout() {
       return;
     }
 
-    const userId = localStorage.getItem('userId');
-
-    const bookingRequest = {
-      user_id: userId,
-      booked_trips: [
-        {
-          trip_id: trip._id,
-          travelers: Object.values(voyagers).map((traveler) => ({
-            firstName: traveler.firstName,
-            lastName: traveler.lastName,
-          })),
-        },
-      ],
-      coupon: promoCode
-        ? {
-            code: promoCode,
-            type: 'discount',
-            discount: discount,
-          }
-        : null,
+    const bookingData = {
+      booked_trips: Object.values(voyagers).map((traveler, index) => ({
+        trip_id: trip._id,
+        departure_date: departureDate.toISOString(),
+        travelers: [traveler],
+      })),
+      coupon_id: isPromoApplied ? promoCode : null,
+      cart_item_ids: [],
+      payment_method: null, // หรือข้อมูล payment method จริงถ้ามี
     };
 
-    console.log('Booking Request:', bookingRequest);
+    try {
+      const response = await axiosUser.post('/bookings', bookingData);
 
-    toast.success('Payment successful!');
+      if (response.status === 200 || response.status === 201) {
+        toast.success('Booking successful!');
+
+        const bookingId = response.data.bookingId;
+        navigate(`/payment/${bookingId}`, {
+          state: { bookingDetails: response.data, orderSummary: bookingData },
+        });
+      } else {
+        // Handle other response statuses if needed (e.g., 400 Bad Request)
+        throw new Error('Booking failed');
+      }
+    } catch (error) {
+      console.error('Error during booking:', error);
+      toast.error('Booking failed. Please try again.');
+    }
   };
-
   const handleRemovePromo = () => {
     setDiscount(0);
     setPromoCode('');
