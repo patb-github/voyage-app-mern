@@ -19,6 +19,8 @@ import { useForm } from 'react-hook-form';
 import { useAtom } from 'jotai';
 import { cartLengthAtom } from '../../atoms/cartAtom';
 import { fetchCart } from '../../utils/cartUtils';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function UserCheckout() {
   const [, setCartLength] = useAtom(cartLengthAtom);
@@ -43,11 +45,7 @@ function UserCheckout() {
     handleSubmit: handleSubmitPromo,
     formState: { errors: promoErrors },
   } = useForm();
-
-  const [notification, setNotification] = useState({
-    type: null,
-    message: '',
-  });
+  const [isPromoApplied, setIsPromoApplied] = useState(false);
 
   useEffect(() => {
     setIsLogin(user !== null);
@@ -178,19 +176,10 @@ function UserCheckout() {
       const response = await axiosUser.post('/cart', cartItem);
       const { cartLength } = await fetchCart();
       setCartLength(cartLength);
-      setNotification({
-        type: 'success',
-        message: 'Trip successfully added to cart',
-      });
-      setTimeout(() => {
-        setNotification({ type: null, message: '' }); // Clear notification after timeout
-      }, 3000); // 3 seconds
+      toast.success('Trip successfully added to cart');
     } catch (error) {
       console.error('Error adding to cart:', error);
-      setNotification({ type: 'error', message: 'Error adding trip to cart' });
-      setTimeout(() => {
-        setNotification({ type: null, message: '' }); // Clear notification after timeout
-      }, 3000); // 3 seconds
+      toast.error('Error adding trip to cart');
     }
   };
 
@@ -199,10 +188,7 @@ function UserCheckout() {
       const couponData = await getCouponByCode(promoCode);
 
       if (trip.price < couponData.coupon.minimumPurchaseAmount) {
-        setNotification({
-          type: 'error',
-          message: 'Minimum purchase amount not reached',
-        });
+        toast.error('Minimum purchase amount not reached');
         return;
       }
 
@@ -213,12 +199,10 @@ function UserCheckout() {
       );
 
       setDiscount(calculatedDiscount);
-      setNotification({
-        type: 'success',
-        message: 'Promo code applied successfully!',
-      });
+      toast.success('Promo code applied successfully!');
+      setIsPromoApplied(true);
     } catch (error) {
-      setNotification({ type: 'error', message: 'Invalid promo code' });
+      toast.error('Invalid promo code');
       console.error(error);
     }
   };
@@ -253,10 +237,14 @@ function UserCheckout() {
 
     console.log('Booking Request:', bookingRequest);
 
-    setNotification({ type: 'success', message: 'Payment successful!' }); // Assuming payment is successful
-    setTimeout(() => {
-      setNotification({ type: null, message: '' }); // Clear notification after timeout
-    }, 3000); // 3 seconds
+    toast.success('Payment successful!');
+  };
+
+  const handleRemovePromo = () => {
+    setDiscount(0);
+    setPromoCode('');
+    setIsPromoApplied(false);
+    toast.info('Promo code has been removed');
   };
   return (
     <div className="min-h-screen bg-[url('/bg-desktop.webp')] py-8 px-4 md:py-16 md:px-48">
@@ -374,7 +362,11 @@ function UserCheckout() {
               </button>
             </div>
             <div className="bg-white shadow-xl p-6 md:w-full card rounded-2xl  my-4 h-fit">
-              <form onSubmit={handleSubmitPromo(handleApplyPromo)}>
+              <form
+                onSubmit={handleSubmitPromo(
+                  isPromoApplied ? handleRemovePromo : handleApplyPromo
+                )}
+              >
                 <h3 className="text-lg font-semibold mb-2">Promotions</h3>
                 <div className="mb-4">
                   <label
@@ -387,17 +379,21 @@ function UserCheckout() {
                     <input
                       type="text"
                       id="promo-code"
-                      value={promoCode}
+                      {...registerPromo('promoCode', { required: true })} // <-- ผูกค่า promoCode กับ React Hook Form
+                      value={promoCode} // <-- เพิ่ม value เพื่อผูกกับ state
+                      onChange={(e) => setPromoCode(e.target.value)} // <-- ผูก onChange กับ state
                       placeholder="promo code"
-                      onChange={(e) => setPromoCode(e.target.value)}
-                      className="flex-grow  focus:outline-none focus:ring focus:ring-blue-500 rounded-l border border-gray-300 py-2 px-4"
+                      className="flex-grow focus:outline-none focus:ring focus:ring-blue-500 rounded-l border border-gray-300 py-2 px-4"
                     />
                     <button
-                      onClick={handleApplyPromo}
                       type="submit"
-                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-r focus:outline-none focus:shadow-outline"
+                      className={`bg-${
+                        isPromoApplied ? 'red' : 'blue'
+                      }-500 hover:bg-${
+                        isPromoApplied ? 'red' : 'blue'
+                      }-700 text-white font-bold py-2 px-4 rounded-r focus:outline-none focus:shadow-outline`}
                     >
-                      Apply
+                      {isPromoApplied ? 'Remove' : 'Apply'}
                     </button>
                   </div>
                   {promoErrors.promoCode && (
@@ -461,31 +457,7 @@ function UserCheckout() {
           </div>
         </div>
       </section>
-
-      {/* Notification Banner */}
-      {notification.type && (
-        <div
-          className={`fixed bottom-20 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-xl
-      bg-gradient-to-r from-${
-        notification.type === 'success' ? 'blue-400' : 'red-400'
-      } to-${
-            notification.type === 'success' ? 'blue-600' : 'red-600'
-          } text-white font-semibold transition-all duration-300 ease-in-out`}
-        >
-          <div className="flex items-center space-x-3">
-            <FontAwesomeIcon
-              icon={
-                notification.type === 'success'
-                  ? faCheckCircle
-                  : faExclamationCircle
-              }
-              className="h-6 w-6"
-            />
-            <span>{notification.message}</span>
-          </div>
-        </div>
-      )}
-
+      <ToastContainer position="bottom-center" />
       {/* Passenger Modal */}
       <dialog
         id="passenger_modal"
