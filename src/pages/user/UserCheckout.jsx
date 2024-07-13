@@ -1,16 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { getCouponByCode, calculateDiscount } from '../../utils/couponUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faSave,
-  faTrash,
-  faTimes,
-  faCalendar,
-  faShoppingCart,
-  faCreditCard,
-  faCheckCircle,
-  faExclamationCircle,
-} from '@fortawesome/free-solid-svg-icons';
+
 import { format, addDays } from 'date-fns';
 import UserContext from '../../context/UserContext';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -21,7 +12,14 @@ import { cartLengthAtom } from '../../atoms/cartAtom';
 import { fetchCart } from '../../utils/cartUtils';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import {
+  faSave,
+  faTrash,
+  faTimes,
+  faCalendar,
+  faShoppingCart,
+  faCreditCard,
+} from '@fortawesome/free-solid-svg-icons';
 function UserCheckout() {
   const [, setCartLength] = useAtom(cartLengthAtom);
   const { user } = useContext(UserContext);
@@ -39,7 +37,7 @@ function UserCheckout() {
   const [promoCode, setPromoCode] = useState('');
   const navigate = useNavigate();
   const { id } = useParams();
-
+  const [couponId, setCouponId] = useState(null);
   const {
     register: registerPromo,
     handleSubmit: handleSubmitPromo,
@@ -199,6 +197,7 @@ function UserCheckout() {
       );
 
       setDiscount(calculatedDiscount);
+      setCouponId(couponData.coupon._id); // Store the coupon ID
       toast.success('Promo code applied successfully!');
       setIsPromoApplied(true);
     } catch (error) {
@@ -214,14 +213,14 @@ function UserCheckout() {
     }
 
     const bookingData = {
-      booked_trips: Object.values(voyagers).map((traveler, index) => ({
+      booked_trips: Object.values(voyagers).map((traveler) => ({
         trip_id: trip._id,
         departure_date: departureDate.toISOString(),
         travelers: [traveler],
       })),
-      coupon_id: isPromoApplied ? promoCode : null,
+      coupon_id: isPromoApplied ? couponId : null,
       cart_item_ids: [],
-      payment_method: null, // หรือข้อมูล payment method จริงถ้ามี
+      payment_method: null, // or actual payment method data if available
     };
 
     try {
@@ -235,7 +234,6 @@ function UserCheckout() {
           state: { bookingDetails: response.data, orderSummary: bookingData },
         });
       } else {
-        // Handle other response statuses if needed (e.g., 400 Bad Request)
         throw new Error('Booking failed');
       }
     } catch (error) {

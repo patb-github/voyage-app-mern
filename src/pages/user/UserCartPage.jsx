@@ -19,11 +19,9 @@ function UserCartPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [couponId, setCouponId] = useState(null);
-  const [showPromoAlert, setShowPromoAlert] = useState(false);
-  const [promoAlertMessage, setPromoAlertMessage] = useState('');
-  const [showMedal, setShowMedal] = useState(false);
-  const [cartLength, setCartLength] = useAtom(cartLengthAtom);
 
+  const [cartLength, setCartLength] = useAtom(cartLengthAtom);
+  const [isPromoApplied, setIsPromoApplied] = useState(false);
   const {
     register: registerPromo,
     handleSubmit: handleSubmitPromo,
@@ -121,7 +119,7 @@ function UserCartPage() {
     toast.success('Promo code removed');
   };
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     const selectedItems = cart.filter((item) => item.isChecked);
     if (selectedItems.length === 0) {
       const modal = document.getElementById('none_item_selection_modal');
@@ -129,24 +127,6 @@ function UserCartPage() {
         modal.showModal();
       }
     } else {
-      // const orderId = generateOrderId(); // Implement this function
-      // const orderStatus = 'Pending';
-      // const order = {
-      //   orderId,
-      //   OrderOriginalPrice: totalAmount,
-      //   OrderDiscount: discount,
-      //   OrderTotal: totalAmount - discount,
-      //   OrderItems: selectedItems,
-      //   orderStatus,
-      //   OrderDate: new Date(),
-      // };
-      // Implement setUser or use appropriate state management
-      // const modal3 = document.getElementById('wait_for_payment_modal');
-      // modal3.showModal();
-      // setTimeout(function () {
-      //   navigate('/Payment', { state: { order } });
-      // }, 2000);
-
       try {
         const modal3 = document.getElementById('wait_for_payment_modal');
         modal3.showModal();
@@ -155,7 +135,7 @@ function UserCartPage() {
           booked_trips: selectedItems.map((item) => ({
             trip_id: item.trip_id,
             travelers: item.travelers,
-            departure_date: item.departure_date
+            departure_date: item.departure_date,
           })),
           coupon_id: couponId,
           cart_item_ids: selectedItems.map((item) => item._id),
@@ -167,6 +147,17 @@ function UserCartPage() {
       } catch (error) {
         console.error('Error booking items:', error);
       }
+    }
+  };
+
+  const fetchCart = async () => {
+    try {
+      const res = await axiosUser.get('/cart');
+      const { cart, cartLength } = res.data; // Assuming your backend sends cartLength
+      return { cart, cartLength };
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+      return { cart: [], cartLength: 0 }; // Return empty cart if error
     }
   };
 
@@ -220,7 +211,7 @@ function UserCartPage() {
         <div className=" mx-4 lg:mx-6  bg md:flex">
           <div>
             {cart.map((item) => (
-              <Link to={`/cart/edit/${item._id}`} >
+              <Link to={`/cart/edit/${item._id}`}>
                 <CartItem
                   key={item._id}
                   cartItemId={item._id}
