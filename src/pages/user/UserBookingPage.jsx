@@ -235,7 +235,7 @@ function UserBookingPage() {
                         className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-300 ease-in-out"
                         onClick={() => navigate(`/payment/${booking._id}`)}
                       >
-                        Payment
+                        Pay Now
                       </button>
                     )}
                 </div>
