@@ -259,11 +259,13 @@ function UserCartEditPage() {
   const handlePayment = async () => {
 
     const bookingData = {
-      booked_trips: Object.values(voyagers).map((traveler) => ({
-        trip_id: trip._id,
-        departure_date: departureDate.toISOString(),
-        travelers: [traveler],
-      })),
+      booked_trips: [
+        {
+          trip_id: trip._id,
+          departure_date: departureDate.toISOString(),
+          travelers: Object.values(voyagers).map(traveler => traveler),
+        }
+      ],
       coupon_id: isPromoApplied ? couponId : null,
       cart_item_ids: [cartItemId],
       payment_method: null, // or actual payment method data if available
