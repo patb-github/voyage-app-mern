@@ -9,11 +9,40 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import axiosUser from '../../utils/axiosUser';
 
+const ConfirmDialog = ({ isOpen, onConfirm, onCancel }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-xl">
+        <h3 className="text-lg font-semibold mb-4">Confirm Changes</h3>
+        <p className="mb-4">Are you sure you want to save these changes?</p>
+        <div className="flex justify-end space-x-2">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const OfferManage = () => {
   const [offers, setOffers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [formData, setFormData] = useState({
     imageSrc: '',
     altText: '',
@@ -58,6 +87,7 @@ const OfferManage = () => {
   };
 
   const handleSubmit = async () => {
+    setIsUploading(true);
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('altText', formData.altText);
@@ -74,40 +104,29 @@ const OfferManage = () => {
         }
       );
 
-      // Instead of updating the state directly, fetch all offers again
       await fetchOffers();
 
       setIsModalOpen(false);
       setError(null);
     } catch (error) {
       console.error('Error updating offer:', error);
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error(error.response.data);
-        console.error(error.response.status);
-        console.error(error.response.headers);
-        setError(
-          `Failed to update offer. Server responded with: ${
-            error.response.data.message || error.response.statusText
-          }`
-        );
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error(error.request);
-        setError('Failed to update offer. No response received from server.');
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error('Error', error.message);
-        setError(`Failed to update offer. Error: ${error.message}`);
-      }
+      setError('Failed to update offer. Please try again.');
+    } finally {
+      setIsUploading(false);
     }
   };
 
   const handleSave = () => {
-    if (window.confirm('Are you sure you want to save these changes?')) {
-      handleSubmit();
-    }
+    setIsConfirmOpen(true);
+  };
+
+  const handleConfirm = () => {
+    setIsConfirmOpen(false);
+    handleSubmit();
+  };
+
+  const handleCancel = () => {
+    setIsConfirmOpen(false);
   };
 
   const OfferItem = ({ offer }) => (
@@ -179,13 +198,7 @@ const OfferManage = () => {
               <h3 className="text-lg leading-6 font-medium text-gray-900">
                 Edit Offer
               </h3>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSave();
-                }}
-                className="mt-2 text-left"
-              >
+              <form className="mt-2 text-left">
                 <div className="mb-4">
                   <label
                     className="block text-gray-700 text-sm font-bold mb-2"
@@ -240,10 +253,14 @@ const OfferManage = () => {
                 </div>
                 <div className="flex items-center justify-between mt-4">
                   <button
-                    type="submit"
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                    type="button"
+                    onClick={handleSave}
+                    className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${
+                      isUploading ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                    disabled={isUploading}
                   >
-                    Save Changes
+                    {isUploading ? 'Uploading...' : 'Save Changes'}
                   </button>
                   <button
                     type="button"
@@ -258,6 +275,12 @@ const OfferManage = () => {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={isConfirmOpen}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
   );
 };

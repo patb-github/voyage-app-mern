@@ -205,7 +205,10 @@ function OrderManage() {
       <dialog id="booking-modal" className="modal">
         <div className="modal-box w-11/12 max-w-4xl bg-white rounded-lg shadow-2xl">
           <button
-            onClick={() => document.getElementById('booking-modal').close()}
+            onClick={() => {
+              document.getElementById('booking-modal').close();
+              setShowCancelConfirm(false);
+            }}
             className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
           >
             ✕
@@ -302,49 +305,52 @@ function OrderManage() {
                   </p>
                 </div>
               )}
+
+              {/* ส่วนของการยืนยันการยกเลิก */}
+              {showCancelConfirm ? (
+                <div
+                  className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+                  role="alert"
+                >
+                  <strong className="font-bold">Confirm Cancellation</strong>
+                  <p className="block sm:inline">
+                    Are you sure you want to cancel this booking? This action
+                    cannot be undone.
+                  </p>
+                  <div className="mt-3">
+                    <button
+                      className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-2"
+                      onClick={() => handleCancelBooking(selectedBooking._id)}
+                    >
+                      Yes, Cancel Booking
+                    </button>
+                    <button
+                      className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                      onClick={() => setShowCancelConfirm(false)}
+                    >
+                      No, Keep Booking
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="modal-action mt-6">
+                  {selectedBooking.booking_status !== 'cancelled' && (
+                    <button
+                      className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300"
+                      onClick={() => setShowCancelConfirm(true)}
+                    >
+                      Cancel Order
+                    </button>
+                  )}
+                  <form method="dialog">
+                    <button className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition duration-300">
+                      Close
+                    </button>
+                  </form>
+                </div>
+              )}
             </div>
           )}
-          <div className="modal-action mt-6">
-            {selectedBooking &&
-              selectedBooking.booking_status !== 'cancelled' && (
-                <button
-                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300"
-                  onClick={() => setShowCancelConfirm(true)}
-                >
-                  Cancel Order
-                </button>
-              )}
-            <form method="dialog">
-              <button className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition duration-300">
-                Close
-              </button>
-            </form>
-          </div>
-        </div>
-      </dialog>
-
-      {/* Cancel Confirmation Modal */}
-      <dialog
-        id="cancel-confirm-modal"
-        className={`modal ${showCancelConfirm ? 'modal-open' : ''}`}
-      >
-        <div className="modal-box">
-          <h3 className="font-bold text-lg">Confirm Cancellation</h3>
-          <p className="py-4">
-            Are you sure you want to cancel this booking? This action cannot be
-            undone.
-          </p>
-          <div className="modal-action">
-            <button
-              className="btn btn-error"
-              onClick={() => handleCancelBooking(selectedBooking._id)}
-            >
-              Yes, Cancel Booking
-            </button>
-            <button className="btn" onClick={() => setShowCancelConfirm(false)}>
-              No, Keep Booking
-            </button>
-          </div>
         </div>
       </dialog>
     </div>

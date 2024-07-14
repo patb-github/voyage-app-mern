@@ -6,6 +6,7 @@ import { faSearch, faTicket } from '@fortawesome/free-solid-svg-icons';
 import { fetchCoupons } from '../utils/couponUtils';
 import DestinationCard from '../components/DestinationCard';
 import axiosVisitor from '../utils/axiosVisitor';
+import { Link } from 'react-router-dom';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -252,13 +253,15 @@ const LandingPage = () => {
         </section>
 
         <div className="flex justify-center mt-12">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="btn btn-wide rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold text-xl px-8 shadow-lg"
-          >
-            Explore More
-          </motion.button>
+          <Link to="/explore-more">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="btn btn-wide rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold text-xl px-8 shadow-lg"
+            >
+              Explore More
+            </motion.button>
+          </Link>
         </div>
       </main>
     </div>
