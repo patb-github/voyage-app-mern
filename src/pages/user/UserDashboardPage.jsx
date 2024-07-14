@@ -6,13 +6,10 @@ import React, {
   useMemo,
   useCallback,
 } from 'react';
+import axiosUser from '../../utils/axiosUser'; //
 import { useForm } from 'react-hook-form';
 import UserContext from '../../context/UserContext';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 
-// Constants
-const API_BASE_URL = 'http://localhost:3000/api';
 const DEFAULT_AVATAR = '/user/profile.jpg';
 
 // Helper function to get current date in YYYY-MM-DD format
@@ -29,7 +26,6 @@ const UserDashboardPage = () => {
   const [passwordError, setPasswordError] = useState('');
   const [updatedData, setUpdatedData] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
   const {
@@ -97,16 +93,7 @@ const UserDashboardPage = () => {
       });
 
       if (loginResult.success) {
-        const token = localStorage.getItem('authToken');
-        if (!token) throw new Error('No authentication token found');
-
-        const res = await axios.put(
-          `${API_BASE_URL}/profile/${user.id}`,
-          updatedData,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const res = await axiosUser.put(`/profile/${user.id}`, updatedData);
 
         console.log('Response:', res);
 

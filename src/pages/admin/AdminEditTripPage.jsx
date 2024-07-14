@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosUser from '../../utils/axiosUser'; // ปรับ path ตามโครงสร้างโปรเจคของคุณ
 import TripForm from '../../components/admin/TripForm';
 
 function AdminEditTripPage() {
@@ -14,9 +14,7 @@ function AdminEditTripPage() {
   useEffect(() => {
     const fetchTripData = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:3000/api/trips/${id}`
-        );
+        const response = await axiosUser.get(`/trips/${id}`);
         setTripData(response.data.trip);
       } catch (error) {
         console.error('Error fetching trip data:', error);
@@ -56,13 +54,9 @@ function AdminEditTripPage() {
         }
       });
 
-      const response = await axios.patch(
-        `http://localhost:3000/api/trips/${id}`,
-        formData,
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        }
-      );
+      const response = await axiosUser.patch(`/trips/${id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
 
       console.log('Trip updated:', response.data);
       setSuccessMessage('Trip updated successfully!');

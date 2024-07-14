@@ -1,12 +1,20 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaBox, FaTicketAlt, FaShoppingCart, FaChartBar, FaSignOutAlt, FaBars } from 'react-icons/fa';
+import {
+  FaBox,
+  FaTicketAlt,
+  FaShoppingCart,
+  FaChartBar,
+  FaSignOutAlt,
+  FaBars,
+  FaTags,
+} from 'react-icons/fa';
 import UserContext from '../../context/UserContext';
 import DashboardOverview from '../../components/admin/DashboardOverview';
 import PackageTripManage from '../../components/admin/PackageTripManage';
 import CouponManage from '../../components/admin/CouponManage';
-import OrderManage from '../../components/admin/OrderManage';
-
+import AdminOrdersPage from './AdminOrdersPage';
+import AdminOfferPage from './AdminOfferPage';
 function AdminDashboard() {
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -20,11 +28,42 @@ function AdminDashboard() {
   };
 
   const menuItems = [
-    { id: 'dashboard', name: 'Dashboard', icon: <FaChartBar />, onClick: () => setActiveMenu('dashboard') },
-    { id: 'packageTrips', name: 'Package Trips', icon: <FaBox />, onClick: () => setActiveMenu('packageTrips') },
-    { id: 'coupons', name: 'Coupons', icon: <FaTicketAlt />, onClick: () => setActiveMenu('coupons') },
-    { id: 'orders', name: 'Orders', icon: <FaShoppingCart />, onClick: () => setActiveMenu('orders') },
-    { id: 'logout', name: 'Logout', icon: <FaSignOutAlt />, onClick: handleLogout },
+    {
+      id: 'dashboard',
+      name: 'Dashboard',
+      icon: <FaChartBar />,
+      onClick: () => setActiveMenu('dashboard'),
+    },
+    {
+      id: 'offers',
+      name: 'Offers',
+      icon: <FaTags />,
+      onClick: () => setActiveMenu('offers'),
+    },
+    {
+      id: 'packageTrips',
+      name: 'Package Trips',
+      icon: <FaBox />,
+      onClick: () => setActiveMenu('packageTrips'),
+    },
+    {
+      id: 'coupons',
+      name: 'Coupons',
+      icon: <FaTicketAlt />,
+      onClick: () => setActiveMenu('coupons'),
+    },
+    {
+      id: 'orders',
+      name: 'Orders',
+      icon: <FaShoppingCart />,
+      onClick: () => setActiveMenu('orders'),
+    },
+    {
+      id: 'logout',
+      name: 'Logout',
+      icon: <FaSignOutAlt />,
+      onClick: handleLogout,
+    },
   ];
 
   const renderContent = () => {
@@ -34,7 +73,9 @@ function AdminDashboard() {
       case 'coupons':
         return <CouponManage />;
       case 'orders':
-        return <OrderManage />;
+        return <AdminOrdersPage />;
+      case 'offers':
+        return <AdminOfferPage />;
       default:
         return <DashboardOverview />;
     }
@@ -55,7 +96,11 @@ function AdminDashboard() {
       </div>
 
       {/* Sidebar */}
-      <div className={`${isSidebarOpen ? 'block' : 'hidden'} md:block md:w-64 bg-white shadow-md h-full`}>
+      <div
+        className={`${
+          isSidebarOpen ? 'block' : 'hidden'
+        } md:block md:w-64 bg-white shadow-md h-full`}
+      >
         <div className="p-4 hidden md:block">
           <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
         </div>
@@ -64,7 +109,9 @@ function AdminDashboard() {
             <button
               key={item.id}
               className={`flex items-center w-full px-4 py-2 text-left ${
-                activeMenu === item.id ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100'
+                activeMenu === item.id
+                  ? 'bg-primary text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
               }`}
               onClick={() => {
                 item.onClick();
@@ -81,9 +128,7 @@ function AdminDashboard() {
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-4 md:p-8">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">
-            {menuItems.find(item => item.id === activeMenu)?.name}
-          </h2>
+          <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6"></h2>
           {renderContent()}
         </div>
       </div>

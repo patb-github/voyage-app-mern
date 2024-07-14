@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import axios from 'axios';
+import axiosUser from '../../utils/axiosUser';
 import { useNavigate } from 'react-router-dom';
 
 function AdminCreateCouponPage() {
@@ -20,11 +20,12 @@ function AdminCreateCouponPage() {
     },
   });
 
-  const type = useWatch({ control, name: 'type' }); // Watch for type changes
+  const type = useWatch({ control, name: 'type' });
 
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const navigate = useNavigate();
 
   const onSubmit = async (data) => {
     setIsLoading(true);
@@ -35,14 +36,14 @@ function AdminCreateCouponPage() {
         minimumPurchaseAmount: parseFloat(data.minimumPurchaseAmount),
       };
 
-      const response = await axios.post(
-        'http://localhost:3000/api/coupons/',
-        coupon
-      );
+      const response = await axiosUser.post('/coupons', coupon);
       setSuccessMessage('Coupon created successfully!');
     } catch (error) {
       console.error('Error creating coupon:', error);
-      setErrorMessage('Error creating coupon. Please try again.');
+      setErrorMessage(
+        error.response?.data?.message ||
+          'Error creating coupon. Please try again.'
+      );
     } finally {
       setIsLoading(false);
     }

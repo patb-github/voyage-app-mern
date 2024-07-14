@@ -5,45 +5,20 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faTicket } from '@fortawesome/free-solid-svg-icons';
 import { fetchCoupons } from '../utils/couponUtils';
 import DestinationCard from '../components/DestinationCard';
-
 import axiosVisitor from '../utils/axiosVisitor';
-
-const recommended = [
-  {
-    id: 1,
-    imageSrc: '/destination/discount.jpg',
-    title: 'Special Discounts',
-    type: 'code',
-  },
-  {
-    id: 2,
-    imageSrc: '/destination/fuji.jpg',
-    title: 'Japan',
-    type: 'search',
-  },
-  {
-    id: 3,
-    imageSrc: '/destination/thai.jpg',
-    title: 'Thailand',
-    type: 'search',
-  },
-  {
-    id: 4,
-    imageSrc: '/destination/europe.jpg',
-    title: 'European Adventure',
-    type: 'search',
-  },
-];
+import { Link } from 'react-router-dom';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [recommendedItems, setRecommendedItems] = useState([]);
+  const [recommended, setRecommended] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoadingCoupons, setIsLoadingCoupons] = useState(true);
   const [coupons, setCoupons] = useState([]);
   const [imageLoaded, setImageLoaded] = useState(false);
+
   const handleOfferClick = (offer) => {
     if (offer.type === 'search') {
       navigate(`/search-results?name=${encodeURIComponent(offer.title)}`);
@@ -78,38 +53,61 @@ const LandingPage = () => {
   useEffect(() => {
     setImageLoaded(true);
   }, []);
+
   useEffect(() => {
     const fetchRecommendedItems = async () => {
-      setIsLoading(true);
+      setIsLoading(true); // เริ่มการโหลด
       try {
-        const response = await axiosVisitor.get('/trips');
-        const allTrips = response.data.trips || [];
-        const shuffledTrips = allTrips.sort(() => 0.5 - Math.random());
-        const selectedTrips = shuffledTrips.slice(0, 8);
-        setRecommendedItems(selectedTrips);
+        // ดึงข้อมูล trips และ recommended พร้อมกัน
+        const [tripsResponse, recommendedResponse] = await Promise.all([
+          axiosVisitor.get('/trips'),
+          axiosVisitor.get('/recommended'),
+        ]);
+
+        // จัดการข้อมูล trips
+        const allTrips = tripsResponse.data.trips || []; // ดึงข้อมูล trips หรือให้เป็น array ว่างถ้าไม่มี
+        const shuffledTrips = allTrips.sort(() => 0.5 - Math.random()); // สุ่มลำดับ trips
+        const selectedTrips = shuffledTrips.slice(0, 8); // เลือก 8 trips แรก
+        setRecommendedItems(selectedTrips); // อัปเดต state recommendedItems
+
+        const apiRecommended = recommendedResponse.data.map((item) => ({
+          ...item,
+          type: 'search',
+          id: item._id,
+        }));
+
+        setRecommended([
+          {
+            id: 1,
+            imageSrc: '/destination/discount.jpg',
+            title: 'Special Discounts',
+            type: 'code',
+          },
+          ...apiRecommended,
+        ]);
       } catch (error) {
-        console.error('Error fetching recommended items:', error);
+        console.error('Error fetching data:', error); // แสดง error ใน console
       } finally {
-        setIsLoading(false);
+        setIsLoading(false); // หยุดการโหลด
       }
     };
 
     const fetchCouponsData = async () => {
-      setIsLoadingCoupons(true);
+      setIsLoadingCoupons(true); // เริ่มการโหลด coupons
       try {
-        const response = await fetchCoupons();
-        setCoupons(response.coupons);
+        const response = await fetchCoupons(); // ดึงข้อมูล coupons
+        setCoupons(response.coupons); // อัปเดต state coupons
       } catch (error) {
-        console.error('Error fetching coupons:', error);
+        console.error('Error fetching coupons:', error); // แสดง error ใน console
       } finally {
-        setIsLoadingCoupons(false);
+        setIsLoadingCoupons(false); // หยุดการโหลด coupons
       }
     };
 
+    // เรียกใช้ฟังก์ชันทั้งสองเมื่อคอมโพเนนต์ mount
     fetchRecommendedItems();
     fetchCouponsData();
-  }, []);
-
+  }, []); // dependency array ว่าง หมายถึงรันครั้งเดียวเมื่อคอมโพเนนต์ mount
   const handleSearch = (e) => {
     e.preventDefault();
     navigate(`/search-results?name=${encodeURIComponent(searchTerm)}`);
@@ -125,7 +123,6 @@ const LandingPage = () => {
           backgroundImage: `url('https://res.cloudinary.com/dfti5yyyn/image/upload/v1720750124/santorini_nnqkww.webp')`,
         }}
       >
-        {' '}
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl font-bold mb-4">
             Your World of Adventures Awaits
@@ -256,13 +253,15 @@ const LandingPage = () => {
         </section>
 
         <div className="flex justify-center mt-12">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="btn btn-wide rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold text-xl px-8 shadow-lg"
-          >
-            Explore More
-          </motion.button>
+          <Link to="/explore-more">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="btn btn-wide rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold text-xl px-8 shadow-lg"
+            >
+              Explore More
+            </motion.button>
+          </Link>
         </div>
       </main>
     </div>

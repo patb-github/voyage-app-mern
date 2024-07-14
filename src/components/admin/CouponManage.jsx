@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
-import axios from 'axios';
+import axiosUser from '../../utils/axiosUser';
 
 const CouponManage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,12 +16,8 @@ const CouponManage = () => {
     const fetchCoupons = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('http://localhost:3000/api/coupons/');
-        if (!response.ok) {
-          throw new Error('Failed to fetch coupons');
-        }
-        const data = await response.json();
-        const couponsData = data.coupons.map((coupon) => ({
+        const response = await axiosUser.get('/coupons');
+        const couponsData = response.data.coupons.map((coupon) => ({
           _id: coupon._id,
           name: coupon.name,
           type: coupon.type,
@@ -47,9 +43,7 @@ const CouponManage = () => {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(
-        `http://localhost:3000/api/coupons/${selectedCoupon._id}`
-      );
+      await axiosUser.delete(`/coupons/${selectedCoupon._id}`);
       setCoupons(coupons.filter((c) => c._id !== selectedCoupon._id));
       setIsModalOpen(false);
     } catch (error) {
