@@ -114,7 +114,7 @@ function UserBookingPage() {
 
   const calculateTotalAmount = (booking) => {
     const tripTotal = booking.booked_trips.reduce(
-      (total, trip) => total + trip.trip.price,
+      (total, trip) => total + (trip.trip.price * trip.travelers.length),
       0
     );
     const discountAmount = booking.coupon ? booking.coupon.discount_amount : 0;
@@ -206,7 +206,7 @@ function UserBookingPage() {
                       destination: trip.trip.destination_to,
                       duration: `${trip.trip.duration_days} days`,
                       voyagerCount: trip.travelers.length,
-                      amount: trip.trip.price,
+                      amount: trip.trip.price * trip.travelers.length,
                     }}
                     isExpanded={expandedTrips[`${booking._id}-${trip._id}`]}
                     onToggle={() => toggleTripExpansion(booking._id, trip._id)}
