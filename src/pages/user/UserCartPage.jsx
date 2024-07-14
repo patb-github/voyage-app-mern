@@ -213,9 +213,8 @@ function UserCartPage() {
         <div className=" mx-4 lg:mx-6  bg md:flex">
           <div>
             {cart.map((item) => (
-              <Link to={`/cart/edit/${item._id}`}>
+              <Link key={item._id} to={`/cart/edit/${item._id}`}>
                 <CartItem
-                  key={item._id}
                   cartItemId={item._id}
                   {...item.trip}
                   voyagerCount={item.travelers?.length || 0}
