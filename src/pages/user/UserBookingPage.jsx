@@ -206,7 +206,7 @@ function UserBookingPage() {
                       destination: trip.trip.destination_to,
                       duration: `${trip.trip.duration_days} days`,
                       voyagerCount: trip.travelers.length,
-                      amount: trip.trip.price,
+                      amount: trip.trip.price * trip.travelers.length,
                     }}
                     isExpanded={expandedTrips[`${booking._id}-${trip._id}`]}
                     onToggle={() => toggleTripExpansion(booking._id, trip._id)}
