@@ -242,14 +242,14 @@ function UserPaymentPage() {
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-lg">Total Amount:</span>
                   <span className="text-lg font-semibold">
-                    ฿{booking.total_amount.toLocaleString()}
+                    ${booking.total_amount}
                   </span>
                 </div>
                 {booking.coupon.discount_amount > 0 && (
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-lg">Discount:</span>
                     <span className="text-lg font-semibold text-red-500">
-                      -฿{booking.coupon.discount_amount.toLocaleString()}
+                      -${booking.coupon.discount_amount}
                     </span>
                   </div>
                 )}
@@ -258,14 +258,14 @@ function UserPaymentPage() {
                     Final Amount:
                   </span>
                   <span className="text-xl font-bold text-indigo-800">
-                    ฿{booking.final_amount.toLocaleString()}
+                    ${booking.final_amount}
                   </span>
                 </div>
                 <button
                   onClick={handleSubmit(handlePayment)}
                   className="btn bg-blue-500 text-white w-full text-lg font-semibold"
                 >
-                  Pay now ฿{booking.final_amount.toLocaleString()}
+                  Pay now ${booking.final_amount}
                 </button>
               </div>
             </div>

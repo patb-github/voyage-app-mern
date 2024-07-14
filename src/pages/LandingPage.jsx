@@ -56,19 +56,17 @@ const LandingPage = () => {
 
   useEffect(() => {
     const fetchRecommendedItems = async () => {
-      setIsLoading(true); // เริ่มการโหลด
+      setIsLoading(true);
       try {
-        // ดึงข้อมูล trips และ recommended พร้อมกัน
         const [tripsResponse, recommendedResponse] = await Promise.all([
           axiosVisitor.get('/trips'),
           axiosVisitor.get('/recommended'),
         ]);
 
-        // จัดการข้อมูล trips
-        const allTrips = tripsResponse.data.trips || []; // ดึงข้อมูล trips หรือให้เป็น array ว่างถ้าไม่มี
-        const shuffledTrips = allTrips.sort(() => 0.5 - Math.random()); // สุ่มลำดับ trips
-        const selectedTrips = shuffledTrips.slice(0, 8); // เลือก 8 trips แรก
-        setRecommendedItems(selectedTrips); // อัปเดต state recommendedItems
+        const allTrips = tripsResponse.data.trips || [];
+        const shuffledTrips = allTrips.sort(() => 0.5 - Math.random());
+        const selectedTrips = shuffledTrips.slice(0, 8);
+        setRecommendedItems(selectedTrips);
 
         const apiRecommended = recommendedResponse.data.map((item) => ({
           ...item,
@@ -86,28 +84,28 @@ const LandingPage = () => {
           ...apiRecommended,
         ]);
       } catch (error) {
-        console.error('Error fetching data:', error); // แสดง error ใน console
+        console.error('Error fetching data:', error);
       } finally {
-        setIsLoading(false); // หยุดการโหลด
+        setIsLoading(false);
       }
     };
 
     const fetchCouponsData = async () => {
-      setIsLoadingCoupons(true); // เริ่มการโหลด coupons
+      setIsLoadingCoupons(true);
       try {
-        const response = await fetchCoupons(); // ดึงข้อมูล coupons
-        setCoupons(response.coupons); // อัปเดต state coupons
+        const response = await fetchCoupons();
+        setCoupons(response.coupons);
       } catch (error) {
-        console.error('Error fetching coupons:', error); // แสดง error ใน console
+        console.error('Error fetching coupons:', error);
       } finally {
-        setIsLoadingCoupons(false); // หยุดการโหลด coupons
+        setIsLoadingCoupons(false);
       }
     };
 
-    // เรียกใช้ฟังก์ชันทั้งสองเมื่อคอมโพเนนต์ mount
     fetchRecommendedItems();
     fetchCouponsData();
-  }, []); // dependency array ว่าง หมายถึงรันครั้งเดียวเมื่อคอมโพเนนต์ mount
+  }, []);
+
   const handleSearch = (e) => {
     e.preventDefault();
     navigate(`/search-results?name=${encodeURIComponent(searchTerm)}`);
@@ -177,6 +175,7 @@ const LandingPage = () => {
           ) : (
             <p>No recommended items available.</p>
           )}
+
           <dialog id="my_modal_1" className="modal" open={isModalOpen}>
             <div className="modal-box bg-white rounded-3xl shadow-2xl overflow-hidden w-full ">
               <div className="text-center p-8 md:p-12">
@@ -204,6 +203,7 @@ const LandingPage = () => {
                         <h4 className="font-semibold text-xl text-indigo-700">
                           {coupon.name}
                         </h4>
+
                         <p className="text-gray-700 mt-2">
                           Code:{' '}
                           <span className="font-mono bg-white px-2 py-1 rounded-full text-indigo-600">

@@ -48,9 +48,9 @@ const ContentHead = ({ trip, setShowPolicy }) => {
           <p className="text-sm md:text-base">{trip.rating}</p>
         </div>
       </div>
-      <button 
+      <button
         className="flex mt-2 text-base md:text-lg text-indigo-600 items-center hover:underline"
-        onClick={() => setShowPolicy(true)}  
+        onClick={() => setShowPolicy(true)}
       >
         <span>Policy | Things to know before traveling</span>
         <span className="text-xl md:text-2xl ml-2">&#8227;</span>
@@ -60,6 +60,8 @@ const ContentHead = ({ trip, setShowPolicy }) => {
 };
 
 const ProductDetails = ({ trip }) => {
+  const formatPrice = (price) => price.toString().replace(/,/g, '');
+
   return (
     <div className="rounded-3xl shadow-lg px-6 py-6 mb-6 bg-white">
       <h2 className="text-xl md:text-2xl font-extrabold py-4 text-indigo-800">
@@ -78,7 +80,7 @@ const ProductDetails = ({ trip }) => {
               {expense.expense_name}
             </p>
             <p className="text-base md:text-lg font-normal">
-              ${expense.expense_amount.toLocaleString()}
+              ${formatPrice(expense.expense_amount)}
             </p>
           </li>
         ))}
@@ -138,6 +140,8 @@ const UserProductPage = () => {
     return;
   }
 
+  const formatPrice = (price) => price.toString().replace(/,/g, '');
+
   return (
     <div className="min-h-screen bg-[url('/bg-desktop.webp')] py-8 px-4 md:py-16 md:px-8 lg:px-16">
       <section className="bg-white rounded-3xl shadow-2xl overflow-hidden">
@@ -176,7 +180,7 @@ const UserProductPage = () => {
               <div className="flex flex-col">
                 <p className="text-sm font-bold">Total Payment</p>
                 <p className="text-2xl md:text-3xl font-bold">
-                  ${trip.price.toLocaleString()}
+                  ${formatPrice(trip.price)}
                 </p>
               </div>
               <div className="flex space-x-2">
