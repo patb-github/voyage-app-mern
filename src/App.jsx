@@ -1,94 +1,129 @@
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ErrorBoundary } from 'react-error-boundary';
 import Navbar from './components/Navbar';
-import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import SearchResultsPage from './pages/SearchResultsPage';
-// user section
-import UserProductPage from './pages/user/UserProductPage';
-import UserDashboardPage from './pages/user/UserDashboardPage';
-import UserProvider from './context/UserProvider';
-import NotFound from './pages/NotFoundPage';
-import UserCartPage from './pages/user/UserCartPage';
-import UserPaymentPage from './pages/user/UserPaymentPage';
-import UserBookingPage from './pages/user/UserBookingPage';
-import UserPasswordChange from './pages/user/UserPasswordChange';
-import UserEditBookingPage from './pages/user/UserEditBookingPage';
-import UserCheckout from './pages/user/UserCheckout';
-import UserPaymentSuccessPage from './pages/user/UserPaymentSuccessPage';
-import UserCartEditPage from './pages/user/UserCartEditPage';
-// admin section
-import AdminCreateTripPage from './pages/admin/AdminCreateTripPage';
-import AdminDashboardPage from './pages/admin/AdminDashboardPage';
-import AdminEditTripPage from './pages/admin/AdminEditTripPage';
-import AdminCreateCouponPage from './pages/admin/AdminCreateCouponPage';
-import AdminEditCouponPage from './pages/admin/AdminEditCouponPage';
 import Footer from './components/Footer';
+import UserProvider from './context/UserProvider';
 import {
   ProtectedAdminRoute,
   ProtectedUserRoute,
 } from './routes/ProtectedRoutes';
+
+// Lazy loaded components
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const SearchResultsPage = lazy(() => import('./pages/SearchResultsPage'));
+const UserProductPage = lazy(() => import('./pages/user/UserProductPage'));
+const UserDashboardPage = lazy(() => import('./pages/user/UserDashboardPage'));
+const NotFound = lazy(() => import('./pages/NotFoundPage'));
+const UserCartPage = lazy(() => import('./pages/user/UserCartPage'));
+const UserPaymentPage = lazy(() => import('./pages/user/UserPaymentPage'));
+const UserBookingPage = lazy(() => import('./pages/user/UserBookingPage'));
+const UserPasswordChange = lazy(() =>
+  import('./pages/user/UserPasswordChange')
+);
+const UserEditBookingPage = lazy(() =>
+  import('./pages/user/UserEditBookingPage')
+);
+const UserCheckout = lazy(() => import('./pages/user/UserCheckout'));
+const UserPaymentSuccessPage = lazy(() =>
+  import('./pages/user/UserPaymentSuccessPage')
+);
+const UserCartEditPage = lazy(() => import('./pages/user/UserCartEditPage'));
+const AdminCreateTripPage = lazy(() =>
+  import('./pages/admin/AdminCreateTripPage')
+);
+const AdminDashboardPage = lazy(() =>
+  import('./pages/admin/AdminDashboardPage')
+);
+const AdminEditTripPage = lazy(() => import('./pages/admin/AdminEditTripPage'));
+const AdminCreateCouponPage = lazy(() =>
+  import('./pages/admin/AdminCreateCouponPage')
+);
+const AdminEditCouponPage = lazy(() =>
+  import('./pages/admin/AdminEditCouponPage')
+);
+
+function ErrorFallback({ error }) {
+  return (
+    <div role="alert" className="error-boundary">
+      <h2>Oops! Something went wrong.</h2>
+      <p>Error: {error.message}</p>
+    </div>
+  );
+}
+
 const App = () => {
   return (
-    <>
-      <BrowserRouter>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <BrowserRouter basename={import.meta.env.PUBLIC_URL}>
         <UserProvider>
           <Navbar />
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/package/:id" element={<UserProductPage />} />
-            <Route path="/search-results" element={<SearchResultsPage />} />
-            {/* user route */}
-            <Route element={<ProtectedUserRoute />}>
-              <Route path="/member" element={<UserDashboardPage />} />
-              <Route path="/cart" element={<UserCartPage />} />
-              <Route
-                path="/cart/edit/:cartItemId"
-                element={<UserCartEditPage />}
-              />
-              <Route path="/payment/:bookingId" element={<UserPaymentPage />} />
-              <Route path="/bookings" element={<UserBookingPage />} />
-              <Route path="/password-change" element={<UserPasswordChange />} />
-              <Route
-                path="/booking-edit/:bookingId"
-                element={<UserEditBookingPage />}
-              />
-              <Route path="/checkout/:id" element={<UserCheckout />} />
-              <Route
-                path="/payment-success"
-                element={<UserPaymentSuccessPage />}
-              />
-            </Route>
+          <Suspense fallback={<div>Loading...</div>}>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/package/:id" element={<UserProductPage />} />
+              <Route path="/search-results" element={<SearchResultsPage />} />
 
-            {/* admin route */}
-            <Route element={<ProtectedAdminRoute />}>
-              <Route path="/admin" element={<AdminDashboardPage />} />
-              <Route
-                path="/admin/create-trip"
-                element={<AdminCreateTripPage />}
-              />
-              <Route
-                path="/admin/edit-trip/:id"
-                element={<AdminEditTripPage />}
-              />
-              <Route
-                path="/admin/create-coupon/"
-                element={<AdminCreateCouponPage />}
-              />
-              <Route
-                path="/admin/edit-coupon/:id"
-                element={<AdminEditCouponPage />}
-              />
-            </Route>
+              {/* Protected User Routes */}
+              <Route element={<ProtectedUserRoute />}>
+                <Route path="/member" element={<UserDashboardPage />} />
+                <Route path="/cart" element={<UserCartPage />} />
+                <Route
+                  path="/cart/edit/:cartItemId"
+                  element={<UserCartEditPage />}
+                />
+                <Route
+                  path="/payment/:bookingId"
+                  element={<UserPaymentPage />}
+                />
+                <Route path="/bookings" element={<UserBookingPage />} />
+                <Route
+                  path="/password-change"
+                  element={<UserPasswordChange />}
+                />
+                <Route
+                  path="/booking-edit/:bookingId"
+                  element={<UserEditBookingPage />}
+                />
+                <Route path="/checkout/:id" element={<UserCheckout />} />
+                <Route
+                  path="/payment-success"
+                  element={<UserPaymentSuccessPage />}
+                />
+              </Route>
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              {/* Protected Admin Routes */}
+              <Route element={<ProtectedAdminRoute />}>
+                <Route path="/admin" element={<AdminDashboardPage />} />
+                <Route
+                  path="/admin/create-trip"
+                  element={<AdminCreateTripPage />}
+                />
+                <Route
+                  path="/admin/edit-trip/:id"
+                  element={<AdminEditTripPage />}
+                />
+                <Route
+                  path="/admin/create-coupon/"
+                  element={<AdminCreateCouponPage />}
+                />
+                <Route
+                  path="/admin/edit-coupon/:id"
+                  element={<AdminEditCouponPage />}
+                />
+              </Route>
+
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
           <Footer />
         </UserProvider>
       </BrowserRouter>
-    </>
+    </ErrorBoundary>
   );
 };
 
