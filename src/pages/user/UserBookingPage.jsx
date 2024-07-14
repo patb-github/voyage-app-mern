@@ -94,7 +94,11 @@ function UserBookingPage() {
       setError(null);
       try {
         const fetchedBookings = await fetchBookings(activeTab);
-        setBookings(fetchedBookings);
+        // เรียงลำดับ bookings ตามวันที่จองล่าสุด
+        const sortedBookings = fetchedBookings.sort(
+          (a, b) => new Date(b.booked_at) - new Date(a.booked_at)
+        );
+        setBookings(sortedBookings);
       } catch (err) {
         setError('Failed to fetch bookings. Please try again later.');
       } finally {
@@ -114,7 +118,7 @@ function UserBookingPage() {
 
   const calculateTotalAmount = (booking) => {
     const tripTotal = booking.booked_trips.reduce(
-      (total, trip) => total + (trip.trip.price * trip.travelers.length),
+      (total, trip) => total + trip.trip.price * trip.travelers.length,
       0
     );
     const discountAmount = booking.coupon ? booking.coupon.discount_amount : 0;
