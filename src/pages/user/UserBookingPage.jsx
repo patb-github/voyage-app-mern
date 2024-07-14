@@ -114,7 +114,7 @@ function UserBookingPage() {
 
   const calculateTotalAmount = (booking) => {
     const tripTotal = booking.booked_trips.reduce(
-      (total, trip) => total + trip.trip.price,
+      (total, trip) => total + (trip.trip.price * trip.travelers.length),
       0
     );
     const discountAmount = booking.coupon ? booking.coupon.discount_amount : 0;
