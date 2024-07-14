@@ -75,7 +75,7 @@ function UserCheckout() {
       setTotalAmount(totalAmount);
       setDiscount(calculateDiscount(totalAmount, couponType, couponValue));
     }
-  }, [trip, voyagers]);
+  }, [trip, voyagers, couponType, couponValue]);
 
   if (isLoading) {
     return (
