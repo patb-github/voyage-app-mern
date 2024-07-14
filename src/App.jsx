@@ -21,6 +21,7 @@ const UserCartPage = lazy(() => import('./pages/user/UserCartPage'));
 const UserPaymentPage = lazy(() => import('./pages/user/UserPaymentPage'));
 const UserBookingPage = lazy(() => import('./pages/user/UserBookingPage'));
 const ExploreMorePage = lazy(() => import('./pages/ExploreMorePage'));
+
 const UserPasswordChange = lazy(() =>
   import('./pages/user/UserPasswordChange')
 );
