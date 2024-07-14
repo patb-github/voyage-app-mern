@@ -7,6 +7,8 @@ const UserContext = createContext({
   setToken: () => {},
   login: () => {},
   logout: () => {},
+  loginError: false,
+  setLoginError: () => {},
 });
 
 export default UserContext;

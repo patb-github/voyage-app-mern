@@ -1,5 +1,6 @@
-import { useState, useEffect, useContext } from 'react';
-import { getCouponByCode, calculateDiscount } from '../../utils/couponUtils';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { format, addDays } from 'date-fns';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faSave,
@@ -8,9 +9,7 @@ import {
   faCalendar,
   faCreditCard,
 } from '@fortawesome/free-solid-svg-icons';
-import { format, addDays } from 'date-fns';
 import UserContext from '../../context/UserContext';
-import { useNavigate, useParams } from 'react-router-dom';
 import axiosUser from '../../utils/axiosUser';
 import axiosVisitor from '../../utils/axiosVisitor';
 import { useForm } from 'react-hook-form';
@@ -19,22 +18,21 @@ import { cartLengthAtom } from '../../atoms/cartAtom';
 import { fetchCart } from '../../utils/cartUtils';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { getCouponByCode, calculateDiscount } from '../../utils/couponUtils';
 
 function UserCartEditPage() {
+  const { user, isLoading: userLoading, token } = useContext(UserContext);
+  const [localUser, setLocalUser] = useState(null);
   const [, setCartLength] = useAtom(cartLengthAtom);
-  const { user } = useContext(UserContext);
   const [trip, setTrip] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentVoyager, setCurrentVoyager] = useState('');
-  const [voyagers, setVoyagers] = useState({
-    1: { firstName: user.firstname, lastName: user.lastname },
-  });
+  const [voyagers, setVoyagers] = useState({});
   const [departureDate, setDepartureDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
   const [totalAmount, setTotalAmount] = useState(0);
   const navigate = useNavigate();
   const { cartItemId } = useParams();
-  // const [cartItem, setCartItem] = useState(null);
   const [discount, setDiscount] = useState(0);
   const [promoCode, setPromoCode] = useState('');
   const [couponId, setCouponId] = useState(null);
@@ -48,82 +46,74 @@ function UserCartEditPage() {
   const [couponValue, setCouponValue] = useState(null);
 
   useEffect(() => {
-    const fetchCartItem = async () => {
-      setIsLoading(true); // แสดง loading ในระหว่างรอข้อมูล
-      try {
-        // 1. Fetch cart item จาก backend
-        const cartResponse = await axiosUser.get(`/cart/${cartItemId}`);
+    console.log('User in UserCartEditPage:', user);
+    if (user) {
+      setLocalUser(user);
+      setVoyagers({
+        1: { firstName: user.firstname, lastName: user.lastname },
+      });
+    }
+  }, [user]);
 
-        // 2. ตรวจสอบ response
-        if (cartResponse.status !== 200) {
-          throw new Error('Failed to fetch cart item');
-        }
+  useEffect(() => {
+    if (token) {
+      axiosUser.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      delete axiosUser.defaults.headers.common['Authorization'];
+    }
+  }, [token]);
 
-        const cartItemData = cartResponse.data.cartItem;
-
-        // 3. อัพเดต state ด้วยข้อมูล cart item
-        // setCartItem(cartItemData);
-        setVoyagers(
-          cartItemData.travelers.reduce((acc, traveler, index) => {
-            acc[index + 1] = {
-              firstName: traveler.firstName,
-              lastName: traveler.lastName,
-            };
-            return acc;
-          }, {})
-        );
-        setDepartureDate(new Date(cartItemData.departure_date));
-
-        // 4. Fetch ข้อมูล trip ที่เกี่ยวข้อง
-        const tripResponse = await axiosVisitor.get(`/trips/${cartItemData.trip_id}`);
-        if (tripResponse.status !== 200) {
-          throw new Error('Failed to fetch trip details');
-        }
-        setTrip(tripResponse.data.trip);
-        setTotalAmount(tripResponse.data.trip.price);
-      } catch (error) {
-        console.error(error);
-        // 5. Error handling (เช่น แสดง alert หรือ redirect)
-        if (error.response && error.response.status === 404) {
-          navigate('/cart'); // ถ้าไม่พบ cart item ให้กลับไปหน้า cart
-        } else {
-          // กรณี error อื่น ๆ
-          setPromoAlertMessage(
-            'An error occurred while fetching cart details.'
-          );
-          setShowPromoAlert(true);
-          setTimeout(() => setShowPromoAlert(false), 3000);
-        }
-      } finally {
-        setIsLoading(false); // ปิด loading
+  const fetchCartItem = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const cartResponse = await axiosUser.get(`/cart/${cartItemId}`);
+      if (cartResponse.status !== 200) {
+        throw new Error('Failed to fetch cart item');
       }
-    };
 
-    if (cartItemId) {
+      const cartItemData = cartResponse.data.cartItem;
+
+      setVoyagers(
+        cartItemData.travelers.reduce((acc, traveler, index) => {
+          acc[index + 1] = {
+            firstName: traveler.firstName || '',
+            lastName: traveler.lastName || '',
+          };
+          return acc;
+        }, {})
+      );
+      setDepartureDate(new Date(cartItemData.departure_date));
+
+      const tripResponse = await axiosVisitor.get(
+        `/trips/${cartItemData.trip_id}`
+      );
+      if (tripResponse.status !== 200) {
+        throw new Error('Failed to fetch trip details');
+      }
+      setTrip(tripResponse.data.trip);
+      setTotalAmount(tripResponse.data.trip.price || 0);
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred while fetching cart details.');
+      navigate('/cart');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [cartItemId, navigate]);
+
+  useEffect(() => {
+    if (cartItemId && localUser) {
       fetchCartItem();
     }
-  }, [cartItemId, navigate]); 
+  }, [cartItemId, fetchCartItem, localUser]);
 
   useEffect(() => {
     if (trip) {
-      const totalAmount = trip.price * Object.keys(voyagers).length; 
+      const totalAmount = trip.price * Object.keys(voyagers).length;
       setTotalAmount(totalAmount);
       setDiscount(calculateDiscount(totalAmount, couponType, couponValue));
     }
-  }, [trip, voyagers]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading...
-      </div>
-    );
-  }
-
-  if (!trip) {
-    navigate('/cart');
-    return;
-  }
+  }, [trip, voyagers, couponType, couponValue]);
 
   const openModal = (voyager) => {
     setCurrentVoyager(voyager);
@@ -163,13 +153,13 @@ function UserCartEditPage() {
       closeModal();
       console.log(voyagers);
     } else {
-      alert('Please fill in both first name and last name');
+      toast.error('Please fill in both first name and last name');
     }
   };
 
   const deleteVoyager = () => {
     if (Object.keys(voyagers).length === 1) {
-      alert('At least one voyager must be specified');
+      toast.error('At least one voyager must be specified');
       return;
     }
     setVoyagers((prev) => {
@@ -200,17 +190,16 @@ function UserCartEditPage() {
     const selectedDate = new Date(e.target.value);
     if (selectedDate >= new Date()) {
       setDepartureDate(selectedDate);
+    } else {
+      toast.error('Please select a future date');
     }
   };
 
   const updateCart = async () => {
     const cartItem = {
       departure_date: departureDate,
-      travelers: [],
+      travelers: Object.values(voyagers),
     };
-    for (let voyager in voyagers) {
-      cartItem.travelers.push(voyagers[voyager]);
-    }
 
     try {
       const response = await axiosUser.put(`/cart/${cartItemId}`, cartItem);
@@ -227,13 +216,15 @@ function UserCartEditPage() {
     setDiscount(0);
     setPromoCode('');
     setIsPromoApplied(false);
+    setCouponType(null);
+    setCouponValue(null);
     toast.info('Promo code has been removed');
   };
 
   const handleApplyPromo = async () => {
     try {
       const couponData = await getCouponByCode(promoCode);
-      if (trip.price < couponData.coupon.minimumPurchaseAmount) {
+      if (totalAmount < couponData.coupon.minimumPurchaseAmount) {
         toast.error('Minimum purchase amount not reached');
         return;
       }
@@ -243,9 +234,9 @@ function UserCartEditPage() {
         couponData.coupon.type,
         couponData.coupon.discount
       );
-      
+
       setDiscount(calculatedDiscount);
-      setCouponId(couponData.coupon._id); // Store the coupon ID
+      setCouponId(couponData.coupon._id);
       setCouponType(couponData.coupon.type);
       setCouponValue(couponData.coupon.discount);
       toast.success('Promo code applied successfully!');
@@ -257,14 +248,13 @@ function UserCartEditPage() {
   };
 
   const handlePayment = async () => {
-
     const bookingData = {
       booked_trips: [
         {
           trip_id: trip._id,
           departure_date: departureDate.toISOString(),
-          travelers: Object.values(voyagers).map(traveler => traveler),
-        }
+          travelers: Object.values(voyagers),
+        },
       ],
       coupon_id: isPromoApplied ? couponId : null,
       cart_item_ids: [cartItemId],
@@ -276,7 +266,7 @@ function UserCartEditPage() {
 
       if (response.status === 200 || response.status === 201) {
         toast.success('Booking successful!');
-        setCartLength(prev => prev - 1);
+        setCartLength((prev) => prev - 1);
         const bookingId = response.data.bookingId;
         navigate(`/payment/${bookingId}`, {
           state: { bookingDetails: response.data, orderSummary: bookingData },
@@ -289,6 +279,19 @@ function UserCartEditPage() {
       toast.error('Booking failed. Please try again.');
     }
   };
+
+  if (userLoading || isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!localUser) {
+    navigate('/login');
+    return null;
+  }
+
+  if (!trip || Object.keys(voyagers).length === 0) {
+    return <div>No data available</div>;
+  }
 
   return (
     <div className="min-h-screen bg-[url('/bg-desktop.webp')] py-8 px-4 md:py-16 md:px-48">
@@ -577,5 +580,3 @@ function UserCartEditPage() {
 }
 
 export default UserCartEditPage;
-
-
