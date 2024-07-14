@@ -1,4 +1,3 @@
-// UserBookingPage.jsx
 import { useState, useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { bookingsAtom, activeTabAtom } from '../../atoms/bookingAtoms';
@@ -38,7 +37,7 @@ function TripCard({ trip, isExpanded, onToggle }) {
                 {trip.voyagerCount}
               </p>
               <p className="text-right mt-2 font-semibold">
-                Amount: ${trip.amount.toLocaleString()}
+                Amount: ${trip.amount}
               </p>
             </div>
           </div>
@@ -94,7 +93,6 @@ function UserBookingPage() {
       setError(null);
       try {
         const fetchedBookings = await fetchBookings(activeTab);
-        // เรียงลำดับ bookings ตามวันที่จองล่าสุด
         const sortedBookings = fetchedBookings.sort(
           (a, b) => new Date(b.booked_at) - new Date(a.booked_at)
         );
@@ -192,8 +190,7 @@ function UserBookingPage() {
                 </p>
                 <div className="mb-6">
                   <p className="text-2xl font-bold text-gray-800">
-                    Total Amount: $
-                    {calculateTotalAmount(booking).toLocaleString()}
+                    Total Amount: ${calculateTotalAmount(booking)}
                   </p>
                   <p className="text-gray-600">
                     Number of Trips: {booking.booked_trips.length}
@@ -219,7 +216,7 @@ function UserBookingPage() {
                 {booking.coupon && (
                   <p className="text-green-600 mt-2">
                     Coupon applied: {booking.coupon.code} ($
-                    {booking.coupon.discount_amount.toLocaleString()} discount)
+                    {booking.coupon.discount_amount} discount)
                   </p>
                 )}
                 <p className="text-gray-500 text-sm mt-4 mb-6">

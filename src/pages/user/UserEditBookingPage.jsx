@@ -82,7 +82,7 @@ const TripAccordion = ({ trip, isOpen, toggleAccordion }) => {
               <p className="text-lg">
                 {trip.trip.name} x {trip.travelers.length}
               </p>
-              <p>฿ {(trip.trip.price * trip.travelers.length).toLocaleString()}</p>
+              <p>$ {trip.trip.price * trip.travelers.length}</p>
             </div>
           </div>
         </div>
@@ -162,7 +162,7 @@ const UserEditBookingPage = () => {
   }
 
   const totalCost = booking.booked_trips.reduce(
-    (sum, trip) => sum + (trip.trip.price * trip.travelers.length),
+    (sum, trip) => sum + trip.trip.price * trip.travelers.length,
     0
   );
   const totalDiscount = booking.coupon ? booking.coupon.discount_amount : 0;
@@ -217,7 +217,7 @@ const UserEditBookingPage = () => {
           </h2>
           <div className="flex justify-between items-center font-semibold text-gray-700">
             <p className="text-lg py-2">Total Package Cost</p>
-            <p>฿ {totalCost.toLocaleString()}</p>
+            <p>$ {totalCost}</p>
           </div>
           {totalDiscount > 0 && (
             <div className="flex justify-between items-center text-green-600 font-semibold">
@@ -225,16 +225,14 @@ const UserEditBookingPage = () => {
                 <FontAwesomeIcon icon={faPercent} className="mr-2" />
                 Discount (Coupon: {booking.coupon.code})
               </p>
-              <p>฿ -{totalDiscount.toLocaleString()}</p>
+              <p>$ -{totalDiscount}</p>
             </div>
           )}
         </div>
         <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl mt-4 text-white">
           <div className="flex flex-col mb-4 sm:mb-0">
             <p className="text-sm font-bold">Total Payment</p>
-            <p className="text-3xl font-bold">
-              ฿ {finalTotal.toLocaleString()}
-            </p>
+            <p className="text-3xl font-bold">$ {finalTotal}</p>
           </div>
           {!isCancelled && (
             <button
