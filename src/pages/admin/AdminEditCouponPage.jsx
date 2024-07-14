@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm, useWatch } from 'react-hook-form';
-import axios from 'axios';
+import axiosUser from '../../utils/axiosUser';
 
 function AdminEditCouponPage() {
   const { id } = useParams();
@@ -24,12 +24,9 @@ function AdminEditCouponPage() {
   useEffect(() => {
     const fetchCouponData = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:3000/api/coupons/${id}`
-        );
+        const response = await axiosUser.get(`/coupons/${id}`);
         const couponData = response.data.coupon;
 
-        // Set values for all keys dynamically
         Object.keys(couponData).forEach((key) => {
           setValue(key, couponData[key]);
         });
@@ -46,7 +43,6 @@ function AdminEditCouponPage() {
     setIsLoading(true);
 
     try {
-      // Prepare updatedCoupon object
       const updatedCoupon = Object.keys(data).reduce((acc, key) => {
         if (data[key] !== undefined) {
           acc[key] =
@@ -57,13 +53,7 @@ function AdminEditCouponPage() {
         return acc;
       }, {});
 
-      const response = await axios.put(
-        `http://localhost:3000/api/coupons/${id}`,
-        updatedCoupon,
-        {
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      const response = await axiosUser.put(`/coupons/${id}`, updatedCoupon);
 
       console.log('Coupon updated:', response.data);
       setSuccessMessage('Coupon updated successfully!');
@@ -72,7 +62,10 @@ function AdminEditCouponPage() {
       }, 2000);
     } catch (error) {
       console.error('Error updating coupon:', error);
-      setErrorMessage('Error updating coupon. Please try again.');
+      setErrorMessage(
+        error.response?.data?.message ||
+          'Error updating coupon. Please try again.'
+      );
     } finally {
       setIsLoading(false);
     }

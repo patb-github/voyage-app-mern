@@ -20,6 +20,8 @@ const NotFound = lazy(() => import('./pages/NotFoundPage'));
 const UserCartPage = lazy(() => import('./pages/user/UserCartPage'));
 const UserPaymentPage = lazy(() => import('./pages/user/UserPaymentPage'));
 const UserBookingPage = lazy(() => import('./pages/user/UserBookingPage'));
+const ExploreMorePage = lazy(() => import('./pages/ExploreMorePage'));
+
 const UserPasswordChange = lazy(() =>
   import('./pages/user/UserPasswordChange')
 );
@@ -67,7 +69,7 @@ const App = () => {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/package/:id" element={<UserProductPage />} />
               <Route path="/search-results" element={<SearchResultsPage />} />
-
+              <Route path="/explore-more" element={<ExploreMorePage />} />
               {/* Protected User Routes */}
               <Route element={<ProtectedUserRoute />}>
                 <Route path="/member" element={<UserDashboardPage />} />

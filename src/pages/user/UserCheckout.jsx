@@ -75,7 +75,7 @@ function UserCheckout() {
       setTotalAmount(totalAmount);
       setDiscount(calculateDiscount(totalAmount, couponType, couponValue));
     }
-  }, [trip, voyagers]);
+  }, [trip, voyagers, couponType, couponValue]);
 
   if (isLoading) {
     return (
@@ -333,10 +333,10 @@ function UserCheckout() {
                 </div>
               </div>
 
-              <button className="flex mt-2 text-lg text-indigo-600 items-center hover:underline">
+              {/* <button className="flex mt-2 text-lg text-indigo-600 items-center hover:underline">
                 <span>Policy | Things to know before traveling</span>
                 <span className="text-2xl ml-2">&#8227;</span>
-              </button>
+              </button> */}
             </div>
           </div>
           <div className="md:w-1/2 md:px-10">

@@ -82,7 +82,7 @@ const TripAccordion = ({ trip, isOpen, toggleAccordion }) => {
               <p className="text-lg">
                 {trip.trip.name} x {trip.travelers.length}
               </p>
-              <p>฿ {trip.trip.price.toLocaleString()}</p>
+              <p>฿ {(trip.trip.price * trip.travelers.length).toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -162,7 +162,7 @@ const UserEditBookingPage = () => {
   }
 
   const totalCost = booking.booked_trips.reduce(
-    (sum, trip) => sum + trip.trip.price,
+    (sum, trip) => sum + (trip.trip.price * trip.travelers.length),
     0
   );
   const totalDiscount = booking.coupon ? booking.coupon.discount_amount : 0;
