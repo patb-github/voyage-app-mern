@@ -8,8 +8,9 @@ import {
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import UserContext from '../../context/UserContext';
 import axiosVisitor from '../../utils/axiosVisitor';
+import PolicyModal from '../../components/user/PolicyModal';
 
-const ContentHead = ({ trip }) => {
+const ContentHead = ({ trip, setShowPolicy }) => {
   return (
     <div className="rounded-3xl shadow-lg px-6 py-6 mb-6 bg-gradient-to-r from-indigo-50 to-blue-50">
       <h2 className="text-xl md:text-2xl font-extrabold py-4 text-indigo-800">
@@ -47,11 +48,10 @@ const ContentHead = ({ trip }) => {
           <p className="text-sm md:text-base">{trip.rating}</p>
         </div>
       </div>
-      <button className="flex mt-4 text-base md:text-lg text-indigo-600 items-center hover:underline">
-        <span>Read full program details</span>
-        <span className="text-xl md:text-2xl ml-2">&#8227;</span>
-      </button>
-      <button className="flex mt-2 text-base md:text-lg text-indigo-600 items-center hover:underline">
+      <button 
+        className="flex mt-2 text-base md:text-lg text-indigo-600 items-center hover:underline"
+        onClick={() => setShowPolicy(true)}  
+      >
         <span>Policy | Things to know before traveling</span>
         <span className="text-xl md:text-2xl ml-2">&#8227;</span>
       </button>
@@ -94,6 +94,7 @@ const UserProductPage = () => {
   const { user, setUserData } = useContext(UserContext);
   const { id } = useParams();
   const navigate = useNavigate();
+  const [showPolicy, setShowPolicy] = useState(false);
 
   useEffect(() => {
     const fetchTrip = async () => {
@@ -169,7 +170,7 @@ const UserProductPage = () => {
             </p>
           </div>
           <div className="md:w-1/2 px-6 lg:px-8 xl:px-10">
-            <ContentHead trip={trip} />
+            <ContentHead trip={trip} setShowPolicy={setShowPolicy} />
             <ProductDetails trip={trip} />
             <div className="flex justify-between px-4 py-4 mb-4 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl mt-4 text-white">
               <div className="flex flex-col">
@@ -217,6 +218,8 @@ const UserProductPage = () => {
           </div>
         </div>
       )}
+
+      <PolicyModal show={showPolicy} onClose={() => setShowPolicy(false)} />
     </div>
   );
 };
