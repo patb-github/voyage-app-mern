@@ -8,6 +8,7 @@ import {
   faTrash,
   faSpinner,
 } from '@fortawesome/free-solid-svg-icons';
+import axiosUser from '../../utils/axiosUser';
 
 const PackageTripManage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -21,12 +22,8 @@ const PackageTripManage = () => {
     const fetchTrips = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('http://localhost:3000/api/trips/');
-        if (!response.ok) {
-          throw new Error('Failed to fetch trips');
-        }
-        const data = await response.json();
-        setTrips(data.trips || []);
+        const response = await axiosUser.get('/trips');
+        setTrips(response.data.trips || []);
       } catch (error) {
         console.error('Error fetching trips:', error);
       } finally {
@@ -46,16 +43,8 @@ const PackageTripManage = () => {
     setIsDeleting(true);
 
     try {
-      const response = await fetch(
-        `http://localhost:3000/api/trips/${tripToDelete}`,
-        { method: 'DELETE' }
-      );
-
-      if (response.ok) {
-        setTrips(trips.filter((trip) => trip._id !== tripToDelete));
-      } else {
-        console.error('Error deleting trip. Please try again.');
-      }
+      await axiosUser.delete(`/trips/${tripToDelete}`);
+      setTrips(trips.filter((trip) => trip._id !== tripToDelete));
     } catch (error) {
       console.error('Error deleting trip:', error);
     } finally {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import TripForm from '../../components/admin/TripForm';
+import axiosUser from '../../utils/axiosUser';
 
 function AdminCreateTripPage() {
   const navigate = useNavigate();
@@ -36,13 +36,9 @@ function AdminCreateTripPage() {
         }
       });
 
-      const response = await axios.post(
-        'http://localhost:3000/api/trips/',
-        formData,
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        }
-      );
+      const response = await axiosUser.post('/trips', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
 
       console.log('Trip created:', response.data);
       setSuccessMessage('Trip created successfully!');
@@ -78,6 +74,7 @@ function AdminCreateTripPage() {
         {errorMessage && (
           <div className="alert alert-error mt-6">{errorMessage}</div>
         )}
+        {isLoading && <div className="mt-6">Loading...</div>}
       </div>
     </div>
   );

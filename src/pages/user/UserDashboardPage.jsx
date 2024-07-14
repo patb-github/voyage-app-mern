@@ -9,7 +9,6 @@ import React, {
 import axiosUser from '../../utils/axiosUser'; //
 import { useForm } from 'react-hook-form';
 import UserContext from '../../context/UserContext';
-import axios from 'axios';
 
 const DEFAULT_AVATAR = '/user/profile.jpg';
 
