@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 
 function TripForm({ onSubmit, initialData = {}, isEditing = false }) {
   const {
@@ -18,7 +18,7 @@ function TripForm({ onSubmit, initialData = {}, isEditing = false }) {
       rating: initialData.rating || 0,
       description: initialData.description || '',
       sub_expenses: initialData.sub_expenses || [],
-      image: initialData.images ? initialData.images[0] : null, // ใช้รูปภาพแรกจาก array
+      image: initialData.images ? initialData.images[0] : null,
     },
   });
 
@@ -35,15 +35,28 @@ function TripForm({ onSubmit, initialData = {}, isEditing = false }) {
   const watchRating = watch('rating');
   const currentRating = parseFloat(watchRating || 0).toFixed(1);
 
-  const [totalPrice, setTotalPrice] = useState(0);
+  // Watch for changes in sub_expenses
+  const subExpenses = useWatch({
+    control,
+    name: 'sub_expenses',
+    defaultValue: initialData.sub_expenses || [],
+  });
 
-  useEffect(() => {
-    const subExpenses = getValues('sub_expenses');
-    const newTotalPrice = subExpenses.reduce((sum, expense) => {
+  // Calculate total price
+  const calculateTotalPrice = (expenses) => {
+    return expenses.reduce((sum, expense) => {
       return sum + (parseFloat(expense.expense_amount) || 0);
     }, 0);
-    setTotalPrice(newTotalPrice);
-  }, [fields, getValues]); // Trigger the effect when fields change
+  };
+
+  const [totalPrice, setTotalPrice] = useState(
+    calculateTotalPrice(subExpenses)
+  );
+
+  // Update total price whenever sub_expenses change
+  useEffect(() => {
+    setTotalPrice(calculateTotalPrice(subExpenses));
+  }, [subExpenses]);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -66,7 +79,7 @@ function TripForm({ onSubmit, initialData = {}, isEditing = false }) {
       setImageError('Please upload an image');
       return;
     }
-    await onSubmit({ ...data, price: totalPrice, image }); // ส่ง image เดี่ยว
+    await onSubmit({ ...data, price: totalPrice, image });
   };
 
   return (
@@ -229,7 +242,10 @@ function TripForm({ onSubmit, initialData = {}, isEditing = false }) {
                 placeholder="Amount"
                 {...register(`sub_expenses.${index}.expense_amount`, {
                   required: 'Expense amount is required',
-                  pattern: /^\d+(\.\d{1,2})?$/, // Corrected pattern
+                  pattern: {
+                    value: /^\d+(\.\d{1,2})?$/,
+                    message: 'Please enter a valid amount',
+                  },
                 })}
               />
               <button
@@ -252,7 +268,7 @@ function TripForm({ onSubmit, initialData = {}, isEditing = false }) {
           {/* Display total price under Sub Expenses */}
           <div className="mt-4 text-lg font-semibold">
             Total Price:{' '}
-            <span className="text-blue-600 ml-2">{totalPrice}</span>
+            <span className="text-blue-600 ml-2">{totalPrice.toFixed(2)}</span>
           </div>
         </div>
       </div>
