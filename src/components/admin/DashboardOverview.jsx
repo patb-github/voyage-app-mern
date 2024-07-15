@@ -76,37 +76,37 @@ function DashboardOverview() {
     const lastMonthConversionRate =
       (lastMonthBookings.length / lastMonthActiveUsers) * 100 || 0;
 
+    const calculateChange = (current, previous) => {
+      if (previous === 0) return current > 0 ? '100%' : '0%';
+      const change = ((current - previous) / previous) * 100;
+      return `${change.toFixed(1)}%`;
+    };
+
     setStats([
       {
         name: 'Total Sales',
         value: `$${totalSales.toFixed(2)}`,
-        change: `${(
-          ((totalSales - lastMonthSales) / lastMonthSales) *
-          100
-        ).toFixed(1)}%`,
+        change: calculateChange(totalSales, lastMonthSales),
         changeType: totalSales >= lastMonthSales ? 'increase' : 'decrease',
       },
       {
         name: 'Active Users',
         value: activeUsers,
-        change: `${(
-          ((activeUsers - lastMonthActiveUsers) / lastMonthActiveUsers) *
-          100
-        ).toFixed(1)}%`,
+        change: calculateChange(activeUsers, lastMonthActiveUsers),
         changeType:
           activeUsers >= lastMonthActiveUsers ? 'increase' : 'decrease',
       },
       {
         name: 'Conversion Rate',
         value: `${conversionRate.toFixed(1)}%`,
-        change: `${(conversionRate - lastMonthConversionRate).toFixed(1)}%`,
+        change: calculateChange(conversionRate, lastMonthConversionRate),
         changeType:
           conversionRate >= lastMonthConversionRate ? 'increase' : 'decrease',
       },
       {
         name: 'Avg. Order Value',
         value: `$${avgOrderValue.toFixed(2)}`,
-        change: `$${(avgOrderValue - lastMonthAvgOrderValue).toFixed(2)}`,
+        change: calculateChange(avgOrderValue, lastMonthAvgOrderValue),
         changeType:
           avgOrderValue >= lastMonthAvgOrderValue ? 'increase' : 'decrease',
       },
@@ -127,6 +127,32 @@ function DashboardOverview() {
     });
   };
 
+  const getCurrentMonth = () => new Date().getMonth();
+  const getCurrentYear = () => new Date().getFullYear();
+
+  const getAvailableMonths = (year) => {
+    const currentYear = getCurrentYear();
+    const currentMonth = getCurrentMonth();
+
+    if (year < currentYear) {
+      return [...Array(12)].map((_, i) => i);
+    } else if (year === currentYear) {
+      return [...Array(currentMonth + 1)].map((_, i) => i);
+    }
+    return [];
+  };
+
+  const handleYearChange = (e) => {
+    const newYear = parseInt(e.target.value);
+    setSelectedYear(newYear);
+
+    // Adjust selected month if necessary
+    const availableMonths = getAvailableMonths(newYear);
+    if (!availableMonths.includes(selectedMonth)) {
+      setSelectedMonth(availableMonths[availableMonths.length - 1]);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -139,6 +165,8 @@ function DashboardOverview() {
     return <div className="text-center py-10 text-red-500">Error: {error}</div>;
   }
 
+  const availableMonths = getAvailableMonths(selectedYear);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Dashboard Overview</h1>
@@ -146,29 +174,29 @@ function DashboardOverview() {
       {/* Month and Year Selector */}
       <div className="mb-6 flex space-x-4">
         <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-          className="border rounded-md p-2"
-        >
-          {[...Array(12)].map((_, i) => (
-            <option key={i} value={i}>
-              {new Date(0, i).toLocaleString('default', { month: 'long' })}
-            </option>
-          ))}
-        </select>
-        <select
           value={selectedYear}
-          onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+          onChange={handleYearChange}
           className="border rounded-md p-2"
         >
           {[...Array(5)].map((_, i) => {
-            const year = new Date().getFullYear() - i;
+            const year = getCurrentYear() - i;
             return (
               <option key={year} value={year}>
                 {year}
               </option>
             );
           })}
+        </select>
+        <select
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+          className="border rounded-md p-2"
+        >
+          {availableMonths.map((month) => (
+            <option key={month} value={month}>
+              {new Date(0, month).toLocaleString('default', { month: 'long' })}
+            </option>
+          ))}
         </select>
       </div>
 
