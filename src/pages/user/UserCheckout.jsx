@@ -71,7 +71,7 @@ function UserCheckout() {
 
   useEffect(() => {
     if (trip) {
-      const totalAmount = trip.price * Object.keys(voyagers).length; 
+      const totalAmount = trip.price * Object.keys(voyagers).length;
       setTotalAmount(totalAmount);
       setDiscount(calculateDiscount(totalAmount, couponType, couponValue));
     }
@@ -190,7 +190,7 @@ function UserCheckout() {
     try {
       const couponData = await getCouponByCode(promoCode);
 
-      if (trip.price < couponData.coupon.minimumPurchaseAmount) {
+      if (totalAmount < couponData.coupon.minimumPurchaseAmount) {
         toast.error('Minimum purchase amount not reached');
         return;
       }
@@ -224,8 +224,8 @@ function UserCheckout() {
         {
           trip_id: trip._id,
           departure_date: departureDate.toISOString(),
-          travelers: Object.values(voyagers).map(traveler => traveler),
-        }
+          travelers: Object.values(voyagers).map((traveler) => traveler),
+        },
       ],
       coupon_id: isPromoApplied ? couponId : null,
       cart_item_ids: [],
