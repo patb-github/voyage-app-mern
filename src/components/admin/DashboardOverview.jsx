@@ -267,10 +267,10 @@ function DashboardOverview() {
                   <span
                     className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       order.booking_status === 'completed'
-                        ? 'bg-green-100 text-green-800'
+                        ? 'bg-green-400 text-white'
                         : order.booking_status === 'cancelled'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-yellow-100 text-yellow-800'
+                        ? 'bg-red-400 text-white'
+                        : 'bg-yellow-400 text-yellow-800'
                     }`}
                   >
                     {order.booking_status}
