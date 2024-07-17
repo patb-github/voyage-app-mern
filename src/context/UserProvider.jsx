@@ -108,7 +108,7 @@ const UserProvider = ({ children }) => {
         };
         setUser(user);
         setLoginError(false);
-        console.log('Login successful, user set:', user);
+
         return { success: true, isAdmin: user.isAdmin };
       } else {
         setLoginError(true);
