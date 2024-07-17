@@ -20,13 +20,11 @@ function AdminDashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { setUser } = useContext(UserContext);
   const navigate = useNavigate();
-
+  const { logout } = useContext(UserContext);
   const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
+    logout();
     navigate('/login');
   };
-
   const menuItems = [
     {
       id: 'dashboard',
